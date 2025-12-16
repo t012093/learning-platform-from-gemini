@@ -1,45 +1,110 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img width="1200" height="400" alt="Lumina Banner" src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1200" style="border-radius: 20px;" />
+
+# Lumina Learning Platform
+### The Next-Gen Immersive Learning Experience
 </div>
 
-# Run and deploy your AI Studio app
+<br/>
 
-This contains everything you need to run your app locally.
+**Lumina** is a modern, experimental learning platform designed to revolutionize how we learn engineering, creativity, and languages. Unlike traditional LMS, Lumina focuses on **"Vibe"**—the feeling of flow, immersion, and narrative-driven education.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1P7UWTr6Nyjh_aX1QW5cJJfdKwDX0nbfN
+## 🌟 Key Features
 
-## Run Locally
+### 1. **Vibe Coding Path** 🟣
+An immersive, story-driven approach to coding.
+- **Narrative**: You are the pilot of an AI-driven spacecraft.
+- **Concept**: Learn "Prompt Engineering", "Copilot", and "Git" not as tools, but as extensions of your will.
+- **Style**: Dark mode, cinematic UI, ambient soundscapes.
 
-**Prerequisites:**  Node.js
+### 2. **Dev Campus (Web Basic & Gen AI)** 🌐
+A solid foundation for modern developers.
+- **Web Basic**: React, TypeScript, TailwindCSS from scratch.
+- **Gen AI Camp**: Python, LLM integration, and AI application development.
 
+### 3. **3D Creative Lab** 🟠
+Unlock your spatial creativity with Blender.
+- **Curriculum**: Modeling, Sculpting, and Geometry Nodes.
+- **Visuals**: Clean, grid-based gallery UI.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 4. **Art Atelier** 🟤
+Explore the intersection of technology and aesthetics.
+- **Content**: Art History, Color Theory, and Design Philosophy.
+- **Atmosphere**: Museum-like quiet and elegant interface.
+
+### 5. **Global Communication** 🟢
+English for Global Engineers.
+- **Focus**: Practical technical reading, documentation, and cross-cultural communication.
 
 ---
 
-## Design System Guidelines (Updated v2.0)
+## 🛠 Tech Stack
 
-Design principles to maintain the "Lumina" brand aesthetic.
+Built with a focus on performance, aesthetics, and developer experience.
 
-### 1. Typography (The "Grounded" Text)
-To prevent black text from looking "floating" or "harsh" on white backgrounds, we follow these rules:
+- **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Charts**: [Recharts](https://recharts.org/)
+- **Audio**: Native HTML5 Audio API for Vibe tracks
 
-*   **Color**: Use **Slate-700** (`text-slate-700`) for primary headings and body text. Avoid pure black or `slate-900`.
-*   **Tracking**: Apply **`tracking-tight`** to all headings (H1-H3) and important labels. This "tightens" the font rendering, creating a premium, print-like quality.
-    *   *Example*: `<h1 className="text-slate-700 font-bold tracking-tight">`
+---
 
-### 2. Color Palette ("Airy" Light Theme)
-*   **Backgrounds**: Use **White** (`bg-white`) or very subtle Slate (`bg-slate-50`). Avoid heavy dark gradients for main content areas unless it's a specific "immersive" mode (like the Art Museum).
-*   **Cards**: White cards with subtle borders (`border-slate-100/200`) and soft shadows (`shadow-sm` -> `hover:shadow-xl`).
-*   **Accents**: Use specific colors (Indigo, Cyan, Orange) only for icons/badges to differentiate categories.
+## 🚀 Getting Started
 
-### 3. Layout (3-Column Grid)
-*   **Learning Hub**: Content cards should be compact enough to fit **3 columns** on desktop (`lg:grid-cols-3`).
-*   **Responsiveness**:
-    *   Mobile: 1 Column
-    *   Tablet: 2 Columns
-    *   Desktop: 3 Columns
+Follow these steps to set up the project locally.
+
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/t012093/learning-platform-from-gemini.git
+   cd learning-platform-from-gemini
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Verify**
+   Open [http://localhost:5173](http://localhost:5173) to view the app.
+
+---
+
+## 🎨 Design System (Lumina UI)
+
+To maintain the coherent "Lumina Aesthetic", please adhere to these guidelines:
+
+### Typography
+- **Font**: Sans-serif (System default or Inter)
+- **Tracking**: `tracking-tight` on all Heads (H1-H3).
+- **Color**: `text-slate-700` (Light Mode) / `text-slate-200` (Dark/Vibe Mode).
+
+### Color Palette
+- **Primary**: Indigo (`indigo-600`) - Logic / Core
+- **Vibe**: Purple (`purple-600`) - Intuition / AI
+- **Creative**: Orange (`orange-500`) - 3D / Making
+- **Global**: Teal (`teal-500`) - English / Connection
+- **Art**: Stone (`stone-600`) - History / Grounding
+
+### Layout Principles
+- **Grid**: 3-Column standard for dashboards.
+- **Card**: Rounded corners (`rounded-2xl` or `rounded-3xl`), subtle borders, soft shadows.
+- **Motion**: Gentle hover effects (`hover:-translate-y-1`), avoiding jarring movements.
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by the Lumina Team</sub>
+</div>
