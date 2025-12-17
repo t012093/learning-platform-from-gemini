@@ -15,7 +15,12 @@ import {
   Box,
   Terminal,
   Palette,
-  Activity
+  Activity,
+  Settings as SettingsIcon,
+  ChevronDown,
+  Brain,
+  FileText,
+  Users
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -25,9 +30,18 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+type NavItem = {
+  view?: ViewState;
+  label: string;
+  icon: any;
+  id?: string;
+  children?: NavItem[];
+};
+
 const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [expandedMenu, setExpandedMenu] = useState<string | null>('settings');
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -80,22 +94,40 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
 
   const styles = getThemeStyles();
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { view: ViewState.DASHBOARD, label: 'ダッシュボード', icon: LayoutDashboard },
-    { view: ViewState.LEARNING_HUB, label: '学習コンテンツ', icon: Layers }, // Unified Hub
-    // { view: ViewState.LIBRARY, label: 'ライブラリ', icon: LibraryIcon },
+    { view: ViewState.LEARNING_HUB, label: '学習コンテンツ', icon: Layers },
     { view: ViewState.AI_TUTOR, label: 'AIチューター', icon: Sparkles },
-    // { view: ViewState.PROFILE, label: 'Profile', icon: User },
+    { view: ViewState.AI_DIAGNOSIS, label: 'AI学習診断', icon: Brain }, // New Item
+    {
+      id: 'documents',
+      label: 'ドキュメント',
+      icon: FileText,
+      children: [
+        { view: ViewState.AI_CHARACTERS, label: 'AIキャラクター', icon: Users },
+      ]
+    },
+    {
+      id: 'account',
+      label: 'Account',
+      icon: User,
+      children: [
+        { view: ViewState.PROFILE, label: 'Profile', icon: User },
+        { view: ViewState.MY_CONTENT, label: 'My Content', icon: LibraryIcon }
+      ]
+    },
   ];
 
-  const isNavItemActive = (itemInfo: { view: ViewState }) => {
+  const isNavItemActive = (itemInfo: NavItem) => {
+    if (!itemInfo.view) return false;
+
     if (currentView === ViewState.LESSON && itemInfo.view === ViewState.DASHBOARD) {
       return true;
     }
     if ((currentView === ViewState.SONIC_SYNTH) && itemInfo.view === ViewState.LEARNING_HUB) {
       return true;
     }
-    // All specific curricuclums should verify active state for LEARNING_HUB
+
     if ((
       currentView === ViewState.BLENDER || currentView === ViewState.BLENDER_PATH || currentView === ViewState.BLENDER_LESSON ||
       currentView.toString().startsWith('VIBE') || currentView.toString().startsWith('PROGRAMMING') || currentView.toString().startsWith('PYTHON') ||
@@ -105,6 +137,13 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
       return true;
     }
     return currentView === itemInfo.view;
+  };
+
+  const isGroupActive = (item: NavItem) => {
+    if (item.children) {
+      return item.children.some(child => isNavItemActive(child));
+    }
+    return false;
   };
 
   return (
@@ -150,12 +189,75 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => {
+            if (item.children) {
+              // Group Item
+              const isActiveGroup = isGroupActive(item);
+              const isExpanded = expandedMenu === item.id;
+
+              return (
+                <div key={item.id} className="space-y-1">
+                  <button
+                    onClick={() => {
+                      if (isCollapsed) {
+                        setIsCollapsed(false);
+                        setExpandedMenu(item.id || null);
+                      } else {
+                        setExpandedMenu(isExpanded ? null : item.id || null);
+                      }
+                    }}
+                    className={`
+                      flex items-center justify-between rounded-lg transition-all duration-200 font-medium w-full
+                      ${isActiveGroup ? styles.sidebarActive : styles.sidebarHover}
+                      ${isCollapsed ? 'justify-center w-10 h-10 mx-auto p-0' : 'px-3 py-2.5'}
+                    `}
+                    title={isCollapsed ? item.label : ''}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon size={20} className={`shrink-0 ${isActiveGroup ? 'text-indigo-600' : styles.text}`} />
+                      {!isCollapsed && (
+                        <span className="whitespace-nowrap overflow-hidden text-sm">{item.label}</span>
+                      )}
+                    </div>
+                    {!isCollapsed && (
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''} ${styles.text}`} />
+                    )}
+                  </button>
+
+                  {/* Sub Items */}
+                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded && !isCollapsed ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="pt-1 pb-2 space-y-1">
+                      {item.children.map((child) => {
+                        const isActive = isNavItemActive(child);
+                        return (
+                          <button
+                            key={child.view}
+                            onClick={() => {
+                              if (child.view) onNavigate(child.view);
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className={`
+                              flex items-center rounded-lg transition-all duration-200 font-medium w-full pl-10 pr-3 py-2
+                              ${isActive ? 'bg-indigo-50/50 text-indigo-600' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50/50'}
+                              text-sm
+                            `}
+                          >
+                            <span className="whitespace-nowrap">{child.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            // Regular Item
             const isActive = isNavItemActive(item);
             return (
               <button
                 key={item.view}
                 onClick={() => {
-                  onNavigate(item.view);
+                  if (item.view) onNavigate(item.view);
                   setIsMobileMenuOpen(false);
                 }}
                 className={`

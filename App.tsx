@@ -31,9 +31,16 @@ import ArtCurriculumView from './components/ArtCurriculumView';
 import ArtIntroView from './components/ArtIntroView';
 import ArtCraftsView from './components/ArtCraftsView';
 import ArtCraftDetailView from './components/ArtCraftDetailView';
-import ArtTribalView from './components/ArtTribalView'; // New
+import ArtTribalView from './components/ArtTribalView';
 import ArtTribalDetailView from './components/ArtTribalDetailView';
-import LearningHub from './components/LearningHub'; // New
+import ProfilePassport from './components/ProfilePassport';
+import MyContent from './components/MyContent';
+import GeneratedCourseView from './components/GeneratedCourseView';
+import GeneratedLessonView from './components/GeneratedLessonView';
+import LearningHub from './components/LearningHub';
+import AIDiagnosisView from './components/AIDiagnosisView';
+import AICharacterIntroView from './components/AICharacterIntroView';
+import AICharacterDetailView from './components/AICharacterDetailView';
 import SonicLabView from './components/SonicLabView';
 import SonicSynthView from './components/SonicSynthView';
 import LoginModal from './components/LoginModal';
@@ -99,6 +106,7 @@ const App: React.FC = () => {
   // Selected Craft/Tribal State
   const [selectedCraftId, setSelectedCraftId] = useState<string | null>(null);
   const [selectedTribalId, setSelectedTribalId] = useState<string | null>(null);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null); // New
 
   const handleCourseSelect = (courseId: string) => {
     setSelectedCourseId(courseId);
@@ -133,7 +141,12 @@ const App: React.FC = () => {
   const handleTribalSelect = (chapterId: string) => {
     setSelectedTribalId(chapterId);
     setCurrentView(ViewState.ART_TRIBAL_DETAIL);
-  }
+  };
+
+  const handleCharacterSelect = (charId: string) => {
+    setSelectedCharacterId(charId);
+    setCurrentView(ViewState.AI_CHARACTER_DETAIL);
+  };
 
   const renderContent = () => {
     switch (currentView) {
@@ -264,8 +277,27 @@ const App: React.FC = () => {
         return <Library />;
       case ViewState.AI_TUTOR:
         return <AITutor />;
+      case ViewState.AI_DIAGNOSIS:
+        return <AIDiagnosisView onNavigate={setCurrentView} />;
+
+      // AI Characters
+      case ViewState.AI_CHARACTERS:
+        return <AICharacterIntroView onNavigate={setCurrentView} onSelectCharacter={handleCharacterSelect} />;
+      case ViewState.AI_CHARACTER_DETAIL:
+        return <AICharacterDetailView
+          characterId={selectedCharacterId || 'openness'}
+          onNavigate={setCurrentView}
+          onBack={() => setCurrentView(ViewState.AI_CHARACTERS)}
+        />;
+
       case ViewState.PROFILE:
-        return <ProfilePlaceholder />;
+        return <ProfilePassport onNavigate={setCurrentView} />;
+      case ViewState.MY_CONTENT:
+        return <MyContent onNavigate={setCurrentView} />;
+      case ViewState.GENERATED_COURSE_PATH:
+        return <GeneratedCourseView onBack={() => setCurrentView(ViewState.MY_CONTENT)} onStartLesson={() => setCurrentView(ViewState.GENERATED_LESSON_VIEW)} />;
+      case ViewState.GENERATED_LESSON_VIEW:
+        return <GeneratedLessonView onBack={() => setCurrentView(ViewState.GENERATED_COURSE_PATH)} onComplete={() => setCurrentView(ViewState.GENERATED_COURSE_PATH)} />;
       case ViewState.LESSON:
         return <LessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} />;
       default:
@@ -275,14 +307,10 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider>
+      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={handleLoginSuccess} />
       <Layout currentView={currentView} onNavigate={setCurrentView}>
         {renderContent()}
       </Layout>
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLogin={handleLoginSuccess}
-      />
     </ThemeProvider>
   );
 };

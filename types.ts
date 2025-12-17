@@ -85,6 +85,9 @@ export enum ViewState {
   COURSE_DETAILS = 'COURSE_DETAILS', // New view for Course Path
   LIBRARY = 'LIBRARY',
   AI_TUTOR = 'AI_TUTOR',
+  AI_DIAGNOSIS = 'AI_DIAGNOSIS', // New AI Diagnosis View
+  AI_CHARACTERS = 'AI_CHARACTERS', // AI Character Introduction
+  AI_CHARACTER_DETAIL = 'AI_CHARACTER_DETAIL', // Individual Character Profile
   PROFILE = 'PROFILE',
   LESSON = 'LESSON',
   BLENDER = 'BLENDER', // Overview
@@ -122,5 +125,9 @@ export enum ViewState {
 
   // Sonic Lab Section
   SONIC_LAB = 'SONIC_LAB', // Hub
-  SONIC_SYNTH = 'SONIC_SYNTH' // Synthesizer Lesson
+  SONIC_SYNTH = 'SONIC_SYNTH', // Synthesizer Lesson
+  MY_CONTENT = 'MY_CONTENT', // User generated content
+  GENERATED_COURSE_PATH = 'GENERATED_COURSE_PATH', // The roadmap for a generated course
+  GENERATED_LESSON_VIEW = 'GENERATED_LESSON_VIEW', // The actual player for generated content
+  BALANCE = 'BALANCE' // Wallet and Earnings
 }
