@@ -84,7 +84,7 @@ export enum ViewState {
   COURSES = 'COURSES', // Renamed to "Path" in UI
   COURSE_DETAILS = 'COURSE_DETAILS', // New view for Course Path
   LIBRARY = 'LIBRARY',
-  AI_TUTOR = 'AI_TUTOR',
+
   AI_DIAGNOSIS = 'AI_DIAGNOSIS', // New AI Diagnosis View
   AI_CHARACTERS = 'AI_CHARACTERS', // AI Character Introduction
   AI_CHARACTER_DETAIL = 'AI_CHARACTER_DETAIL', // Individual Character Profile
@@ -129,5 +129,41 @@ export enum ViewState {
   MY_CONTENT = 'MY_CONTENT', // User generated content
   GENERATED_COURSE_PATH = 'GENERATED_COURSE_PATH', // The roadmap for a generated course
   GENERATED_LESSON_VIEW = 'GENERATED_LESSON_VIEW', // The actual player for generated content
-  BALANCE = 'BALANCE' // Wallet and Earnings
+  BALANCE = 'BALANCE', // Wallet and Earnings
+  COURSE_GENERATOR = 'COURSE_GENERATOR' // New: AI Course Generator Input View
+}
+
+// Generated Content Types
+export interface Big5Profile {
+  openness: number;        // 0-100: Curiosity, Art, Emotion, Adventure, Unusual Ideas
+  conscientiousness: number; // 0-100: Self-discipline, Dutifulness, Aim for achievement
+  extraversion: number;    // 0-100: Energy, Positive emotions, Surgency, Assertiveness
+  agreeableness: number;   // 0-100: Compassionate, Cooperative
+  neuroticism: number;     // 0-100: Sensitive, Nervous (vs. Resilient, Confident)
+}
+
+export interface GeneratedChapter {
+  id: string | number;
+  title: string;
+  duration: string;
+  type: string;
+  content: string; // Overview
+  
+  // Rich Content for Personalized Learning
+  whyItMatters: string; // Motivation aligned with values
+  keyConcepts: string[]; // 3-5 Core keywords
+  actionStep: string; // Concrete task to do NOW
+  analogy: string; // Metaphor to explain complex idea
+  quizQuestion?: string; // Quick check
+}
+
+export interface GeneratedCourse {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  chapters: GeneratedChapter[];
+  createdAt: Date;
+  modelUsed: 'standard' | 'pro';
+  targetProfile?: Big5Profile; // The profile this was generated for
 }

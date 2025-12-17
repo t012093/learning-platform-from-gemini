@@ -1,52 +1,70 @@
 import React, { useState } from 'react';
-import { ViewState } from './types';
-import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
-import CourseList from './components/CourseList';
-import CoursePathView from './components/CoursePathView';
-import AITutor from './components/AITutor';
-import LessonView from './components/LessonView';
-import Library from './components/Library';
-import BlenderCurriculum from './components/BlenderCurriculum';
-import BlenderPathView from './components/BlenderPathView';
-import BlenderLessonView from './components/BlenderLessonView';
-import ProgrammingCurriculum from './components/ProgrammingCurriculum';
-import ProgrammingCourseView from './components/ProgrammingCourseView';
-import PythonBeginnerView from './components/PythonBeginnerView';
-import HtmlCssView from './components/HtmlCssView';
-import HtmlCssPathView from './components/HtmlCssPathView';
-import HtmlCssPartTwoView from './components/HtmlCssPartTwoView';
-import WebInspectorView from './components/WebInspectorView';
-import VibePrologueView from './components/VibePrologueView';
-import VibeChapterOneView from './components/VibeChapterOneView';
-import VibeChapterTwoView from './components/VibeChapterTwoView';
-import VibeChapterThreeView from './components/VibeChapterThreeView';
-import VibeChapterFiveView from './components/VibeChapterFiveView';
-import VibePathView from './components/VibePathView';
-import ArtMuseumView from './components/ArtMuseumView';
-import ArtHistoryView from './components/ArtHistoryView';
-import ArtPeriodDetailView from './components/ArtPeriodDetailView';
-import ArtKintsugiView from './components/ArtKintsugiView';
-import ArtCurriculumView from './components/ArtCurriculumView';
-import ArtIntroView from './components/ArtIntroView';
-import ArtCraftsView from './components/ArtCraftsView';
-import ArtCraftDetailView from './components/ArtCraftDetailView';
-import ArtTribalView from './components/ArtTribalView';
-import ArtTribalDetailView from './components/ArtTribalDetailView';
-import ProfilePassport from './components/ProfilePassport';
-import MyContent from './components/MyContent';
-import GeneratedCourseView from './components/GeneratedCourseView';
-import GeneratedLessonView from './components/GeneratedLessonView';
-import LearningHub from './components/LearningHub';
-import AIDiagnosisView from './components/AIDiagnosisView';
-import AICharacterIntroView from './components/AICharacterIntroView';
-import AICharacterDetailView from './components/AICharacterDetailView';
-import SonicLabView from './components/SonicLabView';
-import SonicSynthView from './components/SonicSynthView';
-import LoginModal from './components/LoginModal';
-import { getCourseById } from './services/curriculumData';
-import { User, Settings, Bell, Shield } from 'lucide-react';
+import { ViewState, GeneratedCourse } from './types';
 import { ThemeProvider } from './context/ThemeContext';
+import { getCourseById } from './services/curriculumData';
+
+// Common Components
+import Layout from './components/common/Layout';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import LoginView from './components/common/LoginView';
+import LandingView from './components/common/LandingView';
+import LoginModal from './components/common/LoginModal';
+import LessonView from './components/common/LessonView';
+import Library from './components/common/Library';
+
+// Dashboard Features
+import Dashboard from './components/features/dashboard/Dashboard';
+import CourseList from './components/features/dashboard/CourseList';
+import CoursePathView from './components/features/dashboard/CoursePathView';
+import LearningHub from './components/features/dashboard/LearningHub';
+import ProfilePassport from './components/features/dashboard/ProfilePassport';
+import MyContent from './components/features/dashboard/MyContent';
+
+// AI Features
+import CourseGeneratorView from './components/features/ai/CourseGeneratorView';
+import GeneratedCourseView from './components/features/ai/GeneratedCourseView';
+import GeneratedLessonView from './components/features/ai/GeneratedLessonView';
+import LuminaConciergeView from './components/features/ai/LuminaConciergeView';
+import AICharacterIntroView from './components/features/ai/AICharacterIntroView';
+import AICharacterDetailView from './components/features/ai/AICharacterDetailView';
+
+// Blender Features
+import BlenderCurriculum from './components/features/blender/BlenderCurriculum';
+import BlenderPathView from './components/features/blender/BlenderPathView';
+import BlenderLessonView from './components/features/blender/BlenderLessonView';
+
+// Programming Features
+import ProgrammingCurriculum from './components/features/programming/ProgrammingCurriculum';
+import ProgrammingCourseView from './components/features/programming/ProgrammingCourseView';
+import PythonBeginnerView from './components/features/programming/PythonBeginnerView';
+import HtmlCssView from './components/features/programming/HtmlCssView';
+import HtmlCssPathView from './components/features/programming/HtmlCssPathView';
+import HtmlCssPartTwoView from './components/features/programming/HtmlCssPartTwoView';
+import WebInspectorView from './components/features/programming/WebInspectorView';
+import VibePrologueView from './components/features/programming/VibePrologueView';
+import VibeChapterOneView from './components/features/programming/VibeChapterOneView';
+import VibeChapterTwoView from './components/features/programming/VibeChapterTwoView';
+import VibeChapterThreeView from './components/features/programming/VibeChapterThreeView';
+import VibeChapterFiveView from './components/features/programming/VibeChapterFiveView';
+import VibePathView from './components/features/programming/VibePathView';
+
+// Art Features
+import ArtMuseumView from './components/features/art/ArtMuseumView';
+import ArtHistoryView from './components/features/art/ArtHistoryView';
+import ArtPeriodDetailView from './components/features/art/ArtPeriodDetailView';
+import ArtKintsugiView from './components/features/art/ArtKintsugiView';
+import ArtCurriculumView from './components/features/art/ArtCurriculumView';
+import ArtIntroView from './components/features/art/ArtIntroView';
+import ArtCraftsView from './components/features/art/ArtCraftsView';
+import ArtCraftDetailView from './components/features/art/ArtCraftDetailView';
+import ArtTribalView from './components/features/art/ArtTribalView';
+import ArtTribalDetailView from './components/features/art/ArtTribalDetailView';
+
+// Sonic Features
+import SonicLabView from './components/features/sonic/SonicLabView';
+import SonicSynthView from './components/features/sonic/SonicSynthView';
+
+import { User, Settings, Bell, Shield } from 'lucide-react';
 
 const ProfilePlaceholder: React.FC = () => (
   <div className="p-8 max-w-2xl mx-auto">
@@ -93,10 +111,14 @@ const ProfilePlaceholder: React.FC = () => (
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.DASHBOARD);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  
+  // AI Generated Course State
+  const [generatedCourse, setGeneratedCourse] = useState<GeneratedCourse | null>(null);
 
   // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isLoginPageVisible, setIsLoginPageVisible] = useState(false); // Toggle Landing vs Login
 
   // Art Language State
   const [artLanguage, setArtLanguage] = useState<'en' | 'jp'>('en');
@@ -147,11 +169,18 @@ const App: React.FC = () => {
     setSelectedCharacterId(charId);
     setCurrentView(ViewState.AI_CHARACTER_DETAIL);
   };
+  
+  const handleCourseGenerated = (course: GeneratedCourse) => {
+    setGeneratedCourse(course);
+    setCurrentView(ViewState.GENERATED_COURSE_PATH);
+  };
 
   const renderContent = () => {
     switch (currentView) {
       case ViewState.DASHBOARD:
         return <Dashboard onNavigate={setCurrentView} />;
+      case ViewState.COURSE_GENERATOR:
+        return <CourseGeneratorView onBack={() => setCurrentView(ViewState.DASHBOARD)} onCourseGenerated={handleCourseGenerated} />;
       case ViewState.LEARNING_HUB:
         return <LearningHub onNavigate={setCurrentView} />;
       case ViewState.COURSES:
@@ -275,10 +304,9 @@ const App: React.FC = () => {
 
       case ViewState.LIBRARY:
         return <Library />;
-      case ViewState.AI_TUTOR:
-        return <AITutor />;
+
       case ViewState.AI_DIAGNOSIS:
-        return <AIDiagnosisView onNavigate={setCurrentView} />;
+        return <LuminaConciergeView onNavigate={setCurrentView} />;
 
       // AI Characters
       case ViewState.AI_CHARACTERS:
@@ -293,11 +321,15 @@ const App: React.FC = () => {
       case ViewState.PROFILE:
         return <ProfilePassport onNavigate={setCurrentView} />;
       case ViewState.MY_CONTENT:
-        return <MyContent onNavigate={setCurrentView} />;
+        return <MyContent onNavigate={setCurrentView} onSelectCourse={handleCourseGenerated} />;
       case ViewState.GENERATED_COURSE_PATH:
-        return <GeneratedCourseView onBack={() => setCurrentView(ViewState.MY_CONTENT)} onStartLesson={() => setCurrentView(ViewState.GENERATED_LESSON_VIEW)} />;
+        if (!generatedCourse) return <MyContent onNavigate={setCurrentView} onSelectCourse={handleCourseGenerated} />;
+        return <GeneratedCourseView course={generatedCourse} onBack={() => setCurrentView(ViewState.MY_CONTENT)} onStartLesson={() => {
+            console.log("App: Switching to GENERATED_LESSON_VIEW");
+            setCurrentView(ViewState.GENERATED_LESSON_VIEW);
+          }} />;
       case ViewState.GENERATED_LESSON_VIEW:
-        return <GeneratedLessonView onBack={() => setCurrentView(ViewState.GENERATED_COURSE_PATH)} onComplete={() => setCurrentView(ViewState.GENERATED_COURSE_PATH)} />;
+        return <GeneratedLessonView course={generatedCourse} onBack={() => setCurrentView(ViewState.GENERATED_COURSE_PATH)} onComplete={() => setCurrentView(ViewState.GENERATED_COURSE_PATH)} />;
       case ViewState.LESSON:
         return <LessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} />;
       default:
@@ -306,12 +338,22 @@ const App: React.FC = () => {
   };
 
   return (
-    <ThemeProvider>
-      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={handleLoginSuccess} />
-      <Layout currentView={currentView} onNavigate={setCurrentView}>
-        {renderContent()}
-      </Layout>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        {!isLoggedIn ? (
+          isLoginPageVisible ?
+            <LoginView onLoginSuccess={() => setIsLoggedIn(true)} /> :
+            <LandingView onLoginClick={() => setIsLoginPageVisible(true)} />
+        ) : (
+          <>
+            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={handleLoginSuccess} />
+            <Layout currentView={currentView} onNavigate={setCurrentView}>
+              {renderContent()}
+            </Layout>
+          </>
+        )}
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 
