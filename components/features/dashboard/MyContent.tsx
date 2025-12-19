@@ -55,9 +55,10 @@ const MOCK_CONTENT: GeneratedContent[] = [
 interface MyContentProps {
     onNavigate?: (view: ViewState) => void;
     onSelectCourse?: (course: GeneratedCourse) => void;
+    newCourseForLibrary?: GeneratedCourse | null;
 }
 
-const MyContent: React.FC<MyContentProps> = ({ onNavigate, onSelectCourse }) => {
+const MyContent: React.FC<MyContentProps> = ({ onNavigate, onSelectCourse, newCourseForLibrary }) => {
     const [contents, setContents] = useState<GeneratedContent[]>(MOCK_CONTENT);
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -78,6 +79,31 @@ const MyContent: React.FC<MyContentProps> = ({ onNavigate, onSelectCourse }) => 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    // Sync externally generated course into the library as a card
+    useEffect(() => {
+        if (!newCourseForLibrary) return;
+        setContents(prev => {
+            const exists = prev.some(c => c.id === newCourseForLibrary.id);
+            if (exists) return prev;
+            const newContent: GeneratedContent = {
+                id: newCourseForLibrary.id,
+                title: newCourseForLibrary.title,
+                topic: newCourseForLibrary.title,
+                duration: newCourseForLibrary.duration,
+                createdAt: new Date().toISOString().split('T')[0],
+                status: 'draft',
+                views: 0,
+                earnings: 0,
+                thumbnail: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&q=80",
+                tags: ["New", "Generated"],
+                description: newCourseForLibrary.description,
+                chapters: newCourseForLibrary.chapters,
+                modelUsed: newCourseForLibrary.modelUsed
+            };
+            return [newContent, ...prev];
+        });
+    }, [newCourseForLibrary]);
 
     const handleSendMessage = () => {
         if (!inputValue.trim() || processingRef.current) return;

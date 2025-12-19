@@ -341,6 +341,13 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
 
   } catch (error) {
     console.error("Course generation failed:", error);
+    const apiError = (error as any)?.error || (error as any);
+    const apiMessage = (apiError?.message as string) || (error instanceof Error ? error.message : '');
+    const apiStatus = apiError?.status || '';
+
+    if (apiMessage.includes("API key not valid") || apiStatus === "INVALID_ARGUMENT") {
+      throw new Error("APIキーが無効です。環境変数 API_KEY を確認してください。");
+    }
     if (error instanceof Error && error.message.includes("GEMINI_API_KEY")) {
       throw error;
     }

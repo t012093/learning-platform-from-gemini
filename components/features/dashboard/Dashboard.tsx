@@ -155,7 +155,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <h3 className="text-slate-800 font-bold">Learning Activity</h3>
           <span className="text-sm text-slate-400">Total 2.5 hours this week</span>
         </div>
-        <div className="h-[100px] w-full">
+        <div className="h-[120px] w-full min-w-[260px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={activityData}>
               <Line type="monotone" dataKey="count" stroke="#94a3b8" strokeWidth={3} dot={{ r: 4, fill: '#cbd5e1', strokeWidth: 0 }} activeDot={{ r: 6, fill: '#6366f1' }} />

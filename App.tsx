@@ -114,6 +114,7 @@ const App: React.FC = () => {
   
   // AI Generated Course State
   const [generatedCourse, setGeneratedCourse] = useState<GeneratedCourse | null>(null);
+  const [latestGeneratedForLibrary, setLatestGeneratedForLibrary] = useState<GeneratedCourse | null>(null);
 
   // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -172,6 +173,7 @@ const App: React.FC = () => {
   
   const handleCourseGenerated = (course: GeneratedCourse) => {
     setGeneratedCourse(course);
+    setLatestGeneratedForLibrary(course);
     setCurrentView(ViewState.GENERATED_COURSE_PATH);
   };
 
@@ -321,7 +323,7 @@ const App: React.FC = () => {
       case ViewState.PROFILE:
         return <ProfilePassport onNavigate={setCurrentView} />;
       case ViewState.MY_CONTENT:
-        return <MyContent onNavigate={setCurrentView} onSelectCourse={handleCourseGenerated} />;
+        return <MyContent onNavigate={setCurrentView} onSelectCourse={handleCourseGenerated} newCourseForLibrary={latestGeneratedForLibrary} />;
       case ViewState.GENERATED_COURSE_PATH:
         if (!generatedCourse) return <MyContent onNavigate={setCurrentView} onSelectCourse={handleCourseGenerated} />;
         return <GeneratedCourseView course={generatedCourse} onBack={() => setCurrentView(ViewState.MY_CONTENT)} onStartLesson={() => {
