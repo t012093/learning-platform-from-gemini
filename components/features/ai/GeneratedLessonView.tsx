@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Play, Pause, SkipForward, SkipBack, Maximize2, Volume2, Send, Bot, MessageSquare, X, Lightbulb, Target, Sparkles, Key } from 'lucide-react';
+import { ArrowLeft, Play, Pause, SkipForward, SkipBack, Maximize2, Volume2, Send, Bot, MessageSquare, X, Lightbulb, Target, Sparkles, Key, Palette } from 'lucide-react';
 import { GeneratedCourse } from '../../../types';
 
 interface GeneratedLessonViewProps {
@@ -104,40 +104,127 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                 <div className="flex-1 bg-slate-950 relative z-10">
                     <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* When slides exist, use them as the primary content; otherwise show the classic cards */}
-                        {hasSlides ? (
-                            <>
-                                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/30 transition-colors md:col-span-2">
-                                    <div className="flex items-center justify-between mb-4 text-emerald-400">
-                                        <div className="flex items-center gap-3">
-                                            <Sparkles size={24} />
-                                            <h3 className="font-bold text-lg text-slate-200">スライド</h3>
+                        {hasSlides ? (() => {
+                            const normalizeLayout = (hint?: string) => {
+                                const h = (hint || '').toLowerCase();
+                                if (/visual|image|gallery|media/.test(h)) return 'visual-first';
+                                if (/text-only|mono|stack/.test(h)) return 'text-only';
+                                if (/wide|hero/.test(h)) return 'wide';
+                                return 'two-column';
+                            };
+                            const mapVisualPreset = (style?: string) => {
+                                const s = (style || '').toLowerCase();
+                                if (s.includes('cyan') || s.includes('neon') || s.includes('indigo')) {
+                                    return {
+                                        gradient: 'bg-gradient-to-br from-indigo-950/70 via-slate-900 to-cyan-900/50 border-cyan-600/30',
+                                        chip: 'bg-cyan-900/30 text-cyan-200 border border-cyan-600/30'
+                                    };
+                                }
+                                if (s.includes('sunset') || s.includes('warm')) {
+                                    return {
+                                        gradient: 'bg-gradient-to-br from-amber-900/60 via-slate-900 to-rose-900/40 border-amber-500/30',
+                                        chip: 'bg-amber-900/40 text-amber-200 border border-amber-500/30'
+                                    };
+                                }
+                                return {
+                                    gradient: 'bg-slate-900/60 border border-slate-800',
+                                    chip: 'bg-slate-800/60 text-slate-200 border border-slate-700/60'
+                                };
+                            };
+                            const mapAccentIcon = (name?: string) => {
+                                const n = (name || '').toLowerCase();
+                                if (n.includes('light') || n.includes('idea')) return Lightbulb;
+                                if (n.includes('target') || n.includes('goal')) return Target;
+                                if (n.includes('palette') || n.includes('art')) return Palette;
+                                if (n.includes('key')) return Key;
+                                return Sparkles;
+                            };
+                            const mapMotionStyle = (cue?: string) => {
+                                const c = (cue || '').toLowerCase();
+                                if (c.includes('slide-left')) return { animation: 'slideLeft 0.55s ease-out' };
+                                if (c.includes('slide-up')) return { animation: 'slideUp 0.55s ease-out' };
+                                if (c.includes('pop')) return { animation: 'popIn 0.45s ease-out' };
+                                return { animation: 'fadeIn 0.6s ease-out' };
+                            };
+
+                            const layout = normalizeLayout(currentSlide?.layoutHint);
+                            const visualPreset = mapVisualPreset(currentSlide?.visualStyle);
+                            const MotionIcon = mapAccentIcon(currentSlide?.accentIcon);
+                            const motionStyle = mapMotionStyle(currentSlide?.motionCue);
+
+                            const containerBase = `rounded-2xl p-6 transition-colors md:col-span-2 ${visualPreset.gradient}`;
+                            const gridClass =
+                                layout === 'text-only'
+                                    ? 'grid grid-cols-1 gap-4'
+                                    : layout === 'visual-first'
+                                        ? 'grid grid-cols-1 md:grid-cols-3 gap-6 items-center'
+                                        : layout === 'wide'
+                                            ? 'grid grid-cols-1 md:grid-cols-4 gap-6 items-start'
+                                            : 'grid grid-cols-1 md:grid-cols-2 gap-6 items-start';
+
+                            const textColSpan =
+                                layout === 'wide' ? 'md:col-span-3' : layout === 'visual-first' ? 'md:col-span-2' : 'md:col-span-1';
+
+                            return (
+                                <>
+                                    <style>{`
+                                      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                                      @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+                                      @keyframes slideLeft { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
+                                      @keyframes popIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+                                    `}</style>
+                                    <div className={`${containerBase} shadow-lg shadow-indigo-900/10`} style={motionStyle}>
+                                        <div className="flex items-center justify-between mb-4 text-emerald-300">
+                                            <div className="flex items-center gap-3">
+                                                <Sparkles size={24} />
+                                                <h3 className="font-bold text-lg text-slate-50">スライド</h3>
+                                            </div>
+                                            <div className="text-xs text-slate-200/70">Slide {currentSlideIndex + 1} / {slides.length}</div>
                                         </div>
-                                        <div className="text-xs text-slate-400">Slide {currentSlideIndex + 1} / {slides.length}</div>
+                                        <div className={gridClass}>
+                                            {layout !== 'text-only' && (
+                                                <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm flex flex-col items-start justify-between h-full gap-4">
+                                                    <div className={`${visualPreset.chip} px-3 py-1 rounded-full text-xs font-semibold`}>
+                                                        {currentSlide?.visualStyle || "Creative Style"}
+                                                    </div>
+                                                    <div className="flex items-center gap-3 text-slate-50">
+                                                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                                                            <MotionIcon size={24} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm text-slate-300">{currentSlide?.accentIcon || "sparkles"}</p>
+                                                            <p className="text-xs text-slate-400">layout: {layout}</p>
+                                                        </div>
+                                                    </div>
+                                                    {currentSlide?.motionCue && (
+                                                        <p className="text-xs text-slate-300/80">motion: {currentSlide.motionCue}</p>
+                                                    )}
+                                                </div>
+                                            )}
+                                            <div className={`bg-slate-950/60 border border-slate-800 rounded-xl p-4 ${textColSpan}`}>
+                                                <h4 className="text-slate-100 font-bold mb-3">{currentSlide?.title || 'Slide'}</h4>
+                                                <ul className="space-y-2">
+                                                    {currentSlide?.bullets?.map((b, idx) => (
+                                                        <li key={idx} className="text-slate-300 text-sm flex gap-2 items-start" style={motionStyle}>
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
+                                                            {b}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                            <div className="flex items-center justify-center gap-3">
+                                                <button onClick={handlePrevSlide} className="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors">
+                                                    Prev Slide
+                                                </button>
+                                                <button onClick={handleNextSlide} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition-colors">
+                                                    {isLastSlide ? 'Next Chapter' : 'Next Slide'}
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4">
-                                            <h4 className="text-slate-100 font-bold mb-2">{currentSlide?.title || 'Slide'}</h4>
-                                            <ul className="space-y-2">
-                                                {currentSlide?.bullets?.map((b, idx) => (
-                                                    <li key={idx} className="text-slate-400 text-sm flex gap-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
-                                                        {b}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                        <div className="flex items-center justify-center gap-3">
-                                            <button onClick={handlePrevSlide} className="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors">
-                                                Prev Slide
-                                            </button>
-                                            <button onClick={handleNextSlide} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition-colors">
-                                                {isLastSlide ? 'Next Chapter' : 'Next Slide'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
+                                </>
+                            );
+                        })() : (
                             <>
                                 {/* 1. Why It Matters (Motivation) */}
                                 <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-colors">
