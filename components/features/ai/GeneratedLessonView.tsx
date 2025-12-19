@@ -105,14 +105,16 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                     <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* When slides exist, use them as the primary content; otherwise show the classic cards */}
                         {hasSlides ? (() => {
-                            const normalizeLayout = (hint?: string) => {
+                            const normalizeLayout = (hint?: string, idx?: number) => {
                                 const h = (hint || '').toLowerCase();
                                 if (/visual|image|gallery|media/.test(h)) return 'visual-first';
                                 if (/text-only|mono|stack/.test(h)) return 'text-only';
                                 if (/wide|hero/.test(h)) return 'wide';
-                                return 'two-column';
+                                // fallbackローテーション: 0 two-column,1 visual-first,2 wide,3 text-only
+                                const mod = (idx || 0) % 4;
+                                return ['two-column', 'visual-first', 'wide', 'text-only'][mod];
                             };
-                            const mapVisualPreset = (style?: string) => {
+                            const mapVisualPreset = (style?: string, idx?: number) => {
                                 const s = (style || '').toLowerCase();
                                 if (s.includes('cyan') || s.includes('neon') || s.includes('indigo')) {
                                     return {
@@ -124,6 +126,20 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                     return {
                                         gradient: 'bg-gradient-to-br from-amber-900/60 via-slate-900 to-rose-900/40 border-amber-500/30',
                                         chip: 'bg-amber-900/40 text-amber-200 border border-amber-500/30'
+                                    };
+                                }
+                                // fallbackローテーション
+                                const mod = (idx || 0) % 3;
+                                if (mod === 1) {
+                                    return {
+                                        gradient: 'bg-gradient-to-br from-slate-900/70 via-indigo-900/40 to-purple-900/40 border-indigo-500/30',
+                                        chip: 'bg-indigo-900/40 text-indigo-200 border border-indigo-500/30'
+                                    };
+                                }
+                                if (mod === 2) {
+                                    return {
+                                        gradient: 'bg-gradient-to-br from-slate-900/70 via-emerald-900/40 to-cyan-900/40 border-emerald-500/30',
+                                        chip: 'bg-emerald-900/40 text-emerald-200 border border-emerald-500/30'
                                     };
                                 }
                                 return {
@@ -147,8 +163,8 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                 return { animation: 'fadeIn 0.6s ease-out' };
                             };
 
-                            const layout = normalizeLayout(currentSlide?.layoutHint);
-                            const visualPreset = mapVisualPreset(currentSlide?.visualStyle);
+                            const layout = normalizeLayout(currentSlide?.layoutHint, currentSlideIndex);
+                            const visualPreset = mapVisualPreset(currentSlide?.visualStyle, currentSlideIndex);
                             const MotionIcon = mapAccentIcon(currentSlide?.accentIcon);
                             const motionStyle = mapMotionStyle(currentSlide?.motionCue);
 
@@ -179,32 +195,32 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                                 <Sparkles size={24} />
                                                 <h3 className="font-bold text-lg text-slate-50">スライド</h3>
                                             </div>
-                                            <div className="text-xs text-slate-200/70">Slide {currentSlideIndex + 1} / {slides.length}</div>
-                                        </div>
-                                        <div className={gridClass}>
-                                            {layout !== 'text-only' && (
-                                                <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm flex flex-col items-start justify-between h-full gap-4">
-                                                    <div className={`${visualPreset.chip} px-3 py-1 rounded-full text-xs font-semibold`}>
-                                                        {currentSlide?.visualStyle || "Creative Style"}
-                                                    </div>
-                                                    <div className="flex items-center gap-3 text-slate-50">
-                                                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                                                            <MotionIcon size={24} />
+                                                <div className="text-xs text-slate-200/70">Slide {currentSlideIndex + 1} / {slides.length}</div>
+                                            </div>
+                                            <div className={gridClass}>
+                                                {layout !== 'text-only' && (
+                                                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm flex flex-col items-start justify-between h-full gap-4">
+                                                        <div className={`${visualPreset.chip} px-3 py-1 rounded-full text-xs font-semibold`}>
+                                                            {currentSlide?.visualStyle || "Creative Style"}
                                                         </div>
-                                                        <div>
-                                                            <p className="text-sm text-slate-300">{currentSlide?.accentIcon || "sparkles"}</p>
-                                                            <p className="text-xs text-slate-400">layout: {layout}</p>
+                                                        <div className="flex items-center gap-3 text-slate-50">
+                                                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                                                                <MotionIcon size={24} />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm text-slate-300">{currentSlide?.accentIcon || "sparkles"}</p>
+                                                                <p className="text-xs text-slate-400">layout: {layout}</p>
+                                                            </div>
                                                         </div>
+                                                        {currentSlide?.motionCue && (
+                                                            <p className="text-xs text-slate-300/80">motion: {currentSlide.motionCue}</p>
+                                                        )}
                                                     </div>
-                                                    {currentSlide?.motionCue && (
-                                                        <p className="text-xs text-slate-300/80">motion: {currentSlide.motionCue}</p>
-                                                    )}
-                                                </div>
-                                            )}
-                                            <div className={`bg-slate-950/60 border border-slate-800 rounded-xl p-4 ${textColSpan}`}>
-                                                <h4 className="text-slate-100 font-bold mb-3">{currentSlide?.title || 'Slide'}</h4>
-                                                <ul className="space-y-2">
-                                                    {currentSlide?.bullets?.map((b, idx) => (
+                                                )}
+                                                <div className={`bg-slate-950/60 border border-slate-800 rounded-xl p-4 ${textColSpan}`}>
+                                                    <h4 className="text-slate-100 font-bold mb-3">{currentSlide?.title || 'Slide'}</h4>
+                                                    <ul className="space-y-2">
+                                                        {currentSlide?.bullets?.map((b, idx) => (
                                                         <li key={idx} className="text-slate-300 text-sm flex gap-2 items-start" style={motionStyle}>
                                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
                                                             {b}

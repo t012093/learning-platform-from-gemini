@@ -276,7 +276,7 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
          - **KeyConcepts**: 3〜5個の重要キーワード（配列）
          - **ActionStep**: 今すぐできる具体的な行動・演習
          - **Analogy**: 難しい概念を直感的に理解するための「たとえ話」（Opennessが高い場合は特に創造的に）
-         - **Slides**: 7〜15枚のスライド（配列）。各スライドは { title, bullets[3-5], timing(optional), visualStyle(optional), motionCue(optional), accentIcon(optional), layoutHint(optional) } を含める。スライドは音声ナレーションに合わせて切り替わる想定。
+         - **Slides**: 7〜15枚のスライド（配列）。各スライドは { title, bullets[3-5], timing(optional), visualStyle(optional), motionCue(optional), accentIcon(optional), layoutHint(optional) } を含める。スライドは音声ナレーションに合わせて切り替わる想定。スライド間で必ず配色/レイアウト/モーションにバリエーションを付けること（同じスタイルを連続させない）。
 
       【スライドデザイン指針（特にBlender/クリエイター向け）】
       - トーン: クリエイター/アーティスト向け、洗練されたダークテーマ。背景は深いネイビー〜スレート、差し色はインディゴ×シアン系。
