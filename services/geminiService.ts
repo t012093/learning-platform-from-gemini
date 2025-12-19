@@ -276,7 +276,14 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
          - **KeyConcepts**: 3〜5個の重要キーワード（配列）
          - **ActionStep**: 今すぐできる具体的な行動・演習
          - **Analogy**: 難しい概念を直感的に理解するための「たとえ話」（Opennessが高い場合は特に創造的に）
-         - **Slides**: 7〜15枚のスライド（配列）。各スライドは { title, bullets[3-5], timing(optional) } を含める。スライドは音声ナレーションに合わせて切り替わる想定。
+         - **Slides**: 7〜15枚のスライド（配列）。各スライドは { title, bullets[3-5], timing(optional), visualStyle(optional), motionCue(optional), accentIcon(optional), layoutHint(optional) } を含める。スライドは音声ナレーションに合わせて切り替わる想定。
+
+      【スライドデザイン指針（特にBlender/クリエイター向け）】
+      - トーン: クリエイター/アーティスト向け、洗練されたダークテーマ。背景は深いネイビー〜スレート、差し色はインディゴ×シアン系。
+      - モーション: 過度な点滅は禁止。見出しはフェードイン、箇条書きは0.15〜0.3秒ステップでスライドアップなど短い指示を `motionCue` に入れる。
+      - スタイル: グラスモーフィズム/ネオンサイバー系を短く `visualStyle` に記述。読みやすさ優先。
+      - アイコン: Lucide系で表現できるモチーフを `accentIcon`（例: sparkles, lightbulb, target）に1つ。
+      - レイアウト: `layoutHint` に左右2カラム/ビジュアル優先/余白多め 等を簡潔に記載。
       
       返す前に必須フィールドが埋まっているか自己チェックし、欠落があれば補完してから返してください。回答はJSONのみ。
     `;
@@ -314,7 +321,11 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
                       properties: {
                         title: { type: Type.STRING },
                         bullets: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        timing: { type: Type.STRING }
+                        timing: { type: Type.STRING },
+                        visualStyle: { type: Type.STRING },
+                        motionCue: { type: Type.STRING },
+                        accentIcon: { type: Type.STRING },
+                        layoutHint: { type: Type.STRING }
                       },
                       required: ["title", "bullets"]
                     }
