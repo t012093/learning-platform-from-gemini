@@ -140,6 +140,15 @@ const extractKeywords = (text: string): string[] => {
 };
 
 const normalizeChapter = (chapter: any, index: number) => {
+  const normalizeSlides = () => {
+    if (!Array.isArray(chapter?.slides)) return [];
+    return chapter.slides.map((s: any, slideIdx: number) => ({
+      title: ensureString(s?.title || `Slide ${slideIdx + 1}`),
+      bullets: Array.isArray(s?.bullets) ? s.bullets.map((b: any) => ensureString(b)).filter(Boolean) : [],
+      timing: ensureString(s?.timing || '')
+    }));
+  };
+
   return {
     id: ensureString(chapter?.id ?? index + 1),
     title: ensureString(chapter?.title),
@@ -150,6 +159,7 @@ const normalizeChapter = (chapter: any, index: number) => {
     keyConcepts: Array.isArray(chapter?.keyConcepts) ? chapter.keyConcepts.map((k: any) => ensureString(k)).filter(Boolean) : [],
     actionStep: ensureString(chapter?.actionStep),
     analogy: ensureString(chapter?.analogy),
+    slides: normalizeSlides()
   };
 };
 
@@ -172,6 +182,14 @@ const validateGeneratedCourse = (raw: any) => {
     if (!Array.isArray(ch.keyConcepts) || ch.keyConcepts.length === 0) errors.push(`chapters[${idx}].keyConcepts is missing`);
     if (!ch.actionStep) errors.push(`chapters[${idx}].actionStep is missing`);
     if (!ch.analogy) errors.push(`chapters[${idx}].analogy is missing`);
+    if (!Array.isArray(ch.slides) || ch.slides.length < 7 || ch.slides.length > 15) {
+      errors.push(`chapters[${idx}].slides must have between 7 and 15 items`);
+    } else {
+      ch.slides.forEach((s, sIdx) => {
+        if (!s.title) errors.push(`chapters[${idx}].slides[${sIdx}].title is missing`);
+        if (!Array.isArray(s.bullets) || s.bullets.length === 0) errors.push(`chapters[${idx}].slides[${sIdx}].bullets is missing`);
+      });
+    }
   });
 
   return {
@@ -258,6 +276,7 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
          - **KeyConcepts**: 3〜5個の重要キーワード（配列）
          - **ActionStep**: 今すぐできる具体的な行動・演習
          - **Analogy**: 難しい概念を直感的に理解するための「たとえ話」（Opennessが高い場合は特に創造的に）
+         - **Slides**: 7〜15枚のスライド（配列）。各スライドは { title, bullets[3-5], timing(optional) } を含める。スライドは音声ナレーションに合わせて切り替わる想定。
       
       返す前に必須フィールドが埋まっているか自己チェックし、欠落があれば補完してから返してください。回答はJSONのみ。
     `;
@@ -288,8 +307,20 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
                   keyConcepts: { type: Type.ARRAY, items: { type: Type.STRING } },
                   actionStep: { type: Type.STRING },
                   analogy: { type: Type.STRING },
+                  slides: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        title: { type: Type.STRING },
+                        bullets: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        timing: { type: Type.STRING }
+                      },
+                      required: ["title", "bullets"]
+                    }
+                  }
                 },
-                required: ["id", "title", "duration", "type", "content", "whyItMatters", "keyConcepts", "actionStep", "analogy"]
+                required: ["id", "title", "duration", "type", "content", "whyItMatters", "keyConcepts", "actionStep", "analogy", "slides"]
               }
             }
           },
@@ -322,8 +353,9 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
     }
 
     if (!validation.isValid) {
-      console.warn("Course generation failed validation. Using fallback.", lastErrors);
-      return buildFallbackCourse(topic, modelType, targetProfile);
+      const errMsg = `生成結果がスキーマを満たしません: ${validation.errors.join('; ')}`;
+      console.error(errMsg);
+      throw new Error(errMsg);
     }
 
     const normalized = validation.normalized;

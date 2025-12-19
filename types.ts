@@ -155,6 +155,11 @@ export interface GeneratedChapter {
   actionStep: string; // Concrete task to do NOW
   analogy: string; // Metaphor to explain complex idea
   quizQuestion?: string; // Quick check
+  slides?: {
+    title: string;
+    bullets: string[];
+    timing?: string;
+  }[]; // Optional: per-chapter slides
 }
 
 export interface GeneratedCourse {

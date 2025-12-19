@@ -10,6 +10,7 @@ interface GeneratedLessonViewProps {
 
 const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBack, onComplete }) => {
     const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
+    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -26,12 +27,17 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
 
     const currentChapter = course.chapters[currentChapterIndex];
     const isLastChapter = currentChapterIndex === course.chapters.length - 1;
+    const slides = currentChapter.slides || [];
+    const hasSlides = slides.length > 0;
+    const currentSlide = hasSlides ? slides[currentSlideIndex] : null;
+    const isLastSlide = hasSlides ? currentSlideIndex === slides.length - 1 : true;
 
     const handleNext = () => {
         if (isLastChapter) {
             onComplete();
         } else {
             setCurrentChapterIndex(prev => prev + 1);
+            setCurrentSlideIndex(0);
             setIsPlaying(false);
         }
     };
@@ -39,7 +45,26 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
     const handlePrev = () => {
         if (currentChapterIndex > 0) {
             setCurrentChapterIndex(prev => prev - 1);
+            setCurrentSlideIndex(0);
             setIsPlaying(false);
+        }
+    };
+
+    const handleNextSlide = () => {
+        if (!hasSlides) return;
+        if (isLastSlide) {
+            handleNext();
+        } else {
+            setCurrentSlideIndex(prev => prev + 1);
+        }
+    };
+
+    const handlePrevSlide = () => {
+        if (!hasSlides) return;
+        if (currentSlideIndex > 0) {
+            setCurrentSlideIndex(prev => prev - 1);
+        } else {
+            handlePrev();
         }
     };
 
@@ -62,6 +87,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                     <div className="relative z-10 max-w-4xl mx-auto space-y-6">
                         <span className="inline-block text-indigo-300 font-mono text-xs tracking-widest uppercase bg-indigo-900/30 px-3 py-1 rounded-full border border-indigo-500/20 backdrop-blur-sm">
                             Chapter {currentChapterIndex + 1} / {course.chapters.length} • {currentChapter.duration}
+                            {hasSlides && ` • Slide ${currentSlideIndex + 1} / ${slides.length}`}
                         </span>
                         
                         <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white drop-shadow-lg">
@@ -69,7 +95,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                         </h2>
                         
                         <p className="text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
-                            {currentChapter.content}
+                            {hasSlides ? (currentSlide?.title || currentChapter.content) : currentChapter.content}
                         </p>
                     </div>
                 </div>
@@ -129,6 +155,44 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                             <p className="text-slate-300 leading-relaxed font-medium">
                                 {currentChapter.actionStep || "エディタを開いて、学んだことを試してみましょう。"}
                             </p>
+                        </div>
+
+                        {/* 4. Slides */}
+                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/30 transition-colors md:col-span-2">
+                            <div className="flex items-center justify-between mb-4 text-emerald-400">
+                                <div className="flex items-center gap-3">
+                                    <Sparkles size={24} />
+                                    <h3 className="font-bold text-lg text-slate-200">スライド</h3>
+                                </div>
+                                {hasSlides && (
+                                    <div className="text-xs text-slate-400">Slide {currentSlideIndex + 1} / {slides.length}</div>
+                                )}
+                            </div>
+                            {hasSlides ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4">
+                                        <h4 className="text-slate-100 font-bold mb-2">{currentSlide?.title || 'Slide'}</h4>
+                                        <ul className="space-y-2">
+                                            {currentSlide?.bullets?.map((b, idx) => (
+                                                <li key={idx} className="text-slate-400 text-sm flex gap-2">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
+                                                    {b}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-3">
+                                        <button onClick={handlePrevSlide} className="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors">
+                                            Prev Slide
+                                        </button>
+                                        <button onClick={handleNextSlide} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition-colors">
+                                            {isLastSlide ? 'Next Chapter' : 'Next Slide'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-slate-500 text-sm">スライドが未生成のため、章の概要のみを表示しています。</p>
+                            )}
                         </div>
 
                     </div>
