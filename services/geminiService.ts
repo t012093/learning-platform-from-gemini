@@ -187,7 +187,15 @@ const validateGeneratedCourse = (raw: any) => {
     } else {
       ch.slides.forEach((s, sIdx) => {
         if (!s.title) errors.push(`chapters[${idx}].slides[${sIdx}].title is missing`);
-        if (!Array.isArray(s.bullets) || s.bullets.length === 0) errors.push(`chapters[${idx}].slides[${sIdx}].bullets is missing`);
+        if (!Array.isArray(s.bullets) || s.bullets.length === 0) {
+          errors.push(`chapters[${idx}].slides[${sIdx}].bullets is missing`);
+        } else {
+          s.bullets.forEach((b: string, bIdx: number) => {
+            if (!b || b.length < 15) {
+              errors.push(`chapters[${idx}].slides[${sIdx}].bullets[${bIdx}] is too short`);
+            }
+          });
+        }
       });
     }
   });
@@ -277,6 +285,7 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
          - **ActionStep**: 今すぐできる具体的な行動・演習
          - **Analogy**: 難しい概念を直感的に理解するための「たとえ話」（Opennessが高い場合は特に創造的に）
          - **Slides**: 7〜15枚のスライド（配列）。各スライドは { title, bullets[3-5], timing(optional), visualStyle(optional), motionCue(optional), accentIcon(optional), layoutHint(optional) } を含める。スライドは音声ナレーションに合わせて切り替わる想定。スライド間で必ず配色/レイアウト/モーションにバリエーションを付けること（同じスタイルを連続させない）。
+         - **Slidesの粒度要件（特にBlender）**: bulletsは抽象NG。各bulletに具体的な操作/ショートカット/設定と結果を入れ、目安50〜80文字。例: 「マウス中ボタンで視点回転、Shift＋中ボタンでパン、Ctrl+スペースで全画面にして作業領域を確保」。
 
       【スライドデザイン指針（特にBlender/クリエイター向け）】
       - トーン: クリエイター/アーティスト向け、洗練されたダークテーマ。背景は深いネイビー〜スレート、差し色はインディゴ×シアン系。
