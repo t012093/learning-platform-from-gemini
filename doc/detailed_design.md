@@ -102,6 +102,18 @@ The service includes a helper `generatePedagogicalStrategy(profile: Big5Profile)
 *   **Navigation:** Next/Prev chapter controls.
 *   **AI Chat Sidebar:** Context-aware chat (toggleable).
 
+### 5.3 Geminiへのスライドデザイン指示（テンプレート参照用メタ生成）
+*   **目的:** Geminiに見た目・動きのヒントをJSONで返させ、UI側でテンプレートに適用する。固定スライドを重ねるのではなく、メタ情報を解釈して描画する。
+*   **プロンプト追記案 (`services/geminiService.ts` の必須出力要件に追加):**
+    - 各スライドに `visualStyle`（色/質感・例: “インディゴ×シアン、暗め背景”）
+    - `motionCue`（登場アニメ・例: “見出しフェードイン、箇条書き0.2秒ステップでスライドアップ”）
+    - `accentIcon`（モチーフ・例: “sparkles”, “lightbulb”, “target” 等の一般名詞）
+    - `layoutHint`（レイアウト意図・例: “左右2カラム、左テキスト右ビジュアル、余白広め”）
+*   **JSONスキーマ拡張:** `slides[].{title, bullets[], timing?}` に加えて `visualStyle?: string`, `motionCue?: string`, `accentIcon?: string`, `layoutHint?: string` を許可。
+*   **UI側の扱い:** 値が無い場合はデフォルトのスタイル/アニメを適用し、存在する場合のみ上書きする。未知の値は握りつぶして安全にフォールバック。
+*   **トーン指定:** プロンプトに「暗色ベース」「過度な点滅禁止」「可読性優先」を入れ、過激なエフェクトを避ける。
+*   **検証:** スキーマバリデーションで空配列や空文字を拒否しつつ、メタフィールドは任意扱いにすることで壊れないようにする。
+
 ## 6. Development Checklist (Generation Pipeline)
 *   [x] `API_KEY` 未設定時の早期リターンとユーザーフレンドリーなメッセージ
 *   [x] Gemini応答のJSONパース例外ハンドリング
