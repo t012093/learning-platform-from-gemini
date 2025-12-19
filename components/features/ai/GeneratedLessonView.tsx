@@ -103,98 +103,96 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                 {/* Rich Content Cards */}
                 <div className="flex-1 bg-slate-950 relative z-10">
                     <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        {/* 1. Why It Matters (Motivation) */}
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-colors">
-                            <div className="flex items-center gap-3 mb-4 text-amber-400">
-                                <Target size={24} />
-                                <h3 className="font-bold text-lg text-slate-200">なぜ重要なのか？</h3>
-                            </div>
-                            <p className="text-slate-400 leading-relaxed">
-                                {currentChapter.whyItMatters || "この知識はあなたのスキルセットの基盤となります。"}
-                            </p>
-                        </div>
-
-                        {/* 2. Analogy (Understanding) */}
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-purple-500/30 transition-colors">
-                            <div className="flex items-center gap-3 mb-4 text-purple-400">
-                                <Lightbulb size={24} />
-                                <h3 className="font-bold text-lg text-slate-200">たとえて言うなら...</h3>
-                            </div>
-                            <p className="text-slate-400 leading-relaxed italic">
-                                "{currentChapter.analogy || "それはまるで、新しい言語を学ぶようなものです。"}"
-                            </p>
-                        </div>
-
-                        {/* 3. Key Concepts (Knowledge) */}
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-cyan-500/30 transition-colors">
-                            <div className="flex items-center gap-3 mb-4 text-cyan-400">
-                                <Key size={24} />
-                                <h3 className="font-bold text-lg text-slate-200">キーコンセプト</h3>
-                            </div>
-                            <ul className="space-y-2">
-                                {currentChapter.keyConcepts && currentChapter.keyConcepts.length > 0 ? (
-                                    currentChapter.keyConcepts.map((concept, idx) => (
-                                        <li key={idx} className="flex items-center gap-2 text-slate-400">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-                                            {concept}
-                                        </li>
-                                    ))
-                                ) : (
-                                    <li className="text-slate-500">基本概念</li>
-                                )}
-                            </ul>
-                        </div>
-
-                        {/* 4. Action Step (Practice) */}
-                        <div className="bg-gradient-to-br from-indigo-900/20 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-lg shadow-indigo-900/10">
-                            <div className="flex items-center gap-3 mb-4 text-indigo-400">
-                                <Sparkles size={24} />
-                                <h3 className="font-bold text-lg text-white">アクション・ステップ</h3>
-                            </div>
-                            <p className="text-slate-300 leading-relaxed font-medium">
-                                {currentChapter.actionStep || "エディタを開いて、学んだことを試してみましょう。"}
-                            </p>
-                        </div>
-
-                        {/* 4. Slides */}
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/30 transition-colors md:col-span-2">
-                            <div className="flex items-center justify-between mb-4 text-emerald-400">
-                                <div className="flex items-center gap-3">
-                                    <Sparkles size={24} />
-                                    <h3 className="font-bold text-lg text-slate-200">スライド</h3>
+                        {/* When slides exist, use them as the primary content; otherwise show the classic cards */}
+                        {hasSlides ? (
+                            <>
+                                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/30 transition-colors md:col-span-2">
+                                    <div className="flex items-center justify-between mb-4 text-emerald-400">
+                                        <div className="flex items-center gap-3">
+                                            <Sparkles size={24} />
+                                            <h3 className="font-bold text-lg text-slate-200">スライド</h3>
+                                        </div>
+                                        <div className="text-xs text-slate-400">Slide {currentSlideIndex + 1} / {slides.length}</div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4">
+                                            <h4 className="text-slate-100 font-bold mb-2">{currentSlide?.title || 'Slide'}</h4>
+                                            <ul className="space-y-2">
+                                                {currentSlide?.bullets?.map((b, idx) => (
+                                                    <li key={idx} className="text-slate-400 text-sm flex gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
+                                                        {b}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div className="flex items-center justify-center gap-3">
+                                            <button onClick={handlePrevSlide} className="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors">
+                                                Prev Slide
+                                            </button>
+                                            <button onClick={handleNextSlide} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition-colors">
+                                                {isLastSlide ? 'Next Chapter' : 'Next Slide'}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                {hasSlides && (
-                                    <div className="text-xs text-slate-400">Slide {currentSlideIndex + 1} / {slides.length}</div>
-                                )}
-                            </div>
-                            {hasSlides ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4">
-                                        <h4 className="text-slate-100 font-bold mb-2">{currentSlide?.title || 'Slide'}</h4>
-                                        <ul className="space-y-2">
-                                            {currentSlide?.bullets?.map((b, idx) => (
-                                                <li key={idx} className="text-slate-400 text-sm flex gap-2">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
-                                                    {b}
+                            </>
+                        ) : (
+                            <>
+                                {/* 1. Why It Matters (Motivation) */}
+                                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-colors">
+                                    <div className="flex items-center gap-3 mb-4 text-amber-400">
+                                        <Target size={24} />
+                                        <h3 className="font-bold text-lg text-slate-200">なぜ重要なのか？</h3>
+                                    </div>
+                                    <p className="text-slate-400 leading-relaxed">
+                                        {currentChapter.whyItMatters || "この知識はあなたのスキルセットの基盤となります。"}
+                                    </p>
+                                </div>
+
+                                {/* 2. Analogy (Understanding) */}
+                                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-purple-500/30 transition-colors">
+                                    <div className="flex items-center gap-3 mb-4 text-purple-400">
+                                        <Lightbulb size={24} />
+                                        <h3 className="font-bold text-lg text-slate-200">たとえて言うなら...</h3>
+                                    </div>
+                                    <p className="text-slate-400 leading-relaxed italic">
+                                        "{currentChapter.analogy || "それはまるで、新しい言語を学ぶようなものです。"}"
+                                    </p>
+                                </div>
+
+                                {/* 3. Key Concepts (Knowledge) */}
+                                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-cyan-500/30 transition-colors">
+                                    <div className="flex items-center gap-3 mb-4 text-cyan-400">
+                                        <Key size={24} />
+                                        <h3 className="font-bold text-lg text-slate-200">キーコンセプト</h3>
+                                    </div>
+                                    <ul className="space-y-2">
+                                        {currentChapter.keyConcepts && currentChapter.keyConcepts.length > 0 ? (
+                                            currentChapter.keyConcepts.map((concept, idx) => (
+                                                <li key={idx} className="flex items-center gap-2 text-slate-400">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+                                                    {concept}
                                                 </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                    <div className="flex items-center justify-center gap-3">
-                                        <button onClick={handlePrevSlide} className="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors">
-                                            Prev Slide
-                                        </button>
-                                        <button onClick={handleNextSlide} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition-colors">
-                                            {isLastSlide ? 'Next Chapter' : 'Next Slide'}
-                                        </button>
-                                    </div>
+                                            ))
+                                        ) : (
+                                            <li className="text-slate-500">基本概念</li>
+                                        )}
+                                    </ul>
                                 </div>
-                            ) : (
-                                <p className="text-slate-500 text-sm">スライドが未生成のため、章の概要のみを表示しています。</p>
-                            )}
-                        </div>
 
+                                {/* 4. Action Step (Practice) */}
+                                <div className="bg-gradient-to-br from-indigo-900/20 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-lg shadow-indigo-900/10">
+                                    <div className="flex items-center gap-3 mb-4 text-indigo-400">
+                                        <Sparkles size={24} />
+                                        <h3 className="font-bold text-lg text-white">アクション・ステップ</h3>
+                                    </div>
+                                    <p className="text-slate-300 leading-relaxed font-medium">
+                                        {currentChapter.actionStep || "エディタを開いて、学んだことを試してみましょう。"}
+                                    </p>
+                                </div>
+                            </>
+                        )}
                     </div>
                     
                     {/* Bottom Spacer */}
