@@ -82,6 +82,13 @@ The service includes a helper `generatePedagogicalStrategy(profile: Big5Profile)
 4.  **Generation:** Call Gemini API (Standard/Pro) with strict JSON schema.
 5.  **Output:** Return `GeneratedCourse` object.
 
+### 4.3 Self-Check & Autofix (Planned/Implemented)
+*   **Schema Validation:** Runtime validation of Gemini出力を行い、必須欠落・型ズレを検知。
+*   **Autofix Loop:** 1回目が不正ならエラー内容を添えて再プロンプトし、修正版のJSONのみを返すよう依頼する。
+*   **Fallback:** 規定回数失敗時は最小限の構造（タイトル/説明/空チャプター）で返却し、UI崩壊を防ぐ。
+*   **API Key Guard:** `API_KEY` 未設定を検知し、ユーザー向けに明示的なエラーメッセージを返す。
+*   **RAG併用（将来）:** 参考コンテキストを「矛盾する場合はトピック優先」と明記してプロンプトに注入予定。
+
 ## 5. UI/UX Design
 
 ### 5.1 Course Generator View
@@ -95,6 +102,34 @@ The service includes a helper `generatePedagogicalStrategy(profile: Big5Profile)
 *   **Navigation:** Next/Prev chapter controls.
 *   **AI Chat Sidebar:** Context-aware chat (toggleable).
 
-## 6. Future Considerations
+## 6. Development Checklist (Generation Pipeline)
+*   [x] `API_KEY` 未設定時の早期リターンとユーザーフレンドリーなメッセージ
+*   [x] Gemini応答のJSONパース例外ハンドリング
+*   [x] スキーマバリデーション（必須: title/description/duration/chapters[*].title/content/whyItMatters/keyConcepts/actionStep/analogy）
+*   [x] 不正出力時の再プロンプト（エラー内容付き）と試行回数上限
+*   [x] 最終フォールバック（簡易コース）でUIを壊さない
+*   [x] RAG導入: 参考コンテキスト注入と矛盾解決方針の文言追加（現状はモックストアを参照）
+*   [ ] ロギング: モデル種別・所要時間・失敗理由（PIIなし）
+
+## 7. Future Considerations
 *   **Real Vector DB:** Replace `_mockVectorStore` with Pinecone or pgvector.
 *   **User Persistence:** Save generated courses and profiles to a backend DB.
+*   **Content Sources:** 外部資料（HTML/PDFなど）は `data/curricula/blender/` などのサブディレクトリ＋メタデータ(JSON/YAML)で管理し、RAG時に出典・バージョンを参照できるようにする。
+
+### Blender Docs Ingestion Status
+- 現在: `data/curricula/blender/blender_manual_v500_en.html/` に公式マニュアルHTML一式を配置し、`metadata.json` にタイトル/バージョン/言語/ライセンス/抽出ポリシーを記載。
+- 未着手: 本文抽出・分割・インデックス化・Embedding。
+
+### Next Actions for Blender RAG
+1) HTML構造の抽出スクリプトを作成（例: Node + cheerio）。対象: `article#furo-main-content` 配下の `h1/h2/h3` と `p/li` を連結し、不要な nav/aside/figure を除外。
+2) セグメント分割: 800–1200文字 + 100文字オーバーラップで段落をまとめ、見出しパスをプレフィックスとして残す。
+3) メタ付与: fileパス/セクションID/見出しパス/ソース/バージョン/言語/ライセンスを各レコードに付与し、`data/curricula/blender/index.jsonl` などに保存。
+4) 検索: ひとまずキーワード/TF-IDFで検索、Embedding導入時は同レコードにベクトルを付加してセマンティック検索へ移行。
+5) プロンプト注入: 上位2–3件を300–500字に短縮し、「参考情報（矛盾時はトピック優先）」として生成プロンプトに注入。
+
+### RAG 取得・閾値・ログの運用案
+- フィルタ: Blender/3D関連語のみでRAGを有効化（例: /blender|3d|geometry|render/i）。誤検知や過剰除外はログを見て調整。
+- スコア閾値: BM25スコアが低いものは捨てる。まず得点分布をログし、誤ヒットが混ざらない下限を決める。閾値未達なら「参考コンテキストなし」で注入しない。
+- 件数上限: 2〜3件を基本とし、詳細モードのみ5件など用途別に設定。トークン節約と矛盾リスク低減が目的。
+- ログ: セグメントID/スコア/セクション名/クエリのみを記録（本文はログしない）。PII/著作権配慮を徹底。
+- フォールバック: 閾値未達・ヒット0件の場合はRAGセクションを挿入しないか、短いメッセージを入れるだけにする。

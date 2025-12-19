@@ -67,7 +67,11 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
       const course = await generateCourse(topic, modelType, userProfile);
       onCourseGenerated(course);
     } catch (err) {
-      setError('Failed to generate course. Please try again.');
+      if (err instanceof Error && err.message) {
+        setError(err.message);
+      } else {
+        setError('Failed to generate course. Please try again.');
+      }
     } finally {
       if (topic.trim().toLowerCase() !== 'demo') {
          setIsGenerating(false);

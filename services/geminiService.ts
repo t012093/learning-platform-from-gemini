@@ -1,5 +1,6 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Profile } from '../types';
+import { retrieveBlenderContext } from './blenderRagService';
 
 // Initialize the client strictly according to guidelines
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -123,15 +124,120 @@ const generatePedagogicalStrategy = (profile: Big5Profile): string => {
   return strategy;
 };
 
+// -------- Runtime Validation & Autofix Helpers --------
+const ensureString = (value: any): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return '';
+};
+
+const extractKeywords = (text: string): string[] => {
+  return text
+    .split(/[\\s、。,.]+/)
+    .map(t => t.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+};
+
+const normalizeChapter = (chapter: any, index: number) => {
+  return {
+    id: ensureString(chapter?.id ?? index + 1),
+    title: ensureString(chapter?.title),
+    duration: ensureString(chapter?.duration || '15分'),
+    type: ensureString(chapter?.type || 'Lesson'),
+    content: ensureString(chapter?.content),
+    whyItMatters: ensureString(chapter?.whyItMatters),
+    keyConcepts: Array.isArray(chapter?.keyConcepts) ? chapter.keyConcepts.map((k: any) => ensureString(k)).filter(Boolean) : [],
+    actionStep: ensureString(chapter?.actionStep),
+    analogy: ensureString(chapter?.analogy),
+  };
+};
+
+const validateGeneratedCourse = (raw: any) => {
+  const errors: string[] = [];
+  const title = ensureString(raw?.title);
+  const description = ensureString(raw?.description);
+  const duration = ensureString(raw?.duration || '60分');
+  const chaptersRaw = Array.isArray(raw?.chapters) ? raw.chapters : [];
+  const chapters = chaptersRaw.map((ch: any, idx: number) => normalizeChapter(ch, idx));
+
+  if (!title) errors.push('title is missing or empty');
+  if (!description) errors.push('description is missing or empty');
+  if (!Array.isArray(raw?.chapters) || raw.chapters.length === 0) errors.push('chapters is missing or empty');
+
+  chapters.forEach((ch, idx) => {
+    if (!ch.title) errors.push(`chapters[${idx}].title is missing`);
+    if (!ch.content) errors.push(`chapters[${idx}].content is missing`);
+    if (!ch.whyItMatters) errors.push(`chapters[${idx}].whyItMatters is missing`);
+    if (!Array.isArray(ch.keyConcepts) || ch.keyConcepts.length === 0) errors.push(`chapters[${idx}].keyConcepts is missing`);
+    if (!ch.actionStep) errors.push(`chapters[${idx}].actionStep is missing`);
+    if (!ch.analogy) errors.push(`chapters[${idx}].analogy is missing`);
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    normalized: { title, description, duration, chapters },
+  };
+};
+
+const buildFallbackCourse = (topic: string, modelType: 'standard' | 'pro', profile: Big5Profile): GeneratedCourse => {
+  return {
+    id: crypto.randomUUID(),
+    title: `${topic} - Quickstart`,
+    description: `${topic} の概要を短時間で掴むためのミニパスです。API接続または生成に失敗したため簡易版を表示しています。`,
+    duration: "45分",
+    chapters: [
+      {
+        id: "1",
+        title: `${topic} を俯瞰する`,
+        duration: "15分",
+        type: "Lesson",
+        content: `${topic} の基本的な定義と適用例を確認します。`,
+        whyItMatters: "まず全体像を把握し、次のステップで深掘りする準備をします。",
+        keyConcepts: [topic, "基礎概念", "ユースケース"],
+        actionStep: `${topic} に関する信頼できる記事を1つ読み、重要な3ポイントをメモしてください。`,
+        analogy: `${topic} を新しい都市と考え、地図を広げて主要なランドマークを押さえる工程です。`
+      }
+    ],
+    createdAt: new Date(),
+    modelUsed: modelType,
+    targetProfile: profile
+  };
+};
+
+const parseJsonSafe = (text?: string) => {
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
 export const generateCourse = async (topic: string, modelType: 'standard' | 'pro' = 'standard', profile?: Big5Profile): Promise<GeneratedCourse> => {
+  if (!process.env.API_KEY) {
+    throw new Error("API_KEY が設定されていません。環境変数に API_KEY をセットしてください。");
+  }
+
   const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.0-flash';
-  
-  // Default balanced profile if none provided
   const targetProfile = profile || { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
   const strategy = generatePedagogicalStrategy(targetProfile);
+  const maxAttempts = 2;
+  const ragKeywords = extractKeywords(topic);
+  const ragDocs = retrieveRelevantContent(ragKeywords, 2);
+  const blenderDocs = await retrieveBlenderContext(topic, 2);
+  const combinedRag = [
+    ...ragDocs.map(doc => ({ source: doc.source, text: doc.text })),
+    ...blenderDocs.map(doc => ({ source: `${doc.source} (${doc.file})`, text: doc.text }))
+  ];
+  const ragSection = combinedRag.length
+    ? `【参考情報（矛盾する場合はトピック優先）】
+${combinedRag.map(doc => `- Source: ${doc.source}
+  Excerpt: ${doc.text}`).join('\n')}
+`
+    : '';
 
-  try {
-    const prompt = `
+  const basePrompt = `
       あなたは世界最高峰の教育カリキュラムデザイナーです。
       以下のトピックについて、特定の学習者プロファイルに最適化されたカリキュラム（日本語）を作成してください。
 
@@ -139,6 +245,8 @@ export const generateCourse = async (topic: string, modelType: 'standard' | 'pro
       
       【学習者プロファイル分析に基づいた教育戦略】
       ${strategy}
+      
+      ${ragSection}
       
       【必須出力要件】
       1. Title: 戦略に基づいた、学習者に響くタイトル。
@@ -151,10 +259,11 @@ export const generateCourse = async (topic: string, modelType: 'standard' | 'pro
          - **ActionStep**: 今すぐできる具体的な行動・演習
          - **Analogy**: 難しい概念を直感的に理解するための「たとえ話」（Opennessが高い場合は特に創造的に）
       
-      回答はJSON形式でお願いします。
+      返す前に必須フィールドが埋まっているか自己チェックし、欠落があれば補完してから返してください。回答はJSONのみ。
     `;
 
-    const response = await ai.models.generateContent({
+  const requestCourse = async (prompt: string) => {
+    return ai.models.generateContent({
       model: modelName,
       contents: prompt,
       config: {
@@ -170,7 +279,7 @@ export const generateCourse = async (topic: string, modelType: 'standard' | 'pro
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  id: { type: Type.INTEGER },
+                  id: { type: Type.STRING },
                   title: { type: Type.STRING },
                   duration: { type: Type.STRING },
                   type: { type: Type.STRING },
@@ -188,15 +297,43 @@ export const generateCourse = async (topic: string, modelType: 'standard' | 'pro
         }
       }
     });
+  };
 
-    const result = JSON.parse(response.text || '{}');
+  try {
+    let attempt = 0;
+    let lastErrors: string[] = [];
+    let response = await requestCourse(basePrompt);
+    let parsed = parseJsonSafe(response.text || '');
+    let validation = validateGeneratedCourse(parsed);
+
+    while (!validation.isValid && attempt < maxAttempts) {
+      attempt += 1;
+      lastErrors = validation.errors;
+
+      const repairPrompt = `
+        あなたの前回の出力は必須スキーマに違反しています。以下のエラーをすべて修正し、完全なJSONのみを返してください。
+        エラー: ${lastErrors.join('; ')}
+        元のJSON: ${JSON.stringify(parsed)}
+        条件: 必須フィールドを埋め、配列は空にせず、JSON以外のテキストは返さないでください。
+      `;
+      response = await requestCourse(repairPrompt);
+      parsed = parseJsonSafe(response.text || '');
+      validation = validateGeneratedCourse(parsed);
+    }
+
+    if (!validation.isValid) {
+      console.warn("Course generation failed validation. Using fallback.", lastErrors);
+      return buildFallbackCourse(topic, modelType, targetProfile);
+    }
+
+    const normalized = validation.normalized;
 
     return {
       id: crypto.randomUUID(),
-      title: result.title,
-      description: result.description,
-      duration: result.duration,
-      chapters: result.chapters,
+      title: normalized.title,
+      description: normalized.description,
+      duration: normalized.duration,
+      chapters: normalized.chapters,
       createdAt: new Date(),
       modelUsed: modelType,
       targetProfile: targetProfile
@@ -204,6 +341,9 @@ export const generateCourse = async (topic: string, modelType: 'standard' | 'pro
 
   } catch (error) {
     console.error("Course generation failed:", error);
+    if (error instanceof Error && error.message.includes("API_KEY")) {
+      throw error;
+    }
     throw new Error("Failed to generate course. Please try again.");
   }
 };
@@ -339,4 +479,3 @@ export const retrieveRelevantContent = (queryKeywords: string[], limit: number =
 };
 
 // --- Mock Vector Store for RAG Simulation --- END
-
