@@ -156,7 +156,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <span className="text-sm text-slate-400">Total 2.5 hours this week</span>
         </div>
         <div className="h-[120px] w-full min-w-[260px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={120}>
             <LineChart data={activityData}>
               <Line type="monotone" dataKey="count" stroke="#94a3b8" strokeWidth={3} dot={{ r: 4, fill: '#cbd5e1', strokeWidth: 0 }} activeDot={{ r: 6, fill: '#6366f1' }} />
               <RechartsTooltip contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px', color: 'white' }} itemStyle={{ color: 'white' }} cursor={false} />
