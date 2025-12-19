@@ -3,7 +3,7 @@ import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Pr
 import { retrieveBlenderContext } from './blenderRagService';
 
 // Initialize the client strictly according to guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export const createChatSession = (systemInstruction?: string): Chat => {
   const defaultInstruction = `You are Lumina, a professional English tutor for a B1+/B2 learner.
@@ -215,8 +215,8 @@ const parseJsonSafe = (text?: string) => {
 };
 
 export const generateCourse = async (topic: string, modelType: 'standard' | 'pro' = 'standard', profile?: Big5Profile): Promise<GeneratedCourse> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API_KEY が設定されていません。環境変数に API_KEY をセットしてください。");
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY が設定されていません。環境変数に GEMINI_API_KEY をセットしてください。");
   }
 
   const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.0-flash';
@@ -341,7 +341,7 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
 
   } catch (error) {
     console.error("Course generation failed:", error);
-    if (error instanceof Error && error.message.includes("API_KEY")) {
+    if (error instanceof Error && error.message.includes("GEMINI_API_KEY")) {
       throw error;
     }
     throw new Error("Failed to generate course. Please try again.");
