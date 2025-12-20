@@ -64,8 +64,21 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
     }
 
     try {
-      const course = await generateCourse(topic, modelType, userProfile);
-      onCourseGenerated(course);
+            const course = await generateCourse(topic, modelType, userProfile);
+            console.log("Generated course:", course);
+            
+            // Trigger audio generation in background
+            try {
+                fetch('http://localhost:3006/api/generate-audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(course)
+                });
+            } catch (e) {
+                console.error("Failed to trigger audio generation server:", e);
+            }
+            
+            onCourseGenerated(course);
     } catch (err) {
       if (err instanceof Error && err.message) {
         setError(err.message);

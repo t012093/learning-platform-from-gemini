@@ -13,60 +13,40 @@
 
 ### 1. **AI-Powered Personalized Curriculums** ✨
 Experience learning tailored just for you.
-- **Big5 Personality Integration**: AI dynamically adapts curriculum content, tone, and learning style based on your Big5 personality traits (Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism).
-- **Rich Content Generation**: Lessons go beyond summaries, providing 'Why It Matters' (motivation), 'Key Concepts' (core knowledge), 'Action Steps' (practical exercises), and 'Analogies' (intuitive understanding).
-- **Advanced AI Models**: Utilize Google Gemini 3.0 Pro for deep reasoning and Gemini 2.0 Flash for quick, efficient generation.
-- **RAG (Retrieval-Augmented Generation) Ready**: Designed to integrate with external knowledge bases (e.g., existing static content) to ground AI responses and minimize hallucinations, ensuring accuracy and relevance.
+- **Big5 Personality Integration**: AI dynamically adapts curriculum content, tone, and learning style based on your Big5 personality traits.
+- **Rich Content Generation**: Lessons go beyond summaries, providing 'Why It Matters', 'Key Concepts', 'Action Steps', and 'Analogies'.
+- **Advanced AI Models**: Utilizing **Google Gemini 3.0 Pro** for deep reasoning and **Gemini 2.0 Flash** for high-speed generation.
+- **RAG (Retrieval-Augmented Generation)**: Integrates with specific knowledge domains (like Blender documentation) to ground AI responses.
 
-### 2. **Vibe Coding Path** 🟣
-An immersive, story-driven approach to coding.
-- **Narrative**: You are the pilot of an AI-driven spacecraft.
-- **Concept**: Learn "Prompt Engineering", "Copilot", and "Git" not as tools, but as extensions of your will.
-- **Style**: Dark mode, cinematic UI, ambient soundscapes.
+### 2. **Immersive Audio Experience (In Progress)** 🎧
+- **Gemini Native TTS**: High-quality, context-aware narration using Gemini 2.5/2.0 Native Audio capabilities (replacing legacy Python gTTS).
+- **Character-Driven**: Voices that match the persona of the AI tutor (Lumina).
 
-### 3. **Dev Campus (Web Basic & Gen AI)** 🌐
-A solid foundation for modern developers.
-- **Web Basic**: React, TypeScript, TailwindCSS from scratch.
-- **Gen AI Camp**: Python, LLM integration, and AI application development.
-
-### 4. **3D Creative Lab** 🟠
-Unlock your spatial creativity with Blender.
-- **Curriculum**: Modeling, Sculpting, and Geometry Nodes.
-- **Visuals**: Clean, grid-based gallery UI.
-
-### 5. **Art Atelier** 🟤
-Explore the intersection of technology and aesthetics.
-- **Content**: Art History, Color Theory, and Design Philosophy.
-- **Atmosphere**: Museum-like quiet and elegant interface.
-
-### 6. **Global Communication** 🟢
-English for Global Engineers.
-- **Focus**: Practical technical reading, documentation, and cross-cultural communication.
+### 3. **Diverse Learning Paths** 🗺️
+- **Vibe Coding Path**: Narrative-driven coding (Prompt Engineering, Git) set in a sci-fi universe.
+- **Dev Campus**: Web Basics (React/TS) and Gen AI application development.
+- **3D Creative Lab**: Blender 3D modeling and sculpting.
+- **Art Atelier**: Art History and Design Philosophy.
+- **Global Communication**: English for global engineers.
 
 ---
 
 ## 🛠 Tech Stack
 
-Built with a focus on performance, aesthetics, and developer experience.
-
-- **Framework**: [React](https://react.dev/) (v19) + [Vite](https://vitejs.dev/)
+- **Frontend**: [React](https://react.dev/) (v19) + [Vite](https://vitejs.dev/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **AI/LLM**: [Google Gemini API](https://ai.google.dev/) (Gemini 3.0 Pro, Gemini 2.0 Flash)
+- **AI/LLM**: [Google Gemini API](https://ai.google.dev/) via `@google/genai` SDK
+- **Backend/Service**: Node.js (Express) for local proxying and audio handling.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Charts**: [Recharts](https://recharts.org/)
-- **Audio**: Native HTML5 Audio API for Vibe tracks
+- **State/Routing**: React Context + Custom View-based routing.
 
 ---
 
-## 🚀 Getting Started
-
-Follow these steps to set up the project locally.
+## 🚀 Getting Started for Engineers
 
 ### Prerequisites
-- Node.js (v18 or higher recommended)
-- npm or yarn
-- **Google Gemini API Key**: Set `GEMINI_API_KEY` in a `.env` file at the project root.
+- Node.js (v20+ recommended)
+- Google Cloud / Gemini API Key
 
 ### Installation
 
@@ -76,69 +56,65 @@ Follow these steps to set up the project locally.
    cd learning-platform-from-gemini
    ```
 
-2. **Install dependencies**
+2. **Environment Setup**
+   Create a `.env` file in the root directory:
+   ```env
+   GEMINI_API_KEY=your_api_key_here
+   ```
+
+3. **Install Dependencies**
    ```bash
    npm install
    ```
 
-3. **Run the development server**
+4. **Run Development Environment**
+   This starts both the frontend (Vite) and the backend (Express) services.
    ```bash
    npm run dev
+   # Frontend: http://localhost:3005
+   # Backend (Audio): http://localhost:3006
    ```
-
-4. **Verify**
-   Open the URL provided by Vite (e.g., [http://localhost:3005](http://localhost:3005)) to view the app.
-   - Navigate to the Dashboard and click "AI Generator" to try the personalized curriculum feature.
 
 ---
 
 ## 📂 Project Structure
 
-The codebase is organized using a **Feature-Based Architecture** for improved modularity and maintainability.
-
 ```
-/src
-  /components
-    /common          # Shared UI components (Layout, Buttons, Modals, ErrorBoundary, Library, Login related)
-    /features
-      /ai            # AI Course Generator, Personalized Lessons, AI Chat, AI Characters
-      /art           # Art Museum, Art History, Crafts, Tribal Art curriculums
-      /blender       # Blender 3D modeling curriculums
-      /dashboard     # Main Dashboard, Course List, Learning Hub, My Content, Profile Passport
-      /programming   # Programming (Python, HTML/CSS, Web Inspector, Vibe Coding) curriculums
-      /sonic         # Sonic Lab, Sonic Synth modules
-  /context           # React Context APIs (e.g., ThemeContext)
-  /services          # API clients (Gemini, Adachi mock), Data providers
-  /types             # TypeScript type definitions (Views, Course Data, Big5 Profile)
-  App.tsx            # Main Application entry point and custom router
-  index.html         # HTML entry point
-  index.tsx          # React app mount point
-  vite.config.ts     # Vite configuration
-  ...
+/
+├── components/          # React Components
+│   ├── common/          # Shared UI (Layouts, Buttons, Modals)
+│   ├── features/        # Feature-specific components
+│       ├── ai/          # AI Course Generator, Chat, Character Views
+│       ├── dashboard/   # Main Dashboard & Learning Hub
+│       └── ...          # Other domain views (art, blender, programming)
+├── context/             # Global Contexts (Theme, etc.)
+├── public/              # Static assets & Generated Audio
+│   └── data/audio/      # AI-generated course audio files
+├── scripts/             # Utility scripts (Legacy Python scripts, new Node tools)
+├── services/            # Business Logic & API Clients
+│   ├── geminiService.ts # Core Gemini API integration (Text & Audio)
+│   └── ...
+├── server.js            # Express backend for file ops & audio handling
+└── types.ts             # Global TypeScript definitions
 ```
 
 ---
 
-## 🎨 Design System (Lumina UI)
+## 🚧 Current Development Focus & Roadmap
 
-To maintain the coherent "Lumina Aesthetic", please adhere to these guidelines:
+We are currently transitioning from a Python-based gTTS architecture to a **Node.js-native Gemini 2.5 TTS** solution.
 
-### Typography
-- **Font**: Sans-serif (System default or Inter)
-- **Tracking**: `tracking-tight` on all Heads (H1-H3).
-- **Color**: `text-slate-700` (Light Mode) / `text-slate-200` (Dark/Vibe Mode).
+### Active Issues
+- **Issue #3**: **Gemini 2.5 TTS Implementation**
+  - Goal: Replace `gTTS` with `@google/genai` SDK native audio generation.
+  - Implement "5-Element Prompting" (Audio Profile, Scene, Director's Notes, Context, Transcript) for expressive narration.
+- **Issue #4**: **Voice Selection Feature**
+  - Goal: Allow users to select different voice personalities (e.g., 'Kore', 'Puck') for the AI tutor.
 
-### Color Palette
-- **Primary**: Indigo (`indigo-600`) - Logic / Core
-- **Vibe**: Purple (`purple-600`) - Intuition / AI
-- **Creative**: Orange (`orange-500`) - 3D / Making
-- **Global**: Teal (`teal-500`) - English / Connection
-- **Art**: Stone (`stone-600`) - History / Grounding
-
-### Layout Principles
-- **Grid**: 3-Column standard for dashboards.
-- **Card**: Rounded corners (`rounded-2xl` or `rounded-3xl`), subtle borders, soft shadows.
-- **Motion**: Gentle hover effects (`hover:-translate-y-1`), avoiding jarring movements.
+### How to Contribute
+1. Check the [Issues](https://github.com/t012093/learning-platform-from-gemini/issues) tab.
+2. Read the specific Issue description (e.g., Issue #3 for the TTS architecture).
+3. Follow the project's coding style (Functional React components, TypeScript, Tailwind).
 
 ---
 
