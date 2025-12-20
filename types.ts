@@ -205,6 +205,8 @@ export interface GeneratedCourse {
   duration: string;
   chapters: GeneratedChapter[];
   createdAt: Date;
-  modelUsed: 'standard' | 'pro';
+  modelUsed: 'standard' | 'pro' | 'gemini-2.5-flash' | 'gemini-2.5-pro';
   targetProfile?: Big5Profile; // The profile this was generated for
+  teacherPersona?: TeacherPersona;
+  personalizationReasoning?: string;
 }

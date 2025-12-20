@@ -14,7 +14,7 @@ interface CourseGeneratorViewProps {
 const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCourseGenerated, onNavigate }) => {
   const { profile: globalProfile } = useTheme();
   const [topic, setTopic] = useState('');
-  const [modelType, setModelType] = useState<'standard' | 'pro'>('standard');
+  const [modelType, setModelType] = useState<'standard' | 'pro' | 'gemini-2.5-flash' | 'gemini-2.5-pro'>('gemini-2.5-flash');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -59,7 +59,7 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
                 neuroticism: 50,
             };
 
-            const course = await generateCourse(topic, modelType, profileToUse);
+            const course = await generateCourse(topic, modelType, profileToUse, undefined, assessment || undefined);
             onCourseGenerated(course);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate course.');
@@ -68,6 +68,42 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
          setIsGenerating(false);
       }
     }
+  };
+
+  const ModelButton = ({ active, onClick, icon, label, desc, color, badge }: any) => {
+    const colorClasses: any = {
+      indigo: active ? 'border-indigo-600 bg-indigo-50/50' : 'border-slate-100 hover:border-slate-200',
+      purple: active ? 'border-purple-600 bg-purple-50/50' : 'border-slate-100 hover:border-slate-200',
+      blue: active ? 'border-blue-600 bg-blue-50/50' : 'border-slate-100 hover:border-slate-200',
+      emerald: active ? 'border-emerald-600 bg-emerald-50/50' : 'border-slate-100 hover:border-slate-200',
+    };
+    const textClasses: any = {
+      indigo: active ? 'text-indigo-900' : 'text-slate-600',
+      purple: active ? 'text-purple-900' : 'text-slate-600',
+      blue: active ? 'text-blue-900' : 'text-slate-600',
+      emerald: active ? 'text-emerald-900' : 'text-slate-600',
+    };
+    const iconClasses: any = {
+      indigo: active ? 'text-indigo-600' : 'text-slate-400',
+      purple: active ? 'text-purple-600' : 'text-slate-400',
+      blue: active ? 'text-blue-600' : 'text-slate-400',
+      emerald: active ? 'text-emerald-600' : 'text-slate-400',
+    };
+
+    return (
+      <button onClick={onClick} className={`p-4 md:p-6 rounded-2xl border-2 text-left transition-all relative overflow-hidden flex flex-col h-full ${colorClasses[color]}`}>
+        {badge && (
+          <div className={`absolute top-0 right-0 px-2 py-0.5 text-[8px] font-black uppercase tracking-tighter text-white bg-${color}-600 rounded-bl-lg`}>
+            {badge}
+          </div>
+        )}
+        <div className="flex items-center gap-2 mb-2">
+          <div className={iconClasses[color]}>{icon}</div>
+          <span className={`font-black uppercase tracking-widest text-[10px] ${textClasses[color]}`}>{label}</span>
+        </div>
+        <p className="text-[10px] text-slate-500 font-medium leading-tight">{desc}</p>
+      </button>
+    );
   };
 
   return (
@@ -141,36 +177,41 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
             </div>
 
             {/* Model Selection */}
-            <div className="grid grid-cols-2 gap-4">
-              <button
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <ModelButton
+                active={modelType === 'standard'}
                 onClick={() => setModelType('standard')}
-                className={`p-6 rounded-2xl border-2 text-left transition-all ${
-                  modelType === 'standard'
-                    ? 'border-indigo-600 bg-indigo-50/50 shadow-inner'
-                    : 'border-slate-100 hover:border-slate-200'
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap size={20} className={modelType === 'standard' ? 'text-indigo-600' : 'text-slate-400'} />
-                  <span className={`font-black uppercase tracking-widest text-xs ${modelType === 'standard' ? 'text-indigo-900' : 'text-slate-600'}`}>Standard</span>
-                </div>
-                <p className="text-xs text-slate-500 font-medium">Gemini 2.5 Flash. 一般的トピック向け。高速かつ効率的。</p>
-              </button>
-
-              <button
+                icon={<Zap size={18} />}
+                label="2.0 Flash"
+                desc="最速・軽量"
+                color="indigo"
+              />
+              <ModelButton
+                active={modelType === 'pro'}
                 onClick={() => setModelType('pro')}
-                className={`p-6 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${
-                  modelType === 'pro'
-                    ? 'border-purple-600 bg-purple-50/50 shadow-inner'
-                    : 'border-slate-100 hover:border-slate-200'
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <BrainCircuit size={20} className={modelType === 'pro' ? 'text-purple-600' : 'text-slate-400'} />
-                  <span className={`font-black uppercase tracking-widest text-xs ${modelType === 'pro' ? 'text-purple-900' : 'text-slate-600'}`}>Reasoning Pro</span>
-                </div>
-                <p className="text-xs text-slate-500 font-medium">Gemini 3.0 Pro. 複雑な主題向けの深い推論。</p>
-              </button>
+                icon={<BrainCircuit size={18} />}
+                label="3.0 Pro"
+                desc="高度な推論"
+                color="purple"
+              />
+              <ModelButton
+                active={modelType === 'gemini-2.5-flash'}
+                onClick={() => setModelType('gemini-2.5-flash')}
+                icon={<Sparkles size={18} />}
+                label="2.5 Flash"
+                desc="最新の安定性"
+                color="blue"
+                badge="NEW"
+              />
+              <ModelButton
+                active={modelType === 'gemini-2.5-pro'}
+                onClick={() => setModelType('gemini-2.5-pro')}
+                icon={<Brain size={18} />}
+                label="2.5 Pro"
+                desc="究極の知性"
+                color="emerald"
+                badge="PRO"
+              />
             </div>
 
             {/* Error Message */}

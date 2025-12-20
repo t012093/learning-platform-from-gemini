@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
-import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Profile, AIAdvice } from '../types';
+import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Profile, AIAdvice, AssessmentProfile } from '../types';
 import { retrieveBlenderContext } from './blenderRagService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -407,7 +407,7 @@ const generateChapterDetails = async (
     ペルソナ: ${strategy.persona}
     【要件】
     - Slides: 3〜6枚。
-    - 各スライドに \`speechScript\` (ナレーション原稿) を必ず含めること。
+    - 各スライドに speechScript (ナレーション原稿) を必ず含めること。
     回答はJSONのみ。
     `;
 
@@ -446,11 +446,15 @@ const generateChapterDetails = async (
 
 export const generateCourse = async (
   topic: string, 
-  modelType: 'standard' | 'pro' = 'standard', 
+  modelType: 'standard' | 'pro' | 'gemini-2.5-flash' | 'gemini-2.5-pro' = 'gemini-2.5-flash', 
   profile?: Big5Profile,
-  config?: GenerateCourseConfig
+  config?: GenerateCourseConfig,
+  assessment?: AssessmentProfile
 ): Promise<GeneratedCourse> => {
-  const modelName = 'gemini-2.5-pro';
+  const modelName = 
+    modelType === 'gemini-2.5-pro' ? 'gemini-2.5-pro' : 
+    modelType === 'gemini-2.5-flash' ? 'gemini-2.5-flash' :
+    modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.0-flash';
   const targetProfile = profile || { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
   const strategy = generatePedagogicalStrategy(targetProfile);
   
