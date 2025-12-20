@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Play, Pause, SkipForward, SkipBack, Maximize2, Volume2, Send, Bot, MessageSquare, X, Lightbulb, Target, Sparkles, Key, Palette } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Volume2, Send, Bot, MessageSquare, X, Lightbulb, Target, Sparkles, Key, Palette } from 'lucide-react';
 import { GeneratedCourse } from '../../../types';
 
 interface GeneratedLessonViewProps {
@@ -13,6 +13,10 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [audioMode, setAudioMode] = useState<'browser' | 'generated'>('browser');
+    const [isMuted, setIsMuted] = useState(false);
+    const [isAudioLoading, setIsAudioLoading] = useState(false);
+    const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
     if (!course) {
         return (
@@ -31,6 +35,58 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
     const hasSlides = slides.length > 0;
     const currentSlide = hasSlides ? slides[currentSlideIndex] : null;
     const isLastSlide = hasSlides ? currentSlideIndex === slides.length - 1 : true;
+
+    // --- Audio Logic ---
+    React.useEffect(() => {
+        if (!currentSlide || isMuted) {
+            window.speechSynthesis.cancel();
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            return;
+        }
+
+        const textToSpeak = currentSlide.speechScript || currentSlide.bullets.join('. ') || currentSlide.title;
+
+        if (audioMode === 'browser') {
+            setIsAudioLoading(false);
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'ja-JP';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        } else {
+            // Generated Audio File
+            const audioPath = `/data/audio/${course.id}/${currentChapterIndex}_${currentSlideIndex}.mp3`;
+            if (audioRef.current) {
+                setIsAudioLoading(true);
+                audioRef.current.src = audioPath;
+                
+                const playPromise = audioRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => setIsAudioLoading(false))
+                        .catch(e => {
+                            console.log("Audio file not ready yet, retrying in 3s...");
+                            // 音声がまだ生成されていない場合、3秒後に再試行
+                            setTimeout(() => {
+                                if (audioMode === 'generated' && !isMuted) {
+                                    setIsAudioLoading(true);
+                                    if (audioRef.current) audioRef.current.load();
+                                }
+                            }, 3000);
+                        });
+                }
+            }
+        }
+
+        return () => {
+            window.speechSynthesis.cancel();
+            if (audioRef.current) audioRef.current.pause();
+        };
+    }, [currentSlide, audioMode, isMuted, course.id, currentChapterIndex, currentSlideIndex]);
 
     const handleNext = () => {
         if (isLastChapter) {
@@ -70,6 +126,55 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
 
     return (
         <div className="h-screen bg-slate-950 text-white flex overflow-hidden w-full font-sans">
+            <audio ref={audioRef} className="hidden" />
+            <button
+                onClick={onBack}
+                className="fixed top-6 left-6 z-50 flex items-center gap-2 text-slate-200 hover:text-white bg-slate-950/80 backdrop-blur-md border border-white/10 px-3 py-2 rounded-full shadow-lg transition-colors"
+            >
+                <ArrowLeft size={18} />
+                <span className="text-xs font-bold tracking-wide uppercase">Back</span>
+            </button>
+            <div className={`fixed top-6 z-50 flex items-center gap-3 transition-all ${isSidebarOpen ? 'right-[25rem]' : 'right-6'}`}>
+                <div className="flex items-center gap-2 bg-slate-950/80 backdrop-blur-md border border-white/10 rounded-full px-2 py-1 shadow-lg">
+                    <button
+                        onClick={() => setIsMuted(!isMuted)}
+                        className="p-2 rounded-full text-slate-400 hover:text-white transition-colors"
+                    >
+                        {isMuted ? <Volume2 size={18} className="opacity-50" /> : <Volume2 size={18} />}
+                    </button>
+                    <button
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
+                    >
+                        {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}
+                    </button>
+                    <button
+                        onClick={() => setAudioMode(prev => prev === 'browser' ? 'generated' : 'browser')}
+                        className={`text-[10px] font-bold px-3 py-1.5 rounded-full transition-all border ${
+                            audioMode === 'browser'
+                                ? 'bg-white/5 hover:bg-white/10 border-white/5 text-slate-200'
+                                : 'bg-indigo-600/20 text-indigo-300 border-indigo-500/30'
+                        }`}
+                    >
+                        {isAudioLoading && audioMode === 'generated' ? (
+                            <span className="flex items-center gap-2">
+                                <span className="w-2 h-2 bg-indigo-400 rounded-full animate-ping"></span>
+                                Preparing
+                            </span>
+                        ) : (
+                            audioMode === 'browser' ? 'Browser Voice' : 'AI Voice'
+                        )}
+                    </button>
+                </div>
+                <button
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                    className={`p-2 rounded-full transition-colors border ${
+                        isSidebarOpen ? 'bg-indigo-600/30 text-white border-indigo-500/40' : 'bg-slate-950/80 text-slate-300 border-white/10 hover:text-white'
+                    }`}
+                >
+                    <MessageSquare size={18} />
+                </button>
+            </div>
             {/* Main Stage (Content) */}
             <div className="flex-1 relative flex flex-col h-full min-w-0 overflow-y-auto">
                 {/* Hero / Header Section */}
@@ -77,9 +182,13 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                     {/* Dynamic Background */}
                     <div className="absolute inset-0 opacity-30">
                         <img
-                            src={`https://picsum.photos/seed/${course.id + currentChapterIndex}/1920/1080`}
+                            src={
+                                currentSlide?.imagePrompt 
+                                ? `https://image.pollinations.ai/prompt/${encodeURIComponent(currentSlide.imagePrompt)}?nologo=true`
+                                : `https://picsum.photos/seed/${course.id + currentChapterIndex}/1920/1080`
+                            }
                             alt="Lesson Background"
-                            className="w-full h-full object-cover blur-sm scale-105"
+                            className="w-full h-full object-cover blur-sm scale-105 transition-opacity duration-1000"
                         />
                         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-slate-950/60 to-slate-950"></div>
                     </div>
@@ -103,50 +212,87 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                 {/* Rich Content Cards */}
                 <div className="flex-1 bg-slate-950 relative z-10">
                     <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* When slides exist, use them as the primary content; otherwise show the classic cards */}
+                        {/* When slides exist, use them as the primary content */}
                         {hasSlides ? (() => {
                             const normalizeLayout = (hint?: string, idx?: number) => {
                                 const h = (hint || '').toLowerCase();
                                 if (/visual|image|gallery|media/.test(h)) return 'visual-first';
                                 if (/text-only|mono|stack/.test(h)) return 'text-only';
                                 if (/wide|hero/.test(h)) return 'wide';
-                                // fallbackローテーション: 0 two-column,1 visual-first,2 wide,3 text-only
                                 const mod = (idx || 0) % 4;
                                 return ['two-column', 'visual-first', 'wide', 'text-only'][mod];
                             };
-                            const mapVisualPreset = (style?: string, idx?: number) => {
-                                const s = (style || '').toLowerCase();
-                                if (s.includes('cyan') || s.includes('neon') || s.includes('indigo')) {
+
+                            const getThemeStyles = (styleHint?: string) => {
+                                const s = (styleHint || '').toLowerCase();
+                                
+                                // 1. Cyber / Tech / Neon
+                                if (s.includes('cyan') || s.includes('neon') || s.includes('tech') || s.includes('code')) {
                                     return {
-                                        gradient: 'bg-gradient-to-br from-indigo-950/70 via-slate-900 to-cyan-900/50 border-cyan-600/30',
-                                        chip: 'bg-cyan-900/30 text-cyan-200 border border-cyan-600/30'
+                                        id: 'cyber',
+                                        container: 'bg-slate-950/80 border-cyan-500/30 shadow-[0_0_40px_-10px_rgba(6,182,212,0.2)] backdrop-blur-xl',
+                                        accent: 'text-cyan-400',
+                                        chip: 'bg-cyan-950/50 text-cyan-300 border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]',
+                                        decoration: (
+                                            <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
+                                                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(rgba(6,182,212,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+                                                <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/20 blur-[100px] rounded-full mix-blend-screen"></div>
+                                                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+                                            </div>
+                                        )
                                     };
                                 }
-                                if (s.includes('sunset') || s.includes('warm')) {
+
+                                // 2. Warm / Sunset / Creative
+                                if (s.includes('sunset') || s.includes('warm') || s.includes('creative') || s.includes('art')) {
                                     return {
-                                        gradient: 'bg-gradient-to-br from-amber-900/60 via-slate-900 to-rose-900/40 border-amber-500/30',
-                                        chip: 'bg-amber-900/40 text-amber-200 border border-amber-500/30'
+                                        id: 'warm',
+                                        container: 'bg-slate-950/80 border-rose-500/30 shadow-[0_0_40px_-10px_rgba(244,63,94,0.2)] backdrop-blur-xl',
+                                        accent: 'text-rose-400',
+                                        chip: 'bg-rose-950/50 text-rose-300 border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.2)]',
+                                        decoration: (
+                                            <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
+                                                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-rose-900/10 via-slate-950/50 to-amber-900/10"></div>
+                                                <div className="absolute -bottom-10 -left-10 w-96 h-96 bg-gradient-to-tr from-amber-600/10 to-rose-600/10 blur-[80px] rounded-full"></div>
+                                                <div className="absolute top-10 right-10 w-2 h-2 bg-rose-400 rounded-full shadow-[0_0_10px_rgba(244,63,94,0.8)] animate-pulse"></div>
+                                            </div>
+                                        )
                                     };
                                 }
-                                // fallbackローテーション
-                                const mod = (idx || 0) % 3;
-                                if (mod === 1) {
+
+                                // 3. Nature / Zen / Growth
+                                if (s.includes('green') || s.includes('zen') || s.includes('growth') || s.includes('nature')) {
                                     return {
-                                        gradient: 'bg-gradient-to-br from-slate-900/70 via-indigo-900/40 to-purple-900/40 border-indigo-500/30',
-                                        chip: 'bg-indigo-900/40 text-indigo-200 border border-indigo-500/30'
+                                        id: 'nature',
+                                        container: 'bg-slate-950/80 border-emerald-500/30 shadow-[0_0_40px_-10px_rgba(16,185,129,0.2)] backdrop-blur-xl',
+                                        accent: 'text-emerald-400',
+                                        chip: 'bg-emerald-950/50 text-emerald-300 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
+                                        decoration: (
+                                            <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
+                                                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
+                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.03)_0%,transparent_70%)]"></div>
+                                                <div className="absolute bottom-10 right-20 w-32 h-32 border border-emerald-500/10 rounded-full opacity-30"></div>
+                                            </div>
+                                        )
                                     };
                                 }
-                                if (mod === 2) {
-                                    return {
-                                        gradient: 'bg-gradient-to-br from-slate-900/70 via-emerald-900/40 to-cyan-900/40 border-emerald-500/30',
-                                        chip: 'bg-emerald-900/40 text-emerald-200 border border-emerald-500/30'
-                                    };
-                                }
+
+                                // 4. Default / Professional
                                 return {
-                                    gradient: 'bg-slate-900/60 border border-slate-800',
-                                    chip: 'bg-slate-800/60 text-slate-200 border border-slate-700/60'
+                                    id: 'default',
+                                    container: 'bg-slate-950/90 border-indigo-500/30 shadow-[0_0_40px_-10px_rgba(99,102,241,0.2)] backdrop-blur-xl',
+                                    accent: 'text-indigo-400',
+                                    chip: 'bg-indigo-950/50 text-indigo-300 border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]',
+                                    decoration: (
+                                        <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
+                                            <div className="absolute -top-40 -left-20 w-96 h-96 bg-indigo-600/10 blur-[100px] rounded-full"></div>
+                                            <div className="absolute bottom-0 right-0 w-full h-1/2 bg-gradient-to-t from-indigo-900/10 to-transparent"></div>
+                                            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent"></div>
+                                        </div>
+                                    )
                                 };
                             };
+
                             const mapAccentIcon = (name?: string) => {
                                 const n = (name || '').toLowerCase();
                                 if (n.includes('light') || n.includes('idea')) return Lightbulb;
@@ -155,6 +301,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                 if (n.includes('key')) return Key;
                                 return Sparkles;
                             };
+
                             const mapMotionStyle = (cue?: string) => {
                                 const c = (cue || '').toLowerCase();
                                 if (c.includes('slide-left')) return { animation: 'slideLeft 0.55s ease-out' };
@@ -164,19 +311,18 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                             };
 
                             const layout = normalizeLayout(currentSlide?.layoutHint, currentSlideIndex);
-                            const visualPreset = mapVisualPreset(currentSlide?.visualStyle, currentSlideIndex);
+                            const theme = getThemeStyles(currentSlide?.visualStyle);
                             const MotionIcon = mapAccentIcon(currentSlide?.accentIcon);
                             const motionStyle = mapMotionStyle(currentSlide?.motionCue);
 
-                            const containerBase = `rounded-2xl p-6 transition-colors md:col-span-2 ${visualPreset.gradient}`;
                             const gridClass =
                                 layout === 'text-only'
-                                    ? 'grid grid-cols-1 gap-4'
+                                    ? 'grid grid-cols-1 gap-6'
                                     : layout === 'visual-first'
-                                        ? 'grid grid-cols-1 md:grid-cols-3 gap-6 items-center'
+                                        ? 'grid grid-cols-1 md:grid-cols-3 gap-8 items-center'
                                         : layout === 'wide'
-                                            ? 'grid grid-cols-1 md:grid-cols-4 gap-6 items-start'
-                                            : 'grid grid-cols-1 md:grid-cols-2 gap-6 items-start';
+                                            ? 'grid grid-cols-1 md:grid-cols-4 gap-8 items-start'
+                                            : 'grid grid-cols-1 md:grid-cols-2 gap-8 items-start';
 
                             const textColSpan =
                                 layout === 'wide' ? 'md:col-span-3' : layout === 'visual-first' ? 'md:col-span-2' : 'md:col-span-1';
@@ -189,51 +335,120 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                       @keyframes slideLeft { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
                                       @keyframes popIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
                                     `}</style>
-                                    <div className={`${containerBase} shadow-lg shadow-indigo-900/10`} style={motionStyle}>
-                                        <div className="flex items-center justify-between mb-4 text-emerald-300">
-                                            <div className="flex items-center gap-3">
-                                                <Sparkles size={24} />
-                                                <h3 className="font-bold text-lg text-slate-50">スライド</h3>
+                                    
+                                    <div className={`relative rounded-3xl p-8 md:p-10 transition-all duration-500 md:col-span-2 border ${theme.container}`} style={motionStyle}>
+                                        {/* Decorative Background Elements */}
+                                        {theme.decoration}
+                                        
+                                        <div className="relative z-10 flex flex-col h-full">
+                                            {/* Slide Header */}
+                                            <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+                                                <div className={`flex items-center gap-3 ${theme.accent}`}>
+                                                    <div className="p-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
+                                                        <Sparkles size={18} />
+                                                    </div>
+                                                    <h3 className="font-bold text-lg tracking-wide text-slate-100 uppercase text-xs">Lesson Slide</h3>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                     <div className="h-1 w-24 bg-white/10 rounded-full overflow-hidden">
+                                                        <div 
+                                                            className={`h-full ${theme.accent.replace('text-', 'bg-')} transition-all duration-500`} 
+                                                            style={{ width: `${((currentSlideIndex + 1) / slides.length) * 100}%` }}
+                                                        ></div>
+                                                     </div>
+                                                     <span className="text-xs font-mono text-slate-400">{currentSlideIndex + 1} / {slides.length}</span>
+                                                </div>
                                             </div>
-                                                <div className="text-xs text-slate-200/70">Slide {currentSlideIndex + 1} / {slides.length}</div>
-                                            </div>
-                                            <div className={gridClass}>
+
+                                            {/* Slide Content Grid */}
+                                            <div className={`flex-1 ${gridClass}`}>
+                                                {/* Visual/Meta Column (if not text-only) */}
                                                 {layout !== 'text-only' && (
-                                                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm flex flex-col items-start justify-between h-full gap-4">
-                                                        <div className={`${visualPreset.chip} px-3 py-1 rounded-full text-xs font-semibold`}>
-                                                            {currentSlide?.visualStyle || "Creative Style"}
-                                                        </div>
-                                                        <div className="flex items-center gap-3 text-slate-50">
-                                                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                                                                <MotionIcon size={24} />
+                                                    <div className="flex flex-col gap-6 h-full">
+                                                        {/* Icon/Theme Card */}
+                                                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md flex flex-col items-center justify-center text-center gap-4 hover:bg-white/10 transition-colors group">
+                                                            <div className={`w-16 h-16 rounded-2xl ${theme.chip} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                                                                <MotionIcon size={32} />
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm text-slate-300">{currentSlide?.accentIcon || "sparkles"}</p>
-                                                                <p className="text-xs text-slate-400">layout: {layout}</p>
+                                                                <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${theme.accent}`}>
+                                                                    {currentSlide?.visualStyle || "Concept"}
+                                                                </div>
+                                                                <div className="text-slate-400 text-sm">{currentSlide?.accentIcon || "Focus Point"}</div>
                                                             </div>
                                                         </div>
+                                                        
+                                                        {/* Context/Hint Card */}
                                                         {currentSlide?.motionCue && (
-                                                            <p className="text-xs text-slate-300/80">motion: {currentSlide.motionCue}</p>
+                                                            <div className="bg-slate-950/40 border border-white/5 rounded-xl p-4 text-xs text-slate-400 font-mono">
+                                                                <span className="block text-slate-500 mb-1 uppercase text-[10px]">Animation Cue</span>
+                                                                {currentSlide.motionCue}
+                                                            </div>
                                                         )}
                                                     </div>
                                                 )}
-                                                <div className={`bg-slate-950/60 border border-slate-800 rounded-xl p-4 ${textColSpan}`}>
-                                                    <h4 className="text-slate-100 font-bold mb-3">{currentSlide?.title || 'Slide'}</h4>
-                                                    <ul className="space-y-2">
+
+                                                {/* Main Text Content */}
+                                                <div className={`${textColSpan} flex flex-col justify-center`}>
+                                                    <h4 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight drop-shadow-sm">
+                                                        {currentSlide?.title || 'Slide Title'}
+                                                    </h4>
+                                                    
+                                                    <div className="space-y-4">
                                                         {currentSlide?.bullets?.map((b, idx) => (
-                                                        <li key={idx} className="text-slate-300 text-sm flex gap-2 items-start" style={motionStyle}>
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
-                                                            {b}
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                                            <div 
+                                                                key={idx} 
+                                                                className="flex gap-4 p-4 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group"
+                                                                style={{ animationDelay: `${idx * 150}ms`, ...motionStyle }}
+                                                            >
+                                                                <div className={`w-2 h-2 rounded-full mt-2.5 shrink-0 ${theme.accent.replace('text-', 'bg-')} shadow-[0_0_8px_currentColor] opacity-80 group-hover:opacity-100 transition-opacity`}></div>
+                                                                <p className="text-slate-300 text-lg leading-relaxed group-hover:text-slate-200 transition-colors">
+                                                                    {b}
+                                                                </p>
+                                                            </div>
+                                                        ))}
+
+                                                        {/* Key Command / Highlight Box */}
+                                                        {currentSlide?.highlightBox && (
+                                                            <div className="mt-6 p-1 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 shadow-lg border border-white/10 overflow-hidden relative group/box">
+                                                                <div className={`absolute inset-0 opacity-20 ${theme.accent.replace('text-', 'bg-')} blur-xl group-hover/box:opacity-30 transition-opacity`}></div>
+                                                                <div className="relative bg-slate-950/90 rounded-lg p-4 flex items-center justify-between gap-4 backdrop-blur-sm">
+                                                                    <div className="flex items-center gap-3">
+                                                                         <div className={`p-2 rounded-md bg-white/5 border border-white/10 ${theme.accent}`}>
+                                                                             <Key size={20} />
+                                                                         </div>
+                                                                         <div>
+                                                                             <span className="text-xs uppercase tracking-wider text-slate-500 font-bold">Key Command</span>
+                                                                             <p className="font-mono text-lg text-white font-bold tracking-tight">{currentSlide.highlightBox}</p>
+                                                                         </div>
+                                                                    </div>
+                                                                    <div className="px-3 py-1 rounded bg-white/10 text-xs font-mono text-slate-400 border border-white/5">
+                                                                        SHORTCUT
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center justify-center gap-3">
-                                                <button onClick={handlePrevSlide} className="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors">
-                                                    Prev Slide
+
+                                            {/* Slide Footer Controls (integrated) */}
+                                            <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                                                <button 
+                                                    onClick={handlePrevSlide} 
+                                                    className="text-slate-400 hover:text-white text-sm font-medium flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/5 transition-colors"
+                                                >
+                                                    <ArrowLeft size={16} /> Previous
                                                 </button>
-                                                <button onClick={handleNextSlide} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition-colors">
-                                                    {isLastSlide ? 'Next Chapter' : 'Next Slide'}
+                                                <button 
+                                                    onClick={handleNextSlide} 
+                                                    className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95
+                                                        ${isLastSlide 
+                                                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/20' 
+                                                            : 'bg-slate-800 hover:bg-slate-700 border border-white/10'}`}
+                                                >
+                                                    {isLastSlide ? 'Finish Chapter' : 'Next Slide'}
+                                                    {!isLastSlide && <ArrowLeft size={16} className="rotate-180" />}
                                                 </button>
                                             </div>
                                         </div>
@@ -298,35 +513,6 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                         )}
                     </div>
                     
-                    {/* Bottom Spacer */}
-                    <div className="h-24"></div>
-                </div>
-
-                {/* Player Controls (Fixed Bottom) */}
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-slate-950/80 backdrop-blur-md border-t border-white/10 flex items-center px-6 gap-6 z-30">
-                    <button onClick={onBack} className="text-slate-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/5">
-                        <ArrowLeft size={24} />
-                    </button>
-
-                    <div className="flex items-center gap-4">
-                        <button onClick={handlePrev} disabled={currentChapterIndex === 0} className={`transition-colors ${currentChapterIndex === 0 ? 'text-slate-700 cursor-not-allowed' : 'text-white hover:text-indigo-400'}`}>
-                            <SkipBack size={24} />
-                        </button>
-                        <button onClick={() => setIsPlaying(!isPlaying)} className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg">
-                            {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
-                        </button>
-                        <button onClick={handleNext} className="text-white hover:text-indigo-400 transition-colors">
-                            <SkipForward size={24} />
-                        </button>
-                    </div>
-
-                    <div className="flex-1"></div>
-
-                    <div className="flex items-center gap-4 text-slate-400">
-                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-indigo-600 text-white' : 'hover:text-white'}`}>
-                            <MessageSquare size={20} />
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -346,8 +532,14 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                 <Bot size={16} className="text-white" />
                             </div>
                             <div className="text-sm text-slate-300 bg-white/5 p-4 rounded-2xl rounded-tl-none border border-white/5">
-                                <p className="mb-2 font-bold text-indigo-300">ここでのポイント:</p>
-                                <p>{currentChapter.analogy}</p>
+                                <p className="mb-2 font-bold text-indigo-300">
+                                    {hasSlides && currentSlide?.speechScript ? "Lumina's Notes:" : "ここでのポイント:"}
+                                </p>
+                                <p>
+                                    {hasSlides && currentSlide?.speechScript 
+                                        ? currentSlide.speechScript 
+                                        : currentChapter.analogy}
+                                </p>
                             </div>
                         </div>
                     </div>

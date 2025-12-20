@@ -5,13 +5,68 @@ import { retrieveBlenderContext } from './blenderRagService';
 // Initialize the client strictly according to guidelines
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-export const createChatSession = (systemInstruction?: string): Chat => {
+// --- Configuration Interfaces ---
+export interface GenerateCourseConfig {
+  targetAudience?: string;
+  slideDesignTheme?: string;
+  slideGranularity?: string;
+  ragSources?: string[];
+  courseType?: 'general' | 'creative' | 'technical';
+  // 3. RAG & Knowledge
+  knowledgeDepth?: 'Broad' | 'Deep';
+  referenceVersion?: string;
+  // 4. Structure
+  difficultyLevel?: 'Beginner' | 'Intermediate' | 'Advanced';
+  learningPathType?: 'Linear' | 'Exploratory';
+  // 5. Design & Branding
+  colorPalette?: { primary: string; secondary: string; accent: string; bg: string };
+  brandKeywords?: string[];
+  typographyHint?: string;
+  teacherPersona?: string;
+}
+
+const DEFAULT_CONFIG: GenerateCourseConfig = {
+  targetAudience: "一般的な学習者",
+  slideDesignTheme: "シンプルで洗練されたデザイン。視認性重視。",
+  slideGranularity: "各行は十分な情報量を持たせること（目安30文字以上）。単語の羅列ではなく、理由や背景を含めた文章として記述する。",
+  courseType: 'general',
+  knowledgeDepth: 'Broad',
+  difficultyLevel: 'Beginner',
+  learningPathType: 'Linear',
+  colorPalette: { primary: "#4f46e5", secondary: "#64748b", accent: "#10b981", bg: "#f8fafc" },
+  brandKeywords: ["Clean", "Professional", "Minimal", "Trusted"],
+  typographyHint: "Sans-serif (Inter, Roboto)",
+  teacherPersona: "親しみやすく知的。『一緒に学ぼう』というスタンス。専門用語は必ず平易な言葉で言い換える。少しお茶目な一面も見せる。"
+};
+
+const CREATIVE_CONFIG: GenerateCourseConfig = {
+  targetAudience: "クリエイター/アーティスト",
+  slideDesignTheme: "クリエイター向けダークテーマ。グラスモーフィズム、ネオンエフェクト、奥行きのあるレイヤー構造。",
+  slideGranularity: `詳細かつ具体的。スライドの内容に応じて以下の記述パターンを使い分け、各行50文字以上をキープすること:
+  1. 【操作系】手順 + 結果 + プロの視点 ("Ctrl+Bでベベルをかけ、ハイライトが入る角を作ります。これでリアリティが段違いになります")
+  2. 【理論系】定義 + たとえ話 + 重要性 ("トポロジーとはポリゴンの流れ。筋肉の繊維のように整えることで、きれいな変形が可能になります")
+  3. 【マインド】視点 + 具体例 + ゴール ("現実は不完全です。あえて汚れを加えることで、CG臭さを消し、物語を感じさせる作品になります")`,
+  courseType: 'creative',
+  knowledgeDepth: 'Deep',
+  difficultyLevel: 'Intermediate',
+  learningPathType: 'Exploratory',
+  colorPalette: { primary: "#6366f1", secondary: "#a855f7", accent: "#06b6d4", bg: "#020617" },
+  brandKeywords: ["Cyberpunk", "High-fidelity", "Immersive", "Vibrant"],
+  typographyHint: "Monospace for code, Bold Display for titles",
+  teacherPersona: "『愛されキャラ×クリエイティブ・ミューズ』のミックス。明るく、想像力を刺激する語り口。「魔法みたい！」「ここが私の推しポイント」など感情豊かに。失敗を恐れさせない励ましと、技術的な驚きを共有する。"
+};
+
+// --- Chat & Analysis ---
+
+export const createChatSession = (systemInstruction?: string, modelType: 'standard' | 'pro' = 'standard'): Chat => {
   const defaultInstruction = `You are Lumina, a professional English tutor for a B1+/B2 learner.
       Your goal is to help them sound more "Exploratory" and "Logical" rather than just "Correct".
       Focus on: Softening (tone), Bridging (logic connections), and Structure.`;
 
+  const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
+
   return ai.chats.create({
-    model: 'gemini-2.5-flash',
+    model: modelName,
     config: {
       systemInstruction: systemInstruction || defaultInstruction,
     },
@@ -27,7 +82,7 @@ export const sendMessageStream = async (chat: Chat, message: string) => {
   }
 };
 
-export const analyzeWriting = async (text: string, rubric: LessonRubric): Promise<AnalysisResult> => {
+export const analyzeWriting = async (text: string, rubric: LessonRubric, modelType: 'standard' | 'pro' = 'standard'): Promise<AnalysisResult> => {
   try {
     const prompt = `
       Analyze the following English text written by a B1+/B2 learner.
@@ -49,8 +104,10 @@ export const analyzeWriting = async (text: string, rubric: LessonRubric): Promis
       - refinedVersion (A rewritten version that keeps the user's meaning but improves flow, linking, and tone)
     `;
 
+    const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
+
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: modelName,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -145,7 +202,14 @@ const normalizeChapter = (chapter: any, index: number) => {
     return chapter.slides.map((s: any, slideIdx: number) => ({
       title: ensureString(s?.title || `Slide ${slideIdx + 1}`),
       bullets: Array.isArray(s?.bullets) ? s.bullets.map((b: any) => ensureString(b)).filter(Boolean) : [],
-      timing: ensureString(s?.timing || '')
+      timing: ensureString(s?.timing || ''),
+      visualStyle: ensureString(s?.visualStyle || ''),
+      motionCue: ensureString(s?.motionCue || ''),
+      accentIcon: ensureString(s?.accentIcon || ''),
+      layoutHint: ensureString(s?.layoutHint || ''),
+      imagePrompt: ensureString(s?.imagePrompt || ''),
+      highlightBox: ensureString(s?.highlightBox || ''),
+      speechScript: ensureString(s?.speechScript || '')
     }));
   };
 
@@ -182,8 +246,8 @@ const validateGeneratedCourse = (raw: any) => {
     if (!Array.isArray(ch.keyConcepts) || ch.keyConcepts.length === 0) errors.push(`chapters[${idx}].keyConcepts is missing`);
     if (!ch.actionStep) errors.push(`chapters[${idx}].actionStep is missing`);
     if (!ch.analogy) errors.push(`chapters[${idx}].analogy is missing`);
-    if (!Array.isArray(ch.slides) || ch.slides.length < 7 || ch.slides.length > 15) {
-      errors.push(`chapters[${idx}].slides must have between 7 and 15 items`);
+    if (!Array.isArray(ch.slides) || ch.slides.length < 3 || ch.slides.length > 15) {
+      errors.push(`chapters[${idx}].slides must have between 3 and 15 items`);
     } else {
       ch.slides.forEach((s, sIdx) => {
         if (!s.title) errors.push(`chapters[${idx}].slides[${sIdx}].title is missing`);
@@ -240,12 +304,26 @@ const parseJsonSafe = (text?: string) => {
   }
 };
 
-export const generateCourse = async (topic: string, modelType: 'standard' | 'pro' = 'standard', profile?: Big5Profile): Promise<GeneratedCourse> => {
+export const generateCourse = async (
+  topic: string, 
+  modelType: 'standard' | 'pro' = 'standard', 
+  profile?: Big5Profile,
+  config?: GenerateCourseConfig
+): Promise<GeneratedCourse> => {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error("GEMINI_API_KEY が設定されていません。環境変数に GEMINI_API_KEY をセットしてください。");
   }
 
-  const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.0-flash';
+  // 1. Determine Config Strategy
+  let activeConfig = config || DEFAULT_CONFIG;
+  if (!config) {
+      const lowerTopic = topic.toLowerCase();
+      if (lowerTopic.includes('blender') || lowerTopic.includes('design') || lowerTopic.includes('art') || lowerTopic.includes('creative')) {
+          activeConfig = CREATIVE_CONFIG;
+      }
+  }
+
+  const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
   const targetProfile = profile || { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
   const strategy = generatePedagogicalStrategy(targetProfile);
   const maxAttempts = 2;
@@ -268,6 +346,9 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
       以下のトピックについて、特定の学習者プロファイルに最適化されたカリキュラム（日本語）を作成してください。
 
       トピック: 「${topic}」
+      ターゲット層: ${activeConfig.targetAudience}
+      難易度レベル: ${activeConfig.difficultyLevel}
+      学習パス形式: ${activeConfig.learningPathType}
       
       【学習者プロファイル分析に基づいた教育戦略】
       ${strategy}
@@ -283,18 +364,42 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
          - **WhyItMatters**: なぜこれを学ぶ価値があるのか？（プロファイルの価値観に訴求）
          - **KeyConcepts**: 3〜5個の重要キーワード（配列）
          - **ActionStep**: 今すぐできる具体的な行動・演習
-         - **Analogy**: 難しい概念を直感的に理解するための「たとえ話」（Opennessが高い場合は特に創造的に）
-         - **Slides**: 7〜15枚のスライド（配列）。各スライドは { title, bullets[3-5], timing(optional), visualStyle(optional), motionCue(optional), accentIcon(optional), layoutHint(optional) } を含める。スライドは音声ナレーションに合わせて切り替わる想定。スライド間で必ず配色/レイアウト/モーションにバリエーションを付けること（同じスタイルを連続させない）。
-         - **Slidesの粒度要件（特にBlender）**: bulletsは抽象NG。各bulletに具体的な操作/ショートカット/設定と結果を入れ、目安50〜80文字。例: 「マウス中ボタンで視点回転、Shift＋中ボタンでパン、Ctrl+スペースで全画面にして作業領域を確保」。
+         - **Analogy**: 難しい概念を直感的に理解するための「たとえ話」
+         - **Slides**: 3〜10枚のスライド（配列）。
+           ※重要※ 各スライドのbulletsは、必ず1つ15文字以上の詳細な文章で記述してください。短いフレーズはシステムエラーを引き起こします。
+           各スライドは以下を含めること:
+           - title: スライドのタイトル
+           - bullets: 3〜5個の箇条書き（配列）
+           - visualStyle: "${activeConfig.brandKeywords?.join(', ')}" の雰囲気を感じさせるスタイル指定
+           - imagePrompt: 背景画像を生成するための英語プロンプト。
+           - highlightBox: 強調表示すべきショートカットキーやコマンド。
+           - speechScript: 講師が話すナレーション原稿（日本語）。
 
-      【スライドデザイン指針（特にBlender/クリエイター向け）】
-      - トーン: クリエイター/アーティスト向け、洗練されたダークテーマ。背景は深いネイビー〜スレート、差し色はインディゴ×シアン系。
-      - モーション: 過度な点滅は禁止。見出しはフェードイン、箇条書きは0.15〜0.3秒ステップでスライドアップなど短い指示を \`motionCue\` に入れる。
-      - スタイル: グラスモーフィズム/ネオンサイバー系を短く \`visualStyle\` に記述。読みやすさ優先。
-      - アイコン: Lucide系で表現できるモチーフを \`accentIcon\`（例: sparkles, lightbulb, target）に1つ。
-      - レイアウト: \`layoutHint\` に左右2カラム/ビジュアル優先/余白多め 等を簡潔に記載。
+         - **Slidesの構成要件 (Narrative Flow)**:
+           - **1枚目のスライド**: 必ず「イントロダクション」。この章で「何を作るか/何ができるようになるか」を具体的に宣言し、学習者の期待を高めること。
+           - **中盤のスライド**: 指定された粒度要件に従い、濃密な知識を提供する。
+           - **最後のスライド**: 必ず「次回予告 (Teaser)」。次の章で学ぶ内容をチラ見せし、「次はもっと凄くなる」とワクワクさせて終わること。
+
+         - **Slidesの粒度要件**: 
+           - ${activeConfig.slideGranularity}
+           - 知識の深さ: ${activeConfig.knowledgeDepth} を意識すること。
+
+      【デザイン・ブランディング指針】
+      - 全体テーマ: ${activeConfig.slideDesignTheme}
+      - 配色 (Color Palette): 
+        - Primary: ${activeConfig.colorPalette?.primary}
+        - Accent: ${activeConfig.colorPalette?.accent}
+        - Background: ${activeConfig.colorPalette?.bg}
+      - タイポグラフィ: ${activeConfig.typographyHint}
+      - ブランドキーワード: ${activeConfig.brandKeywords?.join(', ')}
+      - モーション: 箇条書きは0.15〜0.3秒ステップでスライドアップなど短い指示を \`motionCue\` に入れる。
+
+      【講師ペルソナ (Lumina) の指示】
+      - ${activeConfig.teacherPersona}
+      - ナレーション (\`speechScript\`) は、このペルソナになりきって口語体で記述すること。
+      - 決して教科書的な硬い表現にせず、学習者に語りかけるように。
       
-      返す前に必須フィールドが埋まっているか自己チェックし、欠落があれば補完してから返してください。回答はJSONのみ。
+      回答はJSONのみ。
     `;
 
   const requestCourse = async (prompt: string) => {
@@ -329,14 +434,23 @@ ${combinedRag.map(doc => `- Source: ${doc.source}
                       type: Type.OBJECT,
                       properties: {
                         title: { type: Type.STRING },
-                        bullets: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        bullets: { 
+                          type: Type.ARRAY, 
+                          items: { 
+                            type: Type.STRING,
+                            description: "各箇条書きは、15文字以上の具体的で詳細な文章であること。短い単語やフレーズは禁止。" 
+                          } 
+                        },
                         timing: { type: Type.STRING },
                         visualStyle: { type: Type.STRING },
                         motionCue: { type: Type.STRING },
                         accentIcon: { type: Type.STRING },
-                        layoutHint: { type: Type.STRING }
+                        layoutHint: { type: Type.STRING },
+                        imagePrompt: { type: Type.STRING },
+                        highlightBox: { type: Type.STRING },
+                        speechScript: { type: Type.STRING }
                       },
-                      required: ["title", "bullets"]
+                      required: ["title", "bullets", "imagePrompt"]
                     }
                   }
                 },
