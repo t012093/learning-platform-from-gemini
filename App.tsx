@@ -25,6 +25,7 @@ import CourseGeneratorView from './components/features/ai/CourseGeneratorView';
 import GeneratedCourseView from './components/features/ai/GeneratedCourseView';
 import GeneratedLessonView from './components/features/ai/GeneratedLessonView';
 import LuminaConciergeView from './components/features/ai/LuminaConciergeView';
+import PersonalAssessmentView from './components/features/dashboard/assessment/PersonalAssessmentView';
 import AICharacterIntroView from './components/features/ai/AICharacterIntroView';
 import AICharacterDetailView from './components/features/ai/AICharacterDetailView';
 
@@ -308,7 +309,7 @@ const App: React.FC = () => {
         return <Library />;
 
       case ViewState.AI_DIAGNOSIS:
-        return <LuminaConciergeView onNavigate={setCurrentView} />;
+        return <PersonalAssessmentView onNavigate={setCurrentView} />;
 
       // AI Characters
       case ViewState.AI_CHARACTERS:

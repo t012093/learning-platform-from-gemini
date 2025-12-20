@@ -83,29 +83,45 @@ export const sendMessageStream = async (chat: Chat, message: string) => {
 };
 
 export const analyzeWriting = async (text: string, rubric: LessonRubric, modelType: 'standard' | 'pro' = 'standard'): Promise<AnalysisResult> => {
+// ...
+};
+
+export const analyzePersonality = async (scores: Big5Profile): Promise<AIAdvice & { personalityType: string }> => {
+  const modelName = 'gemini-2.0-flash'; // 診断は高速なFlashでOK
+
+  const prompt = `
+    以下のビッグファイブ・パーソナリティ・スコア（0-100）に基づき、この人物の性格特性、学習戦略、および隠れた才能を深く分析してください。
+    
+    スコア:
+    - Openness (開放性): ${scores.openness}
+    - Conscientiousness (誠実性): ${scores.conscientiousness}
+    - Extraversion (外向性): ${scores.extraversion}
+    - Agreeableness (協調性): ${scores.agreeableness}
+    - Neuroticism (繊細さ): ${scores.neuroticism}
+    
+    【出力要件】
+    1. personalityType: 次の中から最も近いものを1つ選んでください: '冒険家', '戦略家', 'サポーター', '思想家', '職人', 'バランサー'
+    2. strengths: 3つの強み（title, description）
+    3. growthTips: 3つの成長アドバイス（title, description）
+    4. learningStrategy: 学習戦略
+       - title: 戦略名
+       - approach: 基本的なアプローチ（1文）
+       - steps: 3つの具体的なステップ（label, action）
+    5. careerCompatibility: 向いている職業や役割（1文）
+    6. relationshipAnalysis: 対人関係の分析
+       - style: 対人スタイル
+       - idealPartner: 理想的なパートナー像
+       - advice: アドバイス
+    7. businessPartnership: ビジネス上のパートナーシップ
+       - role: 推奨される役割
+       - bestSync: 相性の良いタイプ
+       - warning: 注意点
+    8. hiddenTalent: 隠れた才能（title, description）
+
+    レスポンスは必ず指定されたJSONフォーマットに従ってください。日本語で回答してください。
+  `;
+
   try {
-    const prompt = `
-      Analyze the following English text written by a B1+/B2 learner.
-      Target Profile:
-      - Needs to improve: Linking words, Softening (avoiding absolute assertions), and Academic/Safe vocabulary.
-      
-      Text to analyze: "${text}"
-      
-      Rubric to check against:
-      - Clarity: ${rubric.clarity}
-      - Linking: ${rubric.linking}
-      - Tone: ${rubric.tone}
-
-      Provide a JSON response with:
-      - clarityScore (0-100)
-      - linkingScore (0-100)
-      - toneScore (0-100)
-      - feedback (A concise 2-3 sentence tip focusing on what to add/change to meet the rubric)
-      - refinedVersion (A rewritten version that keeps the user's meaning but improves flow, linking, and tone)
-    `;
-
-    const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
-
     const response = await ai.models.generateContent({
       model: modelName,
       contents: prompt,
@@ -114,39 +130,80 @@ export const analyzeWriting = async (text: string, rubric: LessonRubric, modelTy
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            clarityScore: { type: Type.NUMBER },
-            linkingScore: { type: Type.NUMBER },
-            toneScore: { type: Type.NUMBER },
-            feedback: { type: Type.STRING },
-            refinedVersion: { type: Type.STRING },
+            personalityType: { type: Type.STRING },
+            strengths: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  description: { type: Type.STRING }
+                }
+              }
+            },
+            growthTips: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  description: { type: Type.STRING }
+                }
+              }
+            },
+            learningStrategy: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                approach: { type: Type.STRING },
+                steps: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      label: { type: Type.STRING },
+                      action: { type: Type.STRING }
+                    }
+                  }
+                }
+              }
+            },
+            careerCompatibility: { type: Type.STRING },
+            relationshipAnalysis: {
+              type: Type.OBJECT,
+              properties: {
+                style: { type: Type.STRING },
+                idealPartner: { type: Type.STRING },
+                advice: { type: Type.STRING }
+              }
+            },
+            businessPartnership: {
+              type: Type.OBJECT,
+              properties: {
+                role: { type: Type.STRING },
+                bestSync: { type: Type.STRING },
+                warning: { type: Type.STRING }
+              }
+            },
+            hiddenTalent: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                description: { type: Type.STRING }
+              }
+            }
           }
         }
       }
     });
 
     const result = JSON.parse(response.text || '{}');
-
-    return {
-      clarityScore: result.clarityScore || 0,
-      linkingScore: result.linkingScore || 0,
-      toneScore: result.toneScore || 0,
-      feedback: result.feedback || "Good effort! Try adding more connecting words.",
-      refinedVersion: result.refinedVersion || text
-    };
-
+    return result;
   } catch (error) {
-    console.error("Analysis failed:", error);
-    // Fallback mock response for offline/error cases
-    return {
-      clarityScore: 70,
-      linkingScore: 50,
-      toneScore: 60,
-      feedback: "I couldn't connect to the AI, but make sure you are using 'however' or 'therefore' to connect your ideas.",
-      refinedVersion: text
-    };
+    console.error("Personality analysis failed:", error);
+    throw error;
   }
 };
-
 const generatePedagogicalStrategy = (profile: Big5Profile): string => {
   let strategy = "教育スタイルガイド:\n";
 

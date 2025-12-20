@@ -142,6 +142,42 @@ export interface Big5Profile {
   neuroticism: number;     // 0-100: Sensitive, Nervous (vs. Resilient, Confident)
 }
 
+export type PersonalityType = '冒険家' | '戦略家' | 'サポーター' | '思想家' | '職人' | 'バランサー';
+
+export interface AIAdvice {
+  strengths: { title: string; description: string }[];
+  growthTips: { title: string; description: string }[];
+  learningStrategy: {
+    title: string;
+    approach: string;
+    steps: { label: string; action: string }[];
+  };
+  careerCompatibility: string;
+  relationshipAnalysis: {
+    style: string;
+    idealPartner: string;
+    advice: string;
+  };
+  businessPartnership: {
+    role: string;
+    bestSync: string;
+    warning: string;
+  };
+  hiddenTalent: {
+    title: string;
+    description: string;
+  };
+}
+
+export interface AssessmentProfile {
+  scores: Big5Profile;
+  personalityType: PersonalityType;
+  learningStyle: string;
+  motivation: string;
+  completedAt: string;
+  aiAdvice?: AIAdvice;
+}
+
 export interface GeneratedChapter {
   id: string | number;
   title: string;
