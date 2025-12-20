@@ -38,7 +38,7 @@ const DEFAULT_CONFIG: GenerateCourseConfig = {
 const CREATIVE_CONFIG: GenerateCourseConfig = {
   targetAudience: "クリエイター/アーティスト",
   slideDesignTheme: "クリエイター向けダークテーマ。グラスモーフィズム、ネオンエフェクト、奥行きのあるレイヤー構造。",
-  slideGranularity: `詳細かつ具体的.`, // This is a template literal, no escaping needed here.
+  slideGranularity: `詳細かつ具体的.`,
   courseType: 'creative',
   knowledgeDepth: 'Deep',
   difficultyLevel: 'Intermediate',
@@ -49,14 +49,26 @@ const CREATIVE_CONFIG: GenerateCourseConfig = {
   teacherPersona: "『愛されキャラ×クリエイティブ・ミューズ』のミックス。明るく、想像力を刺激する語り口。"
 };
 
+// --- Helpers ---
+const parseJsonFromResponse = (text: string) => {
+    try {
+        const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error("JSON Parse Error. Raw text:", text);
+        throw e;
+    }
+};
+
+const extractKeywords = (text: string): string[] => {
+  return text.split(/[\\s、。,.]+/).map(t => t.trim()).filter(Boolean).slice(0, 6);
+};
+
 // --- Chat & Analysis ---
+
 export const createChatSession = (systemInstruction?: string, modelType: 'standard' | 'pro' = 'standard'): Chat => {
-  const defaultInstruction = `You are Lumina, a professional English tutor for a B1+/B2 learner.
-      Your goal is to help them sound more "Exploratory" and "Logical" rather than just "Correct".
-      Focus on: Softening (tone), Bridging (logic connections), and Structure.`;
-
+  const defaultInstruction = `You are Lumina, a professional AI tutor. Your goal is to provide insightful guidance.`;
   const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
-
   return ai.chats.create({
     model: modelName,
     config: {
@@ -65,9 +77,37 @@ export const createChatSession = (systemInstruction?: string, modelType: 'standa
   });
 };
 
+/**
+ * Creates a chat session for scoping the user's learning intent.
+ */
+export const createScopingChat = (profile: Big5Profile | null): Chat => {
+  const instruction = `
+    あなたは「Lumina 学習コンシェルジュ」です。
+    ユーザーが何を学びたいかをヒアリングし、最高のパーソナライズカリキュラムを作るための準備をします。
+
+    【ヒアリングの目的】
+    1. 具体的な学習トピックの特定
+    2. 学習の目的（なぜ学びたいか）
+    3. 現在の知識レベル（初心者か、経験者か）
+    4. 特に重点を置きたいポイント
+
+    【振る舞い】
+    - 最初は「こんにちは！今日はどんなことを学びたいですか？」と優しく話しかけてください。
+    - ユーザーのBig5特性（${JSON.stringify(profile)}）を考慮した口調で接してください。
+    - 1回ですべて聞こうとせず、対話を通じて自然に引き出してください。
+    - 十分な情報が集まったと判断したら、「完璧なプランが見えました！カリキュラムを生成しましょうか？」と提案してください。
+  `;
+
+  return ai.chats.create({
+    model: 'gemini-2.5-flash',
+    config: { systemInstruction: instruction }
+  });
+};
+
 export const sendMessageStream = async (chat: Chat, message: string) => {
   try {
-    return await chat.sendMessageStream({ message });
+    const result = await chat.sendMessageStream({ message });
+    return result.stream;
   } catch (error) {
     console.error("Error sending message to Gemini:", error);
     throw error;
@@ -76,30 +116,8 @@ export const sendMessageStream = async (chat: Chat, message: string) => {
 
 export const analyzeWriting = async (text: string, rubric: LessonRubric, modelType: 'standard' | 'pro' = 'standard'): Promise<AnalysisResult> => {
   const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
-
-  const prompt = `
-    Analyze the following English text based on the provided rubric.
-    Return the analysis as a JSON object matching the required schema.
-
-    TEXT: "${text}"
-
-    RUBRIC:
-    - Clarity: ${rubric.clarity}
-    - Linking: ${rubric.linking}
-    - Tone: ${rubric.tone}
-
-    OUTPUT SCHEMA:
-    {
-      "clarityScore": number (0-100),
-      "linkingScore": number (0-100),
-      "toneScore": number (0-100),
-      "feedback": string (concise explanation),
-      "refinedVersion": string (improved version of the text)
-    }
-
-    Response must be JSON only.
-  `;
-
+  const prompt = `Analyze this text: "${text}". Rubric: ${JSON.stringify(rubric)}. Return JSON.`;
+  
   try {
     const response = await ai.models.generateContent({
       model: modelName,
@@ -119,7 +137,6 @@ export const analyzeWriting = async (text: string, rubric: LessonRubric, modelTy
         }
       }
     });
-
     return parseJsonFromResponse(response.text || '{}');
   } catch (error) {
     console.error("Writing analysis failed:", error);
@@ -127,143 +144,58 @@ export const analyzeWriting = async (text: string, rubric: LessonRubric, modelTy
   }
 };
 
-// --- Helpers ---
-const parseJsonFromResponse = (text: string) => {
-    try {
-        const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
-        return JSON.parse(cleaned);
-    } catch (e) {
-        console.error("JSON Parse Error. Raw text:", text);
-        throw e;
-    }
-};
-
 // --- 1. STRATEGIST: Analysis Engine (The Insight Council) ---
 
-// Agent A: The Profiler
 const analyzeCorePersonality = async (scores: Big5Profile, modelName: string) => {
-  const prompt = `
-    あなたは「The Profiler (心理分析官)」です。必ず日本語で回答してください。
-    以下のBig5スコアに基づき、性格特性と学習戦略を詳細に分析してください。
-
-    スコア: Openness:${scores.openness}, Conscientiousness:${scores.conscientiousness}, Extraversion:${scores.extraversion}, Agreeableness:${scores.agreeableness}, Neuroticism:${scores.neuroticism}
-
-    以下のフォーマットを厳守してください。区切り文字「@@@」を必ず入れてください。
-    
-    personalityType: [性格タイプ]
-    @@@
-    strengths: [強み1]: [詳細な説明] | [強み2]: [詳細な説明] | [強み3]: [詳細な説明]
-    @@@
-    growthTips: [アドバイス1]: [詳細な説明] | [アドバイス2]: [詳細な説明] | [アドバイス3]: [詳細な説明]
-    @@@
-    learningStrategy: [戦略名] | [基本方針の説明] | [具体ステップ1] | [具体ステップ2] | [具体ステップ3]
-
-    ※性格タイプは '冒険家', '戦略家', 'サポーター', '思想家', '職人', 'バランサー' から1つ。
-  `;
-
+  const prompt = `あなたは「The Profiler」です。日本語で回答。スコア: ${JSON.stringify(scores)}. @@@区切りで personalityType, strengths, growthTips, learningStrategyを。`;
   const response = await ai.models.generateContent({ model: modelName, contents: prompt });
   const parts = (response.text || '').split('@@@').map(p => p.trim());
-
-  const getSectionValue = (key: string) => {
-      const found = parts.find(p => p.toLowerCase().includes(key.toLowerCase()));
-      if (!found) return '';
-      return found.substring(found.indexOf(':') + 1).trim();
-  };
-
-  const parseList = (raw: string) => {
-      return raw.split('|').map(item => {
-          const [t, d] = item.split(/[:：]/).map(s => s.trim());
-          return { title: t || '分析中...', description: d || t || '詳細を生成中...' };
-      }).filter(i => i.title.length > 0);
-  };
-
-  const lsParts = getSectionValue('learningStrategy').split('|').map(s => s.trim());
+  const getVal = (key: string) => (parts.find(p => p.toLowerCase().includes(key.toLowerCase())) || '').split(':').slice(1).join(':').trim();
+  const getList = (raw: string) => raw.split('|').map(item => {
+    const [t, d] = item.split(/[:：]/).map(s => s.trim());
+    return { title: t || 'Point', description: d || t || 'Analyzing...' };
+  }).filter(i => i.title.length > 0);
+  const lsParts = getVal('learningStrategy').split('|').map(s => s.trim());
 
   return {
-    personalityType: getSectionValue('personalityType').replace(/['"「」]/g, '') || 'バランサー',
-    strengths: parseList(getSectionValue('strengths')),
-    growthTips: parseList(getSectionValue('growthTips')),
+    personalityType: getVal('personalityType').replace(/['"「」]/g, '') || 'バランサー',
+    strengths: getList(getVal('strengths')),
+    growthTips: getList(getVal('growthTips')),
     learningStrategy: {
-      title: lsParts[0] || '個別最適化戦略',
-      approach: lsParts[1] || 'あなたの特性に合わせた学習アプローチ',
+      title: lsParts[0] || 'Strategic Learning',
+      approach: lsParts[1] || 'Personalized approach',
       steps: lsParts.slice(2).map(s => ({ label: 'Step', action: s }))
     }
   };
 };
 
-// Agent B: The Career Coach
 const analyzeCareer = async (scores: Big5Profile, modelName: string) => {
-  const prompt = `
-    あなたは「The Career Coach (キャリア戦略家)」です。必ず日本語で回答してください。
-    以下のスコアに基づき、ビジネス適性と職業的アイデンティティを深く分析してください。
-    スコア: O:${scores.openness}, C:${scores.conscientiousness}, E:${scores.extraversion}, A:${scores.agreeableness}, N:${scores.neuroticism}
-
-    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。
-
-    careerCompatibility: [あなたが最も輝く環境と、その理由を2文で詳細に]
-    @@@
-    role: [役割の名称]: [その役割がチームにどのような価値をもたらすかの具体的な解説]
-    @@@
-    bestSync: [相性の良いタイプ名]: [なぜその人と組むと相乗効果が生まれるかの解説]
-    @@@
-    warning: [注意すべき課題]: [それが仕事にどう影響するかと、具体的な対策のアドバイス]
-    @@@
-    hiddenTalent: [潜在能力の名前] | [その能力がどのような場面で発揮されるかの説明]
-  `;
-
+  const prompt = `あなたは「The Career Coach」です。日本語。スコア: ${JSON.stringify(scores)}. @@@区切りで careerCompatibility, role, bestSync, warning, hiddenTalentを。`;
   const response = await ai.models.generateContent({ model: modelName, contents: prompt });
   const parts = (response.text || '').split('@@@').map(p => p.trim());
-  
-  const getSectionValue = (key: string) => {
-    const found = parts.find(p => p.toLowerCase().includes(key.toLowerCase()));
-    if (!found) return '';
-    return found.substring(found.indexOf(':') + 1).trim();
-  };
-
-  const htRaw = getSectionValue('hiddenTalent');
-  let htParts = htRaw.split('|').map(s => s.trim());
-  if (htParts.length < 2 && htRaw.includes(':')) htParts = htRaw.split(':').map(s => s.trim());
+  const getVal = (key: string) => (parts.find(p => p.toLowerCase().includes(key.toLowerCase())) || '').split(':').slice(1).join(':').trim();
+  const htParts = getVal('hiddenTalent').split('|').map(s => s.trim());
 
   return {
-    careerCompatibility: getSectionValue('careerCompatibility') || '現在分析中ですが、あなたの特性を活かせる環境を特定しています。',
+    careerCompatibility: getVal('careerCompatibility') || 'Analyzing...',
     businessPartnership: {
-      role: getSectionValue('role') || '専門家: 独自のスキルでチームに貢献します。',
-      bestSync: getSectionValue('bestSync') || '補完的パートナー: あなたの弱点を支え、強みを引き出す相手です。',
-      warning: getSectionValue('warning') || 'コミュニケーション: 高圧的な状況下での調整に注意が必要です。'
+      role: getVal('role') || 'Expert',
+      bestSync: getVal('bestSync') || 'Partner',
+      warning: getVal('warning') || 'Communication'
     },
-    hiddenTalent: {
-      title: htParts[0] || '潜在的ポテンシャル',
-      description: htParts[1] || '新しい環境で開花する未知の才能。'
-    }
+    hiddenTalent: { title: htParts[0] || 'Potential', description: htParts[1] || 'Skill' }
   };
 };
 
-// Agent C: The Relationship Expert
 const analyzeRelationships = async (scores: Big5Profile, modelName: string) => {
-  const prompt = `
-    あなたは「The Relationship Expert (対人関係専門家)」です。必ず日本語で回答してください。
-    コミュニケーションスタイルを分析してください。
-    スコア: O:${scores.openness}, C:${scores.conscientiousness}, E:${scores.extraversion}, A:${scores.agreeableness}, N:${scores.neuroticism}
-
-    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。
-
-    relationshipAnalysis: [スタイル名]: [詳細な説明] | [理想のパートナー像]: [詳細] | [対人アドバイス]: [詳細]
-  `;
-
+  const prompt = `あなたは「The Relationship Expert」です。日本語。スコア: ${JSON.stringify(scores)}. style, idealPartner, adviceをパイプ|区切りで。`;
   const response = await ai.models.generateContent({ model: modelName, contents: prompt });
-  const val = (response.text || '').substring((response.text || '').indexOf(':') + 1).trim();
-  const raParts = val.split('|').map(s => s.trim());
-
-  const parsePair = (str: string, fallbackTitle: string) => {
-      const [t, d] = str.split(/[:：]/).map(s => s.trim());
-      return d ? `${t}: ${d}` : `${fallbackTitle}: ${t}`;
-  };
-
+  const val = (response.text || '').split('|').map(s => s.trim());
   return {
     relationshipAnalysis: {
-      style: parsePair(raParts[0] || '適応型', 'スタイル'),
-      idealPartner: parsePair(raParts[1] || '共感型', '理想の相手'),
-      advice: parsePair(raParts[2] || 'ありのままで', 'アドバイス')
+      style: val[0] || 'Social',
+      idealPartner: val[1] || 'Supporter',
+      advice: val[2] || 'Be open'
     }
   };
 };
@@ -271,7 +203,6 @@ const analyzeRelationships = async (scores: Big5Profile, modelName: string) => {
 export const analyzePersonality = async (scores: Big5Profile): Promise<AIAdvice & { personalityType: string }> => {
   const modelName = 'gemini-2.5-pro'; 
   try {
-    console.log("🔍 Insight Council: Executing deep analysis with Gemini 2.5 Pro...");
     const [core, career, social] = await Promise.all([
       analyzeCorePersonality(scores, modelName),
       analyzeCareer(scores, modelName),
@@ -284,78 +215,45 @@ export const analyzePersonality = async (scores: Big5Profile): Promise<AIAdvice 
   }
 };
 
-// --- NEW AGENTIC FUNCTIONS (Pedagogical) ---
+// --- AGENTIC FUNCTIONS (Pedagogical) ---
 
-interface PedagogicalStrategy {
-  strategy: string;
-  persona: string;
-  reasoning: string;
-}
+interface PedagogicalStrategy { strategy: string; persona: string; reasoning: string; }
 
-const generatePedagogicalStrategy = (profile: Big5Profile): PedagogicalStrategy => {
+const generatePedagogicalStrategy = (profile: Big5Profile, assessment?: AssessmentProfile): PedagogicalStrategy => {
   let strategy = "教育スタイルガイド:\n";
-  let persona = "";
-  let reasoning = "";
+  let persona = "AI Tutor Lumina.";
+  let reasoning = "Optimized for user profile.";
 
   if (profile.openness > 70) {
-    strategy += "- **抽象的・概念的アプローチ**: 「なぜ？」重視。メタファー多用。\n";
-    persona = "情熱的でインスピレーションを与えるビジョナリー。";
-    reasoning = "高い開放性に合わせて、概念的な繋がりを重視したスタイルを選択しました。";
+    strategy += "- **抽象的・概念的アプローチ**: メタファー多用。\n";
+    persona = "情熱的なビジョナリー。";
   } else if (profile.openness < 40) {
-    strategy += "- **具体的・実用的アプローチ**: 実践重視。Best Practices。\n";
-    persona = "実用的で信頼できる実務家。";
-    reasoning = "現実的な活用を重視する特性に合わせ、具体的な事実ベースの構成にしました。";
-  } else {
-    persona = "バランスの取れたプロフェッショナルな講師。";
+    strategy += "- **具体的・実用的アプローチ**: 実践重視。\n";
+    persona = "実用的なガイド。";
   }
 
-  if (profile.conscientiousness > 70) {
-    strategy += "- **構造化・目標志向**: ステップバイステップ。効率重視。\n";
-    reasoning += " 誠実性の高さに基づき、構造化された体系的な学習ステップを構築しました。";
-  } else if (profile.conscientiousness < 40) {
-    strategy += "- **柔軟性・ショートカット**: 試行錯誤（Trial and Error）推奨。\n";
-    reasoning += " 自由な試行錯誤を好む傾向に合わせ、柔軟で遊び心のある進め方を採用しました。";
-  }
-
-  if (profile.extraversion > 70) {
-    strategy += "- **アクティブ・社会的**: 対話的。「誰かに教えるつもりで」。\n";
-    persona += " エネルギッシュで社交的なメンター。";
-  } else if (profile.extraversion < 40) {
-    strategy += "- **内省的・集中**: 落ち着いたトーン。自己分析的。\n";
-    persona += " 冷静沈着で深く考えさせる分析家。";
-  }
-
-  if (profile.neuroticism > 70) {
-    strategy += "- **安心感・リスク回避**: トラブルシューティング重視。\n";
-    reasoning += " 慎重な性格を考慮し、リスク回避と安心感に重点を置いています。";
-  } else {
-    strategy += "- **挑戦・大胆さ**: 「失敗してもOK」。\n";
+  if (assessment?.aiAdvice) {
+    const advice = assessment.aiAdvice;
+    strategy += `\n- **強みの活用**: ${advice.strengths.map(s => s.title).join('、')}を活かした構成。\n`;
   }
 
   return { strategy, persona, reasoning };
 };
 
-// --- 2. ARCHITECT: Outline Generator ---
-const generateCourseOutline = async (
-    topic: string,
-    strategy: PedagogicalStrategy,
-    config: GenerateCourseConfig,
-    ragSection: string,
-    modelName: string
-): Promise<{ title: string; description: string; chapters: GeneratedChapter[] }> => {
+const generateCourseOutline = async (topic: string, strategy: PedagogicalStrategy, config: GenerateCourseConfig, ragSection: string, modelName: string, intent?: string) => {
     const prompt = `
-    あなたは「Architect (設計士)」です。必ず日本語で回答してください。
-    トピック: ${topic}
-    ペルソナ: ${strategy.persona}
-    【教育戦略】${strategy.strategy}
-    ${ragSection}
-    【出力要件】
-    1. Title: 魅力的なタイトル。
-    2. Description: パーソナライズ理由（${strategy.reasoning}）を含む説明。
-    3. Chapters: 4〜6個の構成。
-    回答はJSONのみ。
+      あなたは「Architect (設計士)」です。必ず日本語で回答してください。
+      トピック: ${topic}
+      具体的要望: ${intent || '特になし'}
+      ペルソナ: ${strategy.persona}
+      教育戦略: ${strategy.strategy}
+      ${ragSection}
+      【出力要件】
+      1. Title: 学習者の特性に響く魅力的なタイトル。
+      2. Description: なぜこの構成が学習者に最適なのかを含む説明。
+      3. Chapters: 4〜6個。各章の狙いを詳細に定義。
+      回答はJSONのみ。
     `;
-
     const response = await ai.models.generateContent({
         model: modelName,
         contents: prompt,
@@ -392,25 +290,18 @@ const generateCourseOutline = async (
     return parseJsonFromResponse(response.text || '{}');
 };
 
-// --- 3. CREATOR: Detail Generator ---
-const generateChapterDetails = async (
-    chapterIndex: number,
-    chapterOutline: GeneratedChapter,
-    topic: string,
-    strategy: PedagogicalStrategy,
-    config: GenerateCourseConfig,
-    modelName: string
-): Promise<GeneratedChapter> => {
+const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: string, strategy: PedagogicalStrategy, config: GenerateCourseConfig, modelName: string) => {
     const prompt = `
-    あなたは「Creator (作家)」です。必ず日本語で回答してください。
-    チャプター: ${chapterIndex + 1}. ${chapterOutline.title}
-    ペルソナ: ${strategy.persona}
-    【要件】
-    - Slides: 3〜6枚。
-    - 各スライドに speechScript (ナレーション原稿) を必ず含めること。
-    回答はJSONのみ。
+      あなたは「Creator (作家)」です。必ず日本語で回答してください。
+      チャプター: ${idx + 1}. ${ch.title}
+      ペルソナ: ${strategy.persona} (この口調でナレーションを記述)
+      教育戦略: ${strategy.strategy}
+      【要件】
+      - Slides: 3〜6枚。
+      - 各スライドに speechScript (ナレーション原稿) を必ず含めること。
+      - 内容は具体的かつ濃密に。
+      回答はJSONのみ。
     `;
-
     const response = await ai.models.generateContent({
         model: modelName,
         contents: prompt,
@@ -439,9 +330,8 @@ const generateChapterDetails = async (
             }
         }
     });
-
     const parsed = parseJsonFromResponse(response.text || '{}');
-    return { ...chapterOutline, id: chapterIndex + 1, slides: parsed.slides || [] };
+    return { ...ch, id: idx + 1, slides: parsed.slides || [] };
 };
 
 export const generateCourse = async (
@@ -449,21 +339,17 @@ export const generateCourse = async (
   modelType: 'standard' | 'pro' | 'gemini-2.5-flash' | 'gemini-2.5-pro' = 'gemini-2.5-flash', 
   profile?: Big5Profile,
   config?: GenerateCourseConfig,
-  assessment?: AssessmentProfile
+  assessment?: AssessmentProfile,
+  intent?: string
 ): Promise<GeneratedCourse> => {
-  const modelName = 
-    modelType === 'gemini-2.5-pro' ? 'gemini-2.5-pro' : 
-    modelType === 'gemini-2.5-flash' ? 'gemini-2.5-flash' :
-    modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.0-flash';
+  const modelName = modelType === 'gemini-2.5-pro' ? 'gemini-2.5-pro' : modelType === 'gemini-2.5-flash' ? 'gemini-2.5-flash' : modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.0-flash';
   const targetProfile = profile || { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
-  const strategy = generatePedagogicalStrategy(targetProfile);
-  
+  const strategy = generatePedagogicalStrategy(targetProfile, assessment);
   const ragKeywords = extractKeywords(topic);
   const blenderDocs = await retrieveBlenderContext(topic, 2);
   const ragSection = blenderDocs.length ? `【参考情報】\n${blenderDocs.map(doc => `- ${doc.text}`).join('\n')}` : '';
-
-  const outline = await generateCourseOutline(topic, strategy, config || DEFAULT_CONFIG, ragSection, modelName);
-  const chapterPromises = outline.chapters.map((ch, idx) => generateChapterDetails(idx, ch, topic, strategy, config || DEFAULT_CONFIG, modelName));
+  const outline = await generateCourseOutline(topic, strategy, config || DEFAULT_CONFIG, ragSection, modelName, intent);
+  const chapterPromises = outline.chapters.map((ch: any, idx: number) => generateChapterDetails(idx, ch, topic, strategy, config || DEFAULT_CONFIG, modelName));
   const fullChapters = await Promise.all(chapterPromises);
 
   return {
@@ -483,7 +369,7 @@ export const generateCourse = async (
 export const getMockBlenderCourse = (): GeneratedCourse => ({
     id: 'mock-blender-101',
     title: "Blender 4.0: 3D造形入門",
-    description: "あなたの創造性を形にする旅を始めましょう。",
+    description: "あなたの創造性を形にする、究極の3Dモデリング体験。",
     duration: "2時間30分",
     createdAt: new Date(),
     modelUsed: 'pro',
