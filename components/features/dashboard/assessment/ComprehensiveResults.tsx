@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Eye, Compass, CheckCircle2, Wind, Zap, Moon, HeartHandshake, Scale, 
-  ShieldCheck, Gem, BarChart3, Quote, Briefcase, Sparkles, Fingerprint, Brain, Infinity
+  ShieldCheck, Gem, BarChart3, Quote, Briefcase, Sparkles, Fingerprint, Brain, Infinity, Swords, Box, Lightbulb
 } from 'lucide-react';
 import { AssessmentProfile } from '../../../../types';
 
