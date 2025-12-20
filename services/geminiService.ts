@@ -160,13 +160,28 @@ const analyzeCareer = async (scores: Big5Profile, modelName: string) => {
     以下のスコアに基づき、ビジネス適性を分析してください。
     スコア: O:${scores.openness}, C:${scores.conscientiousness}, E:${scores.extraversion}, A:${scores.agreeableness}, N:${scores.neuroticism}
 
-    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。JSONは使用しないこと。
+    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。JSONは使用しないこと。各項目は簡潔に。
 
-    careerCompatibility: [向いている環境]
+    careerCompatibility: [向いている環境の説明]
     @@@
-    businessPartnership: [役割] | [相性の良い相手] | [注意点]
+    role: [ビジネス上の役割（一言で）]
+    @@@
+    bestSync: [相性の良いパートナーのタイプ]
+    @@@
+    warning: [注意点・リスク]
     @@@
     hiddenTalent: [才能のタイトル] | [説明]
+
+    出力例:
+    スタートアップや新規事業開発。
+    @@@
+    ビジョナリー・リーダー
+    @@@
+    実務遂行力の高いオペレーター
+    @@@
+    細部の詰めが甘くなること
+    @@@
+    潜在的交渉力 | 相手の懐に入るのが上手い
   `;
 
   const response = await ai.models.generateContent({
@@ -179,14 +194,15 @@ const analyzeCareer = async (scores: Big5Profile, modelName: string) => {
   const parts = text.split('@@@').map(p => p.trim());
   
   const getValue = (section: string) => {
+    // Remove "Label:" prefix if present
     const splitIdx = section.indexOf(':');
-    if (splitIdx === -1) return section;
-    return section.substring(splitIdx + 1).trim();
+    if (splitIdx !== -1 && splitIdx < 20) { 
+        return section.substring(splitIdx + 1).trim();
+    }
+    return section;
   };
 
-  const bpParts = getValue(parts[1] || '').split('|').map(s => s.trim());
-  const htRaw = getValue(parts[2] || '');
-  // Try split by | first, if not, try split by :
+  const htRaw = getValue(parts[4] || '');
   let htParts = htRaw.split('|').map(s => s.trim());
   if (htParts.length < 2 && htRaw.includes(':')) {
       htParts = htRaw.split(':').map(s => s.trim());
@@ -195,9 +211,9 @@ const analyzeCareer = async (scores: Big5Profile, modelName: string) => {
   return {
     careerCompatibility: getValue(parts[0] || ''),
     businessPartnership: {
-      role: bpParts[0] || 'Specialist',
-      bestSync: bpParts[1] || 'Complementary Type',
-      warning: bpParts[2] || 'Communication Gaps'
+      role: getValue(parts[1] || 'Specialist'),
+      bestSync: getValue(parts[2] || 'Complementary Type'),
+      warning: getValue(parts[3] || 'Communication Gaps')
     },
     hiddenTalent: {
       title: htParts[0] || 'Latent Potential',
