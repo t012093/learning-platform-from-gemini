@@ -61,71 +61,6 @@ export const createChatSession = (systemInstruction?: string, modelType: 'standa
 export const sendMessageStream = async (chat: Chat, message: string) => { return await chat.sendMessageStream({ message }); };
 export const analyzeWriting = async (text: string, rubric: LessonRubric, modelType: 'standard' | 'pro' = 'standard'): Promise<AnalysisResult> => { return {} as AnalysisResult; };
 
-// --- 1. STRATEGIST: Analysis Engine ---
-export const analyzePersonality = async (scores: Big5Profile): Promise<AIAdvice & { personalityType: string }> => {
-  const modelName = 'gemini-2.0-flash';
-  const prompt = `
-    以下のビッグファイブ・パーソナリティ・スコア（0-100）に基づき、この人物の性格特性、学習戦略、および隠れた才能を深く分析してください。
-    
-    スコア:
-    - Openness (開放性): ${scores.openness}
-    - Conscientiousness (誠実性): ${scores.conscientiousness}
-    - Extraversion (外向性): ${scores.extraversion}
-    - Agreeableness (協調性): ${scores.agreeableness}
-    - Neuroticism (繊細さ): ${scores.neuroticism}
-    
-    【出力要件】
-    1. personalityType: 次の中から最も近いものを1つ選んでください: '冒険家', '戦略家', 'サポーター', '思想家', '職人', 'バランサー'
-    2. strengths: 3つの強み（title, description）
-    3. growthTips: 3つの成長アドバイス（title, description）
-    4. learningStrategy: 学習戦略
-       - title: 戦略名
-       - approach: 基本的なアプローチ（1文）
-       - steps: 3つの具体的なステップ（label, action）
-    5. careerCompatibility: 向いている職業や役割（1文）
-    6. relationshipAnalysis: 対人関係の分析
-       - style: 対人スタイル
-       - idealPartner: 理想的なパートナー像
-       - advice: アドバイス
-    7. businessPartnership: ビジネス上のパートナーシップ
-       - role: 推奨される役割
-       - bestSync: 相性の良いタイプ
-       - warning: 注意点
-    8. hiddenTalent: 隠れた才能（title, description）
-
-    レスポンスは必ず指定されたJSONフォーマットに従ってください。日本語で回答してください。
-  `;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            personalityType: { type: Type.STRING },
-            strengths: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, description: { type: Type.STRING } } } },
-            growthTips: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, description: { type: Type.STRING } } } },
-            learningStrategy: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, approach: { type: Type.STRING }, steps: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { label: { type: Type.STRING }, action: { type: Type.STRING } } } } } },
-            careerCompatibility: { type: Type.STRING },
-            relationshipAnalysis: { type: Type.OBJECT, properties: { style: { type: Type.STRING }, idealPartner: { type: Type.STRING }, advice: { type: Type.STRING } } },
-            businessPartnership: { type: Type.OBJECT, properties: { role: { type: Type.STRING }, bestSync: { type: Type.STRING }, warning: { type: Type.STRING } } },
-            hiddenTalent: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, description: { type: Type.STRING } } }
-          }
-        }
-      }
-    });
-
-    const result = JSON.parse(response.text || '{}');
-    return result;
-  } catch (error) {
-    console.error("Personality analysis failed:", error);
-    throw error;
-  }
-};
-
 // --- Helpers ---
 const ensureString = (value: any): string => {
   if (typeof value === 'string') return value;
@@ -148,7 +83,190 @@ const parseJsonFromResponse = (text: string) => {
     }
 };
 
-// --- NEW AGENTIC FUNCTIONS ---
+// --- 1. STRATEGIST: Analysis Engine (The Insight Council) ---
+
+// Agent A: The Profiler (Psychological Analyst)
+const analyzeCorePersonality = async (scores: Big5Profile, modelName: string) => {
+  const prompt = `
+    あなたは「The Profiler (心理分析官)」です。
+    以下のBig5スコアに基づき、性格特性と学習戦略を分析してください。
+
+    スコア: Openness:${scores.openness}, Conscientiousness:${scores.conscientiousness}, Extraversion:${scores.extraversion}, Agreeableness:${scores.agreeableness}, Neuroticism:${scores.neuroticism}
+
+    以下のフォーマットで回答してください。区切り文字「@@@」を厳守すること。JSONは使用しないこと。
+
+    personalityType: [性格タイプ]
+    @@@
+    strengths: [強み1のタイトル]: [強み1の説明] | [強み2のタイトル]: [強み2の説明] | [強み3のタイトル]: [強み3の説明]
+    @@@
+    growthTips: [成長1のタイトル]: [成長1の説明] | [成長2のタイトル]: [成長2の説明] | [成長3のタイトル]: [成長3の説明]
+    @@@
+    learningStrategy: [戦略名] | [アプローチ] | [ステップ1] | [ステップ2] | [ステップ3]
+
+    ※性格タイプは '冒険家', '戦略家', 'サポーター', '思想家', '職人', 'バランサー' から1つ。
+    ※各説明は簡潔に。
+  `;
+
+  const response = await ai.models.generateContent({
+    model: modelName,
+    contents: prompt,
+    config: { maxOutputTokens: 2000 } // Plain text generation
+  });
+
+  const text = response.text || '';
+  const parts = text.split('@@@').map(p => p.trim());
+
+  const getValue = (section: string) => {
+    if (!section) return '';
+    const splitIdx = section.indexOf(':');
+    return section.substring(splitIdx + 1).trim();
+  };
+
+  const getList = (section: string) => {
+    const raw = getValue(section);
+    return raw.split('|').map(item => {
+      item = item.trim();
+      // Improved Regex: capture everything before first : as title, and everything after as desc
+      const match = item.match(/^(.+?)[:：]\s*(.*)$/);
+      if (match) {
+        return { title: match[1].trim(), description: match[2].trim() };
+      }
+      return { title: "Point", description: item };
+    }).filter(i => i.description.length > 0);
+  };
+
+  // Find sections by key name to be more robust than index-based
+  const findPart = (key: string) => parts.find(p => p.toLowerCase().includes(key.toLowerCase())) || '';
+
+  const lsRaw = getValue(findPart('learningStrategy'));
+  const lsParts = lsRaw.split('|').map(s => s.trim());
+
+  return {
+    personalityType: getValue(findPart('personalityType')).replace(/['"「」]/g, '') || 'バランサー',
+    strengths: getList(findPart('strengths')),
+    growthTips: getList(findPart('growthTips')),
+    learningStrategy: {
+      title: lsParts[0] || 'Custom Strategy',
+      approach: lsParts[1] || 'Adaptive Learning',
+      steps: lsParts.slice(2).map(s => ({ label: 'Step', action: s }))
+    }
+  };
+};
+
+// Agent B: The Career Coach (Professional Strategist)
+const analyzeCareer = async (scores: Big5Profile, modelName: string) => {
+  const prompt = `
+    あなたは「The Career Coach (キャリア戦略家)」です。
+    以下のスコアに基づき、ビジネス適性を分析してください。
+    スコア: O:${scores.openness}, C:${scores.conscientiousness}, E:${scores.extraversion}, A:${scores.agreeableness}, N:${scores.neuroticism}
+
+    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。JSONは使用しないこと。
+
+    careerCompatibility: [向いている環境]
+    @@@
+    businessPartnership: [役割] | [相性の良い相手] | [注意点]
+    @@@
+    hiddenTalent: [才能のタイトル] | [説明]
+  `;
+
+  const response = await ai.models.generateContent({
+    model: modelName,
+    contents: prompt,
+    config: { maxOutputTokens: 2000 }
+  });
+
+  const text = response.text || '';
+  const parts = text.split('@@@').map(p => p.trim());
+  
+  const getValue = (section: string) => {
+    const splitIdx = section.indexOf(':');
+    if (splitIdx === -1) return section;
+    return section.substring(splitIdx + 1).trim();
+  };
+
+  const bpParts = getValue(parts[1] || '').split('|').map(s => s.trim());
+  const htRaw = getValue(parts[2] || '');
+  // Try split by | first, if not, try split by :
+  let htParts = htRaw.split('|').map(s => s.trim());
+  if (htParts.length < 2 && htRaw.includes(':')) {
+      htParts = htRaw.split(':').map(s => s.trim());
+  }
+
+  return {
+    careerCompatibility: getValue(parts[0] || ''),
+    businessPartnership: {
+      role: bpParts[0] || 'Specialist',
+      bestSync: bpParts[1] || 'Complementary Type',
+      warning: bpParts[2] || 'Communication Gaps'
+    },
+    hiddenTalent: {
+      title: htParts[0] || 'Latent Potential',
+      description: htParts[1] || htParts[0] || 'Unlocking new skills...'
+    }
+  };
+};
+
+// Agent C: The Relationship Expert (Social Dynamics)
+const analyzeRelationships = async (scores: Big5Profile, modelName: string) => {
+  const prompt = `
+    あなたは「The Relationship Expert (対人関係専門家)」です。
+    コミュニケーションスタイルを分析してください。
+    スコア: O:${scores.openness}, C:${scores.conscientiousness}, E:${scores.extraversion}, A:${scores.agreeableness}, N:${scores.neuroticism}
+
+    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。JSONは使用しないこと。
+
+    relationshipAnalysis: [スタイル] | [理想のパートナー] | [アドバイス]
+  `;
+
+  const response = await ai.models.generateContent({
+    model: modelName,
+    contents: prompt,
+    config: { maxOutputTokens: 2000 } // Increased for safety
+  });
+
+  const text = response.text || '';
+  // Remove label if present
+  const val = text.includes(':') ? text.substring(text.indexOf(':') + 1).trim() : text;
+  const raParts = val.split('|').map(s => s.trim());
+
+  return {
+    relationshipAnalysis: {
+      style: raParts[0] || 'Adaptive',
+      idealPartner: raParts[1] || 'Anyone',
+      advice: raParts[2] || 'Be yourself'
+    }
+  };
+};
+
+// Main Orchestrator for Personality Analysis
+export const analyzePersonality = async (scores: Big5Profile): Promise<AIAdvice & { personalityType: string }> => {
+  // Use Gemini 2.5 Flash for high stability and 65k output window
+  const modelName = 'gemini-2.5-flash'; 
+
+  try {
+    console.log("🔍 Insight Council: Starting parallel analysis using Gemini 2.5 Flash (Plain Text Mode)...");
+    
+    const [core, career, social] = await Promise.all([
+      analyzeCorePersonality(scores, modelName),
+      analyzeCareer(scores, modelName),
+      analyzeRelationships(scores, modelName)
+    ]);
+
+    console.log("✅ Insight Council: Analysis complete.");
+
+    return {
+      ...core,
+      ...career,
+      ...social
+    };
+
+  } catch (error) {
+    console.error("Personality analysis failed:", error);
+    throw error;
+  }
+};
+
+// --- NEW AGENTIC FUNCTIONS (Pedagogical) ---
 
 interface PedagogicalStrategy {
   strategy: string;

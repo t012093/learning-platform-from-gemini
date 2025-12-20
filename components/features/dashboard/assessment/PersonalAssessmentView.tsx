@@ -47,6 +47,7 @@ const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onNavig
     try {
       // Gemini API で分析を実行
       const advice = await analyzePersonality(finalScores);
+      console.log("Gemini Advice:", advice);
       
       const newProfile: AssessmentProfile = {
         scores: finalScores,

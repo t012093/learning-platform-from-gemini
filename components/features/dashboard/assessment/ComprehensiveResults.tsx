@@ -187,12 +187,12 @@ const ComprehensiveResults: React.FC<ComprehensiveResultsProps> = ({ profile, on
             <div className="space-y-10 relative z-10">
               <div className="space-y-2">
                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Signature Style</span>
-                <p className="text-2xl md:text-3xl font-black leading-tight tracking-tight">{advice?.relationshipAnalysis.style}</p>
+                <p className="text-2xl md:text-3xl font-black leading-tight tracking-tight">{advice?.relationshipAnalysis?.style || "Analysis pending..."}</p>
               </div>
               <div className="space-y-2">
                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Optimal Partnership</span>
                 <p className="text-lg font-bold text-slate-300 leading-relaxed border-l-2 border-rose-500/50 pl-6 italic">
-                  {advice?.relationshipAnalysis.idealPartner}
+                  {advice?.relationshipAnalysis?.idealPartner || "Calculating synergy..."}
                 </p>
               </div>
             </div>
@@ -200,7 +200,7 @@ const ComprehensiveResults: React.FC<ComprehensiveResultsProps> = ({ profile, on
           <div className="lg:col-span-5 bg-white p-10 md:p-14 rounded-[3.5rem] border border-slate-100 shadow-xl flex flex-col justify-center text-center relative">
              <Quote className="w-8 h-8 text-indigo-100 mb-8 mx-auto" />
              <p className="text-slate-600 font-medium leading-relaxed italic text-xl px-2">
-               "{advice?.relationshipAnalysis.advice}"
+               "{advice?.relationshipAnalysis?.advice || "Generating insights..."}"
              </p>
              <div className="mt-10 pt-8 border-t border-slate-50">
                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em]">AI Relational Guidance</span>
@@ -216,17 +216,17 @@ const ComprehensiveResults: React.FC<ComprehensiveResultsProps> = ({ profile, on
             <div>
               <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Professional Role</span>
               <h5 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
-                {advice?.businessPartnership.role}
+                {advice?.businessPartnership?.role || "Defining role..."}
               </h5>
             </div>
             <div className="grid sm:grid-cols-2 gap-8 pt-6 border-t border-slate-50">
               <div className="space-y-2">
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">High Synergy Type</span>
-                <p className="font-bold text-slate-700 leading-relaxed">{advice?.businessPartnership.bestSync}</p>
+                <p className="font-bold text-slate-700 leading-relaxed">{advice?.businessPartnership?.bestSync || "Analyzing..."}</p>
               </div>
               <div className="space-y-2">
                 <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest block">Risk/Warning</span>
-                <p className="font-bold text-slate-700 leading-relaxed">{advice?.businessPartnership.warning}</p>
+                <p className="font-bold text-slate-700 leading-relaxed">{advice?.businessPartnership?.warning || "Scanning risks..."}</p>
               </div>
             </div>
           </div>
@@ -236,8 +236,8 @@ const ComprehensiveResults: React.FC<ComprehensiveResultsProps> = ({ profile, on
               <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center p-3 text-white mb-6 shadow-inner">
                 <Sparkles className="w-full h-full animate-pulse" />
               </div>
-              <h5 className="text-3xl font-black mb-3 tracking-tight leading-none">{advice?.hiddenTalent.title}</h5>
-              <p className="text-white/90 text-sm leading-relaxed font-medium italic opacity-80">{advice?.hiddenTalent.description}</p>
+              <h5 className="text-3xl font-black mb-3 tracking-tight leading-none">{advice?.hiddenTalent?.title || "Discovering..."}</h5>
+              <p className="text-white/90 text-sm leading-relaxed font-medium italic opacity-80">{advice?.hiddenTalent?.description || "Unlocking potential..."}</p>
             </div>
             <Fingerprint className="text-white/5 w-[18rem] h-[18rem] absolute -bottom-16 -right-16 rotate-12" />
           </div>
@@ -252,26 +252,26 @@ const ComprehensiveResults: React.FC<ComprehensiveResultsProps> = ({ profile, on
             <h4 className="text-indigo-400 font-black uppercase tracking-[0.5em] text-[10px] flex items-center">
               <span className="w-12 h-px bg-indigo-400/40 mr-4"></span> Core Capabilities
             </h4>
-            <div className="grid gap-6">
-              {advice?.strengths.map((s, i) => (
-                <div key={i} className="group bg-white/5 border border-white/10 p-8 rounded-[2rem] hover:bg-white/[0.08] transition-all">
-                  <h5 className="text-xl font-black text-white mb-2 tracking-tight">{s.title}</h5>
-                  <p className="text-slate-400 text-sm leading-relaxed font-medium">{s.description}</p>
+            <div className="grid gap-4 sm:gap-6">
+              {advice?.strengths?.map((s, i) => (
+                <div key={i} className="group bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:bg-white/[0.08] transition-all">
+                  <h5 className="text-lg sm:text-xl font-black text-white mb-2 tracking-tight leading-snug">{s.title}</h5>
+                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed font-medium">{s.description}</p>
                 </div>
-              ))}
+              )) || <div className="text-slate-500 italic">Analysis in progress...</div>}
             </div>
           </div>
           <div className="space-y-12">
             <h4 className="text-purple-400 font-black uppercase tracking-[0.5em] text-[10px] flex items-center">
               <span className="w-12 h-px bg-purple-400/40 mr-4"></span> Strategic Growth
             </h4>
-            <div className="grid gap-6">
-              {advice?.growthTips.map((s, i) => (
-                <div key={i} className="group bg-white/5 border border-white/10 p-8 rounded-[2rem] hover:bg-white/[0.08] transition-all">
-                  <h5 className="text-xl font-black text-white mb-2 tracking-tight">{s.title}</h5>
-                  <p className="text-slate-400 text-sm leading-relaxed font-medium">{s.description}</p>
+            <div className="grid gap-4 sm:gap-6">
+              {advice?.growthTips?.map((s, i) => (
+                <div key={i} className="group bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:bg-white/[0.08] transition-all">
+                  <h5 className="text-lg sm:text-xl font-black text-white mb-2 tracking-tight leading-snug">{s.title}</h5>
+                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed font-medium">{s.description}</p>
                 </div>
-              ))}
+              )) || <div className="text-slate-500 italic">Processing growth paths...</div>}
             </div>
           </div>
         </div>
