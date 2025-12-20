@@ -80,7 +80,18 @@ export const createChatSession = (systemInstruction?: string, modelType: 'standa
 /**
  * Creates a chat session for scoping the user's learning intent.
  */
-export const createScopingChat = (profile: Big5Profile | null): Chat => {
+export const createScopingChat = (
+  profile: Big5Profile | null,
+  modelType: 'standard' | 'pro' | 'gemini-2.5-flash' | 'gemini-2.5-pro' = 'gemini-2.5-flash'
+): Chat => {
+  const modelName =
+    modelType === 'gemini-2.5-pro'
+      ? 'gemini-2.5-pro'
+      : modelType === 'gemini-2.5-flash'
+      ? 'gemini-2.5-flash'
+      : modelType === 'pro'
+      ? 'gemini-3.0-pro'
+      : 'gemini-2.0-flash';
   const instruction = `
     あなたは「Lumina 学習コンシェルジュ」です。
     ユーザーが何を学びたいかをヒアリングし、最高のパーソナライズカリキュラムを作るための準備をします。
@@ -99,7 +110,7 @@ export const createScopingChat = (profile: Big5Profile | null): Chat => {
   `;
 
   return ai.chats.create({
-    model: 'gemini-2.5-flash',
+    model: modelName,
     config: { systemInstruction: instruction }
   });
 };
@@ -107,7 +118,7 @@ export const createScopingChat = (profile: Big5Profile | null): Chat => {
 export const sendMessageStream = async (chat: Chat, message: string) => {
   try {
     const result = await chat.sendMessageStream({ message });
-    return result.stream;
+    return result;
   } catch (error) {
     console.error("Error sending message to Gemini:", error);
     throw error;

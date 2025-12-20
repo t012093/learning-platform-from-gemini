@@ -35,9 +35,6 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
         setAssessment(currentAssessment);
       } catch (e) { console.error(e); }
     }
-
-    // Init Scoping Chat
-    chatSession.current = createScopingChat(currentAssessment?.scores || null);
     
     // Initial AI message
     const initialMsg = "こんにちは！今日はどんなことを学びたいですか？具体的なトピックや、今のレベル（初心者など）を教えてください。";
@@ -51,6 +48,10 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
     ]);
   }, []);
 
+  useEffect(() => {
+    chatSession.current = createScopingChat(assessment?.scores || null, modelType);
+  }, [assessment, modelType]);
+
   // Auto scroll chat
   useEffect(() => {
     if (scrollRef.current) {
@@ -60,6 +61,10 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isAiTyping) return;
+
+    if (!chatSession.current) {
+        chatSession.current = createScopingChat(assessment?.scores || null, modelType);
+    }
 
     const userMsg: Message = {
         id: Date.now().toString(),
@@ -74,13 +79,19 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
 
     try {
         const stream = await sendMessageStream(chatSession.current, inputValue);
+        if (!stream || typeof (stream as any)[Symbol.asyncIterator] !== 'function') {
+            throw new Error("Invalid stream response from AI.");
+        }
         let fullText = '';
         
         const aiMsgId = (Date.now() + 1).toString();
         setMessages(prev => [...prev, { id: aiMsgId, role: 'model', text: '', timestamp: new Date(), isStreaming: true }]);
 
         for await (const chunk of stream) {
-            const chunkText = chunk.text();
+            const chunkText = typeof (chunk as any).text === 'function'
+                ? (chunk as any).text()
+                : (chunk as any).text;
+            if (!chunkText) continue;
             fullText += chunkText;
             setMessages(prev => prev.map(m => m.id === aiMsgId ? { ...m, text: fullText } : m));
         }
@@ -177,7 +188,11 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
                         onClick={() => setModelType(m)}
                         className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all ${modelType === m ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                     >
-                        {m.replace('gemini-', '').replace('standard', '2.0F').replace('pro', '3.0P')}
+                        {m === 'standard'
+                            ? '2.0F'
+                            : m === 'pro'
+                            ? '3.0P'
+                            : m.replace('gemini-', '')}
                     </button>
                 ))}
             </div>
@@ -312,7 +327,7 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
                     <button 
                         onClick={() => {
                             setMessages([]);
-                            chatSession.current = createScopingChat(assessment?.scores || null);
+                            chatSession.current = createScopingChat(assessment?.scores || null, modelType);
                             setMessages([{ id: 'reset', role: 'model', text: "プランをリセットしました。何から始めましょうか？", timestamp: new Date() }]);
                         }}
                         className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mx-auto transition-colors"
