@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
-import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Profile } from '../types';
+import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Profile, AIAdvice } from '../types';
 import { retrieveBlenderContext } from './blenderRagService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -38,10 +38,7 @@ const DEFAULT_CONFIG: GenerateCourseConfig = {
 const CREATIVE_CONFIG: GenerateCourseConfig = {
   targetAudience: "クリエイター/アーティスト",
   slideDesignTheme: "クリエイター向けダークテーマ。グラスモーフィズム、ネオンエフェクト、奥行きのあるレイヤー構造。",
-  slideGranularity: `詳細かつ具体的。スライドの内容に応じて以下の記述パターンを使い分け、各行50文字以上をキープすること:
-  1. 【操作系】手順 + 結果 + プロの視点 ("Ctrl+Bでベベルをかけ、ハイライトが入る角を作ります。これでリアリティが段違いになります")
-  2. 【理論系】定義 + たとえ話 + 重要性 ("トポロジーとはポリゴンの流れ。筋肉の繊維のように整えることで、きれいな変形が可能になります")
-  3. 【マインド】視点 + 具体例 + ゴール ("現実は不完全です。あえて汚れを加えることで、CG臭さを消し、物語を感じさせる作品になります")`,
+  slideGranularity: `詳細かつ具体的.`, // This is a template literal, no escaping needed here.
   courseType: 'creative',
   knowledgeDepth: 'Deep',
   difficultyLevel: 'Intermediate',
@@ -49,32 +46,90 @@ const CREATIVE_CONFIG: GenerateCourseConfig = {
   colorPalette: { primary: "#6366f1", secondary: "#a855f7", accent: "#06b6d4", bg: "#020617" },
   brandKeywords: ["Cyberpunk", "High-fidelity", "Immersive", "Vibrant"],
   typographyHint: "Monospace for code, Bold Display for titles",
-  teacherPersona: "『愛されキャラ×クリエイティブ・ミューズ』のミックス。明るく、想像力を刺激する語り口。「魔法みたい！」「ここが私の推しポイント」など感情豊かに。失敗を恐れさせない励ましと、技術的な驚きを共有する。"
+  teacherPersona: "『愛されキャラ×クリエイティブ・ミューズ』のミックス。明るく、想像力を刺激する語り口。"
 };
 
 // --- Chat & Analysis ---
 export const createChatSession = (systemInstruction?: string, modelType: 'standard' | 'pro' = 'standard'): Chat => {
-    const defaultInstruction = `You are Lumina, a professional English tutor for a B1+/B2 learner.`;
-    const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
-    return ai.chats.create({ model: modelName, config: { systemInstruction: systemInstruction || defaultInstruction } });
+  const defaultInstruction = `You are Lumina, a professional English tutor for a B1+/B2 learner.
+      Your goal is to help them sound more "Exploratory" and "Logical" rather than just "Correct".
+      Focus on: Softening (tone), Bridging (logic connections), and Structure.`;
+
+  const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
+
+  return ai.chats.create({
+    model: modelName,
+    config: {
+      systemInstruction: systemInstruction || defaultInstruction,
+    },
+  });
 };
-export const sendMessageStream = async (chat: Chat, message: string) => { return await chat.sendMessageStream({ message }); };
-export const analyzeWriting = async (text: string, rubric: LessonRubric, modelType: 'standard' | 'pro' = 'standard'): Promise<AnalysisResult> => { return {} as AnalysisResult; };
+
+export const sendMessageStream = async (chat: Chat, message: string) => {
+  try {
+    return await chat.sendMessageStream({ message });
+  } catch (error) {
+    console.error("Error sending message to Gemini:", error);
+    throw error;
+  }
+};
+
+export const analyzeWriting = async (text: string, rubric: LessonRubric, modelType: 'standard' | 'pro' = 'standard'): Promise<AnalysisResult> => {
+  const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
+
+  const prompt = `
+    Analyze the following English text based on the provided rubric.
+    Return the analysis as a JSON object matching the required schema.
+
+    TEXT: "${text}"
+
+    RUBRIC:
+    - Clarity: ${rubric.clarity}
+    - Linking: ${rubric.linking}
+    - Tone: ${rubric.tone}
+
+    OUTPUT SCHEMA:
+    {
+      "clarityScore": number (0-100),
+      "linkingScore": number (0-100),
+      "toneScore": number (0-100),
+      "feedback": string (concise explanation),
+      "refinedVersion": string (improved version of the text)
+    }
+
+    Response must be JSON only.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            clarityScore: { type: Type.NUMBER },
+            linkingScore: { type: Type.NUMBER },
+            toneScore: { type: Type.NUMBER },
+            feedback: { type: Type.STRING },
+            refinedVersion: { type: Type.STRING }
+          },
+          required: ["clarityScore", "linkingScore", "toneScore", "feedback", "refinedVersion"]
+        }
+      }
+    });
+
+    return parseJsonFromResponse(response.text || '{}');
+  } catch (error) {
+    console.error("Writing analysis failed:", error);
+    throw error;
+  }
+};
 
 // --- Helpers ---
-const ensureString = (value: any): string => {
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number') return String(value);
-  return '';
-};
-
-const extractKeywords = (text: string): string[] => {
-  return text.split(/[\s、。,.]+/).map(t => t.trim()).filter(Boolean).slice(0, 6);
-};
-
 const parseJsonFromResponse = (text: string) => {
     try {
-        // Clean markdown backticks if present
         const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
         return JSON.parse(cleaned);
     } catch (e) {
@@ -85,197 +140,144 @@ const parseJsonFromResponse = (text: string) => {
 
 // --- 1. STRATEGIST: Analysis Engine (The Insight Council) ---
 
-// Agent A: The Profiler (Psychological Analyst)
+// Agent A: The Profiler
 const analyzeCorePersonality = async (scores: Big5Profile, modelName: string) => {
   const prompt = `
-    あなたは「The Profiler (心理分析官)」です。
-    以下のBig5スコアに基づき、性格特性と学習戦略を分析してください。
+    あなたは「The Profiler (心理分析官)」です。必ず日本語で回答してください。
+    以下のBig5スコアに基づき、性格特性と学習戦略を詳細に分析してください。
 
     スコア: Openness:${scores.openness}, Conscientiousness:${scores.conscientiousness}, Extraversion:${scores.extraversion}, Agreeableness:${scores.agreeableness}, Neuroticism:${scores.neuroticism}
 
-    以下のフォーマットで回答してください。区切り文字「@@@」を厳守すること。JSONは使用しないこと。
-
+    以下のフォーマットを厳守してください。区切り文字「@@@」を必ず入れてください。
+    
     personalityType: [性格タイプ]
     @@@
-    strengths: [強み1のタイトル]: [強み1の説明] | [強み2のタイトル]: [強み2の説明] | [強み3のタイトル]: [強み3の説明]
+    strengths: [強み1]: [詳細な説明] | [強み2]: [詳細な説明] | [強み3]: [詳細な説明]
     @@@
-    growthTips: [成長1のタイトル]: [成長1の説明] | [成長2のタイトル]: [成長2の説明] | [成長3のタイトル]: [成長3の説明]
+    growthTips: [アドバイス1]: [詳細な説明] | [アドバイス2]: [詳細な説明] | [アドバイス3]: [詳細な説明]
     @@@
-    learningStrategy: [戦略名] | [アプローチ] | [ステップ1] | [ステップ2] | [ステップ3]
+    learningStrategy: [戦略名] | [基本方針の説明] | [具体ステップ1] | [具体ステップ2] | [具体ステップ3]
 
     ※性格タイプは '冒険家', '戦略家', 'サポーター', '思想家', '職人', 'バランサー' から1つ。
-    ※各説明は簡潔に。
   `;
 
-  const response = await ai.models.generateContent({
-    model: modelName,
-    contents: prompt,
-    config: { maxOutputTokens: 2000 } // Plain text generation
-  });
+  const response = await ai.models.generateContent({ model: modelName, contents: prompt });
+  const parts = (response.text || '').split('@@@').map(p => p.trim());
 
-  const text = response.text || '';
-  const parts = text.split('@@@').map(p => p.trim());
-
-  const getValue = (section: string) => {
-    if (!section) return '';
-    const splitIdx = section.indexOf(':');
-    return section.substring(splitIdx + 1).trim();
+  const getSectionValue = (key: string) => {
+      const found = parts.find(p => p.toLowerCase().includes(key.toLowerCase()));
+      if (!found) return '';
+      return found.substring(found.indexOf(':') + 1).trim();
   };
 
-  const getList = (section: string) => {
-    const raw = getValue(section);
-    return raw.split('|').map(item => {
-      item = item.trim();
-      // Improved Regex: capture everything before first : as title, and everything after as desc
-      const match = item.match(/^(.+?)[:：]\s*(.*)$/);
-      if (match) {
-        return { title: match[1].trim(), description: match[2].trim() };
-      }
-      return { title: "Point", description: item };
-    }).filter(i => i.description.length > 0);
+  const parseList = (raw: string) => {
+      return raw.split('|').map(item => {
+          const [t, d] = item.split(/[:：]/).map(s => s.trim());
+          return { title: t || '分析中...', description: d || t || '詳細を生成中...' };
+      }).filter(i => i.title.length > 0);
   };
 
-  // Find sections by key name to be more robust than index-based
-  const findPart = (key: string) => parts.find(p => p.toLowerCase().includes(key.toLowerCase())) || '';
-
-  const lsRaw = getValue(findPart('learningStrategy'));
-  const lsParts = lsRaw.split('|').map(s => s.trim());
+  const lsParts = getSectionValue('learningStrategy').split('|').map(s => s.trim());
 
   return {
-    personalityType: getValue(findPart('personalityType')).replace(/['"「」]/g, '') || 'バランサー',
-    strengths: getList(findPart('strengths')),
-    growthTips: getList(findPart('growthTips')),
+    personalityType: getSectionValue('personalityType').replace(/['"「」]/g, '') || 'バランサー',
+    strengths: parseList(getSectionValue('strengths')),
+    growthTips: parseList(getSectionValue('growthTips')),
     learningStrategy: {
-      title: lsParts[0] || 'Custom Strategy',
-      approach: lsParts[1] || 'Adaptive Learning',
+      title: lsParts[0] || '個別最適化戦略',
+      approach: lsParts[1] || 'あなたの特性に合わせた学習アプローチ',
       steps: lsParts.slice(2).map(s => ({ label: 'Step', action: s }))
     }
   };
 };
 
-// Agent B: The Career Coach (Professional Strategist)
+// Agent B: The Career Coach
 const analyzeCareer = async (scores: Big5Profile, modelName: string) => {
   const prompt = `
-    あなたは「The Career Coach (キャリア戦略家)」です。
-    以下のスコアに基づき、ビジネス適性を分析してください。
+    あなたは「The Career Coach (キャリア戦略家)」です。必ず日本語で回答してください。
+    以下のスコアに基づき、ビジネス適性と職業的アイデンティティを深く分析してください。
     スコア: O:${scores.openness}, C:${scores.conscientiousness}, E:${scores.extraversion}, A:${scores.agreeableness}, N:${scores.neuroticism}
 
-    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。JSONは使用しないこと。各項目は簡潔に。
+    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。
 
-    careerCompatibility: [向いている環境の説明]
+    careerCompatibility: [あなたが最も輝く環境と、その理由を2文で詳細に]
     @@@
-    role: [ビジネス上の役割（一言で）]
+    role: [役割の名称]: [その役割がチームにどのような価値をもたらすかの具体的な解説]
     @@@
-    bestSync: [相性の良いパートナーのタイプ]
+    bestSync: [相性の良いタイプ名]: [なぜその人と組むと相乗効果が生まれるかの解説]
     @@@
-    warning: [注意点・リスク]
+    warning: [注意すべき課題]: [それが仕事にどう影響するかと、具体的な対策のアドバイス]
     @@@
-    hiddenTalent: [才能のタイトル] | [説明]
-
-    出力例:
-    スタートアップや新規事業開発。
-    @@@
-    ビジョナリー・リーダー
-    @@@
-    実務遂行力の高いオペレーター
-    @@@
-    細部の詰めが甘くなること
-    @@@
-    潜在的交渉力 | 相手の懐に入るのが上手い
+    hiddenTalent: [潜在能力の名前] | [その能力がどのような場面で発揮されるかの説明]
   `;
 
-  const response = await ai.models.generateContent({
-    model: modelName,
-    contents: prompt,
-    config: { maxOutputTokens: 2000 }
-  });
-
-  const text = response.text || '';
-  const parts = text.split('@@@').map(p => p.trim());
+  const response = await ai.models.generateContent({ model: modelName, contents: prompt });
+  const parts = (response.text || '').split('@@@').map(p => p.trim());
   
-  const getValue = (section: string) => {
-    // Remove "Label:" prefix if present
-    const splitIdx = section.indexOf(':');
-    if (splitIdx !== -1 && splitIdx < 20) { 
-        return section.substring(splitIdx + 1).trim();
-    }
-    return section;
+  const getSectionValue = (key: string) => {
+    const found = parts.find(p => p.toLowerCase().includes(key.toLowerCase()));
+    if (!found) return '';
+    return found.substring(found.indexOf(':') + 1).trim();
   };
 
-  const htRaw = getValue(parts[4] || '');
+  const htRaw = getSectionValue('hiddenTalent');
   let htParts = htRaw.split('|').map(s => s.trim());
-  if (htParts.length < 2 && htRaw.includes(':')) {
-      htParts = htRaw.split(':').map(s => s.trim());
-  }
+  if (htParts.length < 2 && htRaw.includes(':')) htParts = htRaw.split(':').map(s => s.trim());
 
   return {
-    careerCompatibility: getValue(parts[0] || ''),
+    careerCompatibility: getSectionValue('careerCompatibility') || '現在分析中ですが、あなたの特性を活かせる環境を特定しています。',
     businessPartnership: {
-      role: getValue(parts[1] || 'Specialist'),
-      bestSync: getValue(parts[2] || 'Complementary Type'),
-      warning: getValue(parts[3] || 'Communication Gaps')
+      role: getSectionValue('role') || '専門家: 独自のスキルでチームに貢献します。',
+      bestSync: getSectionValue('bestSync') || '補完的パートナー: あなたの弱点を支え、強みを引き出す相手です。',
+      warning: getSectionValue('warning') || 'コミュニケーション: 高圧的な状況下での調整に注意が必要です。'
     },
     hiddenTalent: {
-      title: htParts[0] || 'Latent Potential',
-      description: htParts[1] || htParts[0] || 'Unlocking new skills...'
+      title: htParts[0] || '潜在的ポテンシャル',
+      description: htParts[1] || '新しい環境で開花する未知の才能。'
     }
   };
 };
 
-// Agent C: The Relationship Expert (Social Dynamics)
+// Agent C: The Relationship Expert
 const analyzeRelationships = async (scores: Big5Profile, modelName: string) => {
   const prompt = `
-    あなたは「The Relationship Expert (対人関係専門家)」です。
+    あなたは「The Relationship Expert (対人関係専門家)」です。必ず日本語で回答してください。
     コミュニケーションスタイルを分析してください。
     スコア: O:${scores.openness}, C:${scores.conscientiousness}, E:${scores.extraversion}, A:${scores.agreeableness}, N:${scores.neuroticism}
 
-    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。JSONは使用しないこと。
+    以下のフォーマットで回答してください。区切り文字「@@@」を厳守。
 
-    relationshipAnalysis: [スタイル] | [理想のパートナー] | [アドバイス]
+    relationshipAnalysis: [スタイル名]: [詳細な説明] | [理想のパートナー像]: [詳細] | [対人アドバイス]: [詳細]
   `;
 
-  const response = await ai.models.generateContent({
-    model: modelName,
-    contents: prompt,
-    config: { maxOutputTokens: 2000 } // Increased for safety
-  });
-
-  const text = response.text || '';
-  // Remove label if present
-  const val = text.includes(':') ? text.substring(text.indexOf(':') + 1).trim() : text;
+  const response = await ai.models.generateContent({ model: modelName, contents: prompt });
+  const val = (response.text || '').substring((response.text || '').indexOf(':') + 1).trim();
   const raParts = val.split('|').map(s => s.trim());
+
+  const parsePair = (str: string, fallbackTitle: string) => {
+      const [t, d] = str.split(/[:：]/).map(s => s.trim());
+      return d ? `${t}: ${d}` : `${fallbackTitle}: ${t}`;
+  };
 
   return {
     relationshipAnalysis: {
-      style: raParts[0] || 'Adaptive',
-      idealPartner: raParts[1] || 'Anyone',
-      advice: raParts[2] || 'Be yourself'
+      style: parsePair(raParts[0] || '適応型', 'スタイル'),
+      idealPartner: parsePair(raParts[1] || '共感型', '理想の相手'),
+      advice: parsePair(raParts[2] || 'ありのままで', 'アドバイス')
     }
   };
 };
 
-// Main Orchestrator for Personality Analysis
 export const analyzePersonality = async (scores: Big5Profile): Promise<AIAdvice & { personalityType: string }> => {
-  // Use Gemini 2.5 Flash for high stability and 65k output window
-  const modelName = 'gemini-2.5-flash'; 
-
+  const modelName = 'gemini-2.5-pro'; 
   try {
-    console.log("🔍 Insight Council: Starting parallel analysis using Gemini 2.5 Flash (Plain Text Mode)...");
-    
+    console.log("🔍 Insight Council: Executing deep analysis with Gemini 2.5 Pro...");
     const [core, career, social] = await Promise.all([
       analyzeCorePersonality(scores, modelName),
       analyzeCareer(scores, modelName),
       analyzeRelationships(scores, modelName)
     ]);
-
-    console.log("✅ Insight Council: Analysis complete.");
-
-    return {
-      ...core,
-      ...career,
-      ...social
-    };
-
+    return { ...core, ...career, ...social };
   } catch (error) {
     console.error("Personality analysis failed:", error);
     throw error;
@@ -341,26 +343,16 @@ const generateCourseOutline = async (
     ragSection: string,
     modelName: string
 ): Promise<{ title: string; description: string; chapters: GeneratedChapter[] }> => {
-    
     const prompt = `
-    あなたは「Architect (設計士)」です。
-    以下のトピックと戦略に基づき、コースの「全体構成（Outline）」のみを作成してください。
-    スライドの内容はまだ作成しないでください。
-
+    あなたは「Architect (設計士)」です。必ず日本語で回答してください。
     トピック: ${topic}
-    ターゲット: ${config.targetAudience}
     ペルソナ: ${strategy.persona}
-    
-    【教育戦略】
-    ${strategy.strategy}
-    
+    【教育戦略】${strategy.strategy}
     ${ragSection}
-
     【出力要件】
-    1. Title: 学習者の心に響くタイトル。
-    2. Description: コースの魅力とパーソナライズ理由（${strategy.reasoning}）を含む説明。
-    3. Chapters: 4〜6個。各チャプターの「狙い」と「構成要素」を定義する。
-    
+    1. Title: 魅力的なタイトル。
+    2. Description: パーソナライズ理由（${strategy.reasoning}）を含む説明。
+    3. Chapters: 4〜6個の構成。
     回答はJSONのみ。
     `;
 
@@ -383,7 +375,7 @@ const generateCourseOutline = async (
                                 title: { type: Type.STRING },
                                 duration: { type: Type.STRING },
                                 type: { type: Type.STRING },
-                                content: { type: Type.STRING, description: "Overview of the chapter" },
+                                content: { type: Type.STRING },
                                 whyItMatters: { type: Type.STRING },
                                 keyConcepts: { type: Type.ARRAY, items: { type: Type.STRING } },
                                 actionStep: { type: Type.STRING },
@@ -397,7 +389,6 @@ const generateCourseOutline = async (
             }
         }
     });
-
     return parseJsonFromResponse(response.text || '{}');
 };
 
@@ -410,25 +401,13 @@ const generateChapterDetails = async (
     config: GenerateCourseConfig,
     modelName: string
 ): Promise<GeneratedChapter> => {
-
     const prompt = `
-    あなたは「Creator (作家)」です。
-    設計されたチャプター構成に基づき、詳細なスライドとナレーションを作成してください。
-
-    トピック: ${topic}
+    あなたは「Creator (作家)」です。必ず日本語で回答してください。
     チャプター: ${chapterIndex + 1}. ${chapterOutline.title}
-    概要: ${chapterOutline.content}
-    ペルソナ: ${strategy.persona} (この口調でナレーションを書いてください)
-
-    【教育戦略】
-    ${strategy.strategy}
-
+    ペルソナ: ${strategy.persona}
     【要件】
     - Slides: 3〜6枚。
-    - 各スライドには **必ず** \`speechScript\` (ナレーション原稿) を含めること。これが最重要です。
-    - \`speechScript\` は、ペルソナになりきって、学習者に語りかける口語体で記述すること。
-    - Visual Style: ${config.brandKeywords?.join(', ')}
-
+    - 各スライドに \`speechScript\` (ナレーション原稿) を必ず含めること。
     回答はJSONのみ。
     `;
 
@@ -437,7 +416,7 @@ const generateChapterDetails = async (
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            maxOutputTokens: 8192, // High token limit for details
+            maxOutputTokens: 8192,
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
@@ -447,13 +426,8 @@ const generateChapterDetails = async (
                             type: Type.OBJECT,
                             properties: {
                                 title: { type: Type.STRING },
-                                speechScript: { type: Type.STRING, description: "ナレーション原稿。必須。" },
+                                speechScript: { type: Type.STRING },
                                 bullets: { type: Type.ARRAY, items: { type: Type.STRING } },
-                                timing: { type: Type.STRING },
-                                visualStyle: { type: Type.STRING },
-                                motionCue: { type: Type.STRING },
-                                accentIcon: { type: Type.STRING },
-                                layoutHint: { type: Type.STRING },
                                 imagePrompt: { type: Type.STRING },
                                 highlightBox: { type: Type.STRING }
                             },
@@ -467,141 +441,58 @@ const generateChapterDetails = async (
     });
 
     const parsed = parseJsonFromResponse(response.text || '{}');
-    return {
-        ...chapterOutline,
-        id: chapterIndex + 1,
-        slides: parsed.slides || []
-    };
+    return { ...chapterOutline, id: chapterIndex + 1, slides: parsed.slides || [] };
 };
 
-
-// --- 4. ORCHESTRATOR ---
 export const generateCourse = async (
   topic: string, 
   modelType: 'standard' | 'pro' = 'standard', 
   profile?: Big5Profile,
   config?: GenerateCourseConfig
 ): Promise<GeneratedCourse> => {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY が設定されていません。");
-  }
-
-  // Config setup
-  let activeConfig = config || DEFAULT_CONFIG;
-  if (!config) {
-      const lowerTopic = topic.toLowerCase();
-      if (lowerTopic.includes('blender') || lowerTopic.includes('design') || lowerTopic.includes('art') || lowerTopic.includes('creative')) {
-          activeConfig = CREATIVE_CONFIG;
-      }
-  }
-
-  const modelName = modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.5-flash';
+  const modelName = 'gemini-2.5-pro';
   const targetProfile = profile || { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
+  const strategy = generatePedagogicalStrategy(targetProfile);
+  
+  const ragKeywords = extractKeywords(topic);
+  const blenderDocs = await retrieveBlenderContext(topic, 2);
+  const ragSection = blenderDocs.length ? `【参考情報】\n${blenderDocs.map(doc => `- ${doc.text}`).join('\n')}` : '';
 
-  try {
-      // Step 1: Strategy
-      const strategy = generatePedagogicalStrategy(targetProfile);
-      
-      // RAG Retrieval (Lightweight)
-      const ragKeywords = extractKeywords(topic);
-      const ragDocs = retrieveRelevantContent(ragKeywords, 2);
-      const blenderDocs = await retrieveBlenderContext(topic, 2);
-      const combinedRag = [
-        ...ragDocs.map(doc => ({ source: doc.source, text: doc.text })),
-        ...blenderDocs.map(doc => ({ source: `${doc.source} (${doc.file})`, text: doc.text }))
-      ];
-      const ragSection = combinedRag.length
-        ? `【参考情報】\n${combinedRag.map(doc => `- ${doc.text}`).join('\n')}`
-        : '';
+  const outline = await generateCourseOutline(topic, strategy, config || DEFAULT_CONFIG, ragSection, modelName);
+  const chapterPromises = outline.chapters.map((ch, idx) => generateChapterDetails(idx, ch, topic, strategy, config || DEFAULT_CONFIG, modelName));
+  const fullChapters = await Promise.all(chapterPromises);
 
-      // Step 2: Architect (Outline)
-      console.log("🤖 Architect Agent: Designing Course Structure...");
-      const outline = await generateCourseOutline(topic, strategy, activeConfig, ragSection, modelName);
-      
-      // Step 3: Creator (Details) - Parallel Execution
-      console.log(`👨‍🎨 Creator Agents: Writing content for ${outline.chapters.length} chapters...`);
-      const chapterPromises = outline.chapters.map((ch, idx) => 
-          generateChapterDetails(idx, ch, topic, strategy, activeConfig, modelName)
-      );
-      
-      const fullChapters = await Promise.all(chapterPromises);
-      console.log("✅ All Agents Finished.");
-
-      // Return full course
-      return {
-        id: crypto.randomUUID(),
-        title: outline.title,
-        description: outline.description,
-        duration: "Flexible", // Calculated dynamically later
-        chapters: fullChapters,
-        createdAt: new Date(),
-        modelUsed: modelType,
-        targetProfile: targetProfile,
-        teacherPersona: {
-            name: "Lumina",
-            role: "AI Tutor",
-            tone: strategy.persona,
-            greeting: "Hello!"
-        },
-        personalizationReasoning: strategy.reasoning
-      };
-
-  } catch (error) {
-    console.error("Agentic Generation Failed:", error);
-    throw new Error("Failed to generate course via Multi-Agent pipeline.");
-  }
+  return {
+    id: crypto.randomUUID(),
+    title: outline.title,
+    description: outline.description,
+    duration: "Flexible",
+    chapters: fullChapters,
+    createdAt: new Date(),
+    modelUsed: modelType,
+    targetProfile: targetProfile,
+    teacherPersona: { name: "Lumina", role: "AI Tutor", tone: strategy.persona, greeting: "こんにちは！" },
+    personalizationReasoning: strategy.reasoning
+  };
 };
 
-export const getMockBlenderCourse = (): GeneratedCourse => {
-    // Keep mock data for demo
-    return {
-      id: 'mock-blender-101',
-      title: "Blender 4.0: アートの魂を吹き込む3D造形",
-      description: "単なるツールの操作ではありません。あなたの頭の中にある無限の世界を、3D空間に顕現させるための「魔法の杖」の使い方を学びます。",
-      duration: "2時間30分",
-      createdAt: new Date(),
-      modelUsed: 'pro',
-      targetProfile: { openness: 90, conscientiousness: 30, extraversion: 50, agreeableness: 50, neuroticism: 40 },
-      chapters: [] // Simplified for brevity in this full overwrite, normally would have full mock data
-    };
+export const getMockBlenderCourse = (): GeneratedCourse => ({
+    id: 'mock-blender-101',
+    title: "Blender 4.0: 3D造形入門",
+    description: "あなたの創造性を形にする旅を始めましょう。",
+    duration: "2時間30分",
+    createdAt: new Date(),
+    modelUsed: 'pro',
+    chapters: []
+});
+
+export const generateAudioContent = async (speechScript: string): Promise<string> => {
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-preview-tts",
+    contents: [{ role: "user", parts: [{ text: speechScript }] }],
+    config: { responseMimeType: "audio/mp3" },
+  });
+  return response.response.candidates?.[0].content.parts[0].inlineData?.data || '';
 };
 
-export const generateAudioContent = async (
-  speechScript: string,
-  modelName: string = "gemini-2.5-flash-preview-tts"
-): Promise<string> => {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is not set");
-  }
-
-  const prompt = `
-# AUDIO PROFILE: Lumina
-## Professional AI Tutor / Friendly Guide
-### TRANSCRIPT
-${speechScript}
-`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      config: { responseMimeType: "audio/mp3" },
-    });
-
-    const candidates = response.response.candidates;
-    if (!candidates || candidates.length === 0) throw new Error("No audio candidates.");
-    const part = candidates[0].content.parts[0];
-    if (!part.inlineData || !part.inlineData.data) throw new Error("No inline audio data.");
-
-    return part.inlineData.data;
-  } catch (error) {
-    console.error("Gemini Audio Generation Failed:", error);
-    throw error;
-  }
-};
-
-// --- Mock Vector Store for RAG Simulation ---
-const _mockVectorStore: any[] = []; // Simplified for brevity as retrieval logic is separate
-export const retrieveRelevantContent = (queryKeywords: string[], limit: number = 2): any[] => {
-    return [];
-};
+export const retrieveRelevantContent = (keywords: string[]): any[] => [];

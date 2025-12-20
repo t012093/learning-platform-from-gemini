@@ -133,6 +133,21 @@ const SectionHeader: React.FC<{ title: string; subtitle: string; icon: React.Rea
 
 const ComprehensiveResults: React.FC<ComprehensiveResultsProps> = ({ profile, onRestart }) => {
   const advice = profile.aiAdvice;
+
+  // Helper to render long "Title: Desc" strings beautifully
+  const renderDescriptiveItem = (text: string | undefined, defaultTitle: string) => {
+    if (!text) return { title: defaultTitle, body: 'Analyzing...' };
+    const match = text.match(/^([^:：]+)[:：](.*)$/);
+    if (match) {
+      return { title: match[1].trim(), body: match[2].trim() };
+    }
+    return { title: text, body: '' };
+  };
+
+  const roleInfo = renderDescriptiveItem(advice?.businessPartnership?.role, 'Professional Role');
+  const syncInfo = renderDescriptiveItem(advice?.businessPartnership?.bestSync, 'High Synergy Type');
+  const warningInfo = renderDescriptiveItem(advice?.businessPartnership?.warning, 'Risk/Warning');
+
   const typeConfigs: Record<string, { icon: React.ReactNode; bg: string; description: string }> = {
     '冒険家': { icon: <Wind className="w-full h-full" />, bg: 'from-orange-400 to-red-500', description: '自由な発想と行動力で、未踏の領域を切り拓く開探者。' },
     '戦略家': { icon: <Swords className="w-full h-full" />, bg: 'from-blue-500 to-indigo-600', description: '論理的な分析と長期的な視点で、複雑な課題を解き明かす軍師。' },
@@ -215,18 +230,21 @@ const ComprehensiveResults: React.FC<ComprehensiveResultsProps> = ({ profile, on
           <div className="lg:col-span-2 bg-white rounded-[3.5rem] p-10 md:p-14 border border-slate-100 shadow-xl space-y-12">
             <div>
               <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Professional Role</span>
-              <h5 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
-                {advice?.businessPartnership?.role || "Defining role..."}
+              <h5 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none mb-6">
+                {roleInfo.title}
               </h5>
+              <p className="text-slate-500 font-medium leading-relaxed text-lg">
+                {roleInfo.body}
+              </p>
             </div>
-            <div className="grid sm:grid-cols-2 gap-8 pt-6 border-t border-slate-50">
-              <div className="space-y-2">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">High Synergy Type</span>
-                <p className="font-bold text-slate-700 leading-relaxed">{advice?.businessPartnership?.bestSync || "Analyzing..."}</p>
+            <div className="grid sm:grid-cols-2 gap-8 pt-10 border-t border-slate-50">
+              <div className="space-y-3">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">{syncInfo.title}</span>
+                <p className="font-bold text-slate-700 leading-relaxed">{syncInfo.body || 'Analysis pending...'}</p>
               </div>
-              <div className="space-y-2">
-                <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest block">Risk/Warning</span>
-                <p className="font-bold text-slate-700 leading-relaxed">{advice?.businessPartnership?.warning || "Scanning risks..."}</p>
+              <div className="space-y-3">
+                <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest block">{warningInfo.title}</span>
+                <p className="font-bold text-slate-700 leading-relaxed">{warningInfo.body || 'Scanning risks...'}</p>
               </div>
             </div>
           </div>
