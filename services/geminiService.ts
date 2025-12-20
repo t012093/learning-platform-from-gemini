@@ -251,11 +251,21 @@ const generatePedagogicalStrategy = (profile: Big5Profile, assessment?: Assessme
   return { strategy, persona, reasoning };
 };
 
-const generateCourseOutline = async (topic: string, strategy: PedagogicalStrategy, config: GenerateCourseConfig, ragSection: string, modelName: string, intent?: string) => {
+const generateCourseOutline = async (
+  topic: string,
+  strategy: PedagogicalStrategy,
+  config: GenerateCourseConfig,
+  ragSection: string,
+  modelName: string,
+  intent?: string,
+  intentMeta?: string
+) => {
     const prompt = `
       あなたは「Architect (設計士)」です。必ず日本語で回答してください。
       トピック: ${topic}
       具体的要望: ${intent || '特になし'}
+      ユーザー意図(構造化メタ):
+      ${intentMeta || 'なし'}
       ペルソナ: ${strategy.persona}
       教育戦略: ${strategy.strategy}
       ${ragSection}
@@ -351,7 +361,8 @@ export const generateCourse = async (
   profile?: Big5Profile,
   config?: GenerateCourseConfig,
   assessment?: AssessmentProfile,
-  intent?: string
+  intent?: string,
+  intentMeta?: string
 ): Promise<GeneratedCourse> => {
   const modelName = modelType === 'gemini-2.5-pro' ? 'gemini-2.5-pro' : modelType === 'gemini-2.5-flash' ? 'gemini-2.5-flash' : modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.0-flash';
   const targetProfile = profile || { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
@@ -359,7 +370,7 @@ export const generateCourse = async (
   const ragKeywords = extractKeywords(topic);
   const blenderDocs = await retrieveBlenderContext(topic, 2);
   const ragSection = blenderDocs.length ? `【参考情報】\n${blenderDocs.map(doc => `- ${doc.text}`).join('\n')}` : '';
-  const outline = await generateCourseOutline(topic, strategy, config || DEFAULT_CONFIG, ragSection, modelName, intent);
+  const outline = await generateCourseOutline(topic, strategy, config || DEFAULT_CONFIG, ragSection, modelName, intent, intentMeta);
   const chapterPromises = outline.chapters.map((ch: any, idx: number) => generateChapterDetails(idx, ch, topic, strategy, config || DEFAULT_CONFIG, modelName));
   const fullChapters = await Promise.all(chapterPromises);
 

@@ -11,6 +11,52 @@ interface CourseGeneratorViewProps {
   onNavigate?: (view: ViewState) => void;
 }
 
+const buildIntentMeta = (userMessages: Message[]): string => {
+  const raw = userMessages.map(m => m.text).join('\n').trim();
+  if (!raw) return '';
+
+  const normalized = raw.toLowerCase();
+  const lines: string[] = [];
+
+  const level =
+    /初心者|初学者|ビギナー|beginner/i.test(raw)
+      ? 'Beginner'
+      : /中級|intermediate/i.test(raw)
+      ? 'Intermediate'
+      : /上級|advanced|エキスパート/i.test(raw)
+      ? 'Advanced'
+      : 'Unspecified';
+  lines.push(`Level: ${level}`);
+
+  const goals: string[] = [];
+  if (normalized.includes('blender')) goals.push('Blender');
+  if (normalized.includes('モデリング') || normalized.includes('modeling')) goals.push('3D Modeling');
+  if (normalized.includes('アニメーション') || normalized.includes('animation')) goals.push('Animation');
+  if (normalized.includes('スカルプト') || normalized.includes('こね')) goals.push('Sculpting');
+  if (goals.length) lines.push(`Goals: ${goals.join(', ')}`);
+
+  const priorities: string[] = [];
+  const wantsFirst = normalized.includes('まず') || normalized.includes('最初') || normalized.includes('はじめ');
+  if (wantsFirst) {
+    if (normalized.includes('こね') || normalized.includes('スカルプト')) priorities.push('Start with Sculpting');
+    else if (normalized.includes('モデリング')) priorities.push('Start with Modeling');
+    else if (normalized.includes('アニメーション')) priorities.push('Start with Animation');
+  }
+  if (normalized.includes('次') || normalized.includes('その後') || normalized.includes('あと')) {
+    if (normalized.includes('アニメーション')) priorities.push('Then Animation');
+  }
+  if (priorities.length) lines.push(`Priority: ${priorities.join(' -> ')}`);
+
+  const preferences: string[] = [];
+  if (normalized.includes('実践') || normalized.includes('ハンズオン')) preferences.push('Hands-on');
+  if (normalized.includes('チュートリアル')) preferences.push('Tutorial-focused');
+  if (normalized.includes('プロジェクト')) preferences.push('Project-based');
+  if (normalized.includes('短時間') || normalized.includes('短め') || normalized.includes('スキマ')) preferences.push('Short lessons');
+  if (preferences.length) lines.push(`Preferences: ${preferences.join(', ')}`);
+
+  return lines.join('\n');
+};
+
 const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCourseGenerated, onNavigate }) => {
   const { profile: globalProfile } = useTheme();
   const [modelType, setModelType] = useState<'standard' | 'pro' | 'gemini-2.5-flash' | 'gemini-2.5-pro'>('gemini-2.5-flash');
@@ -107,8 +153,10 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
 
   const handleGenerate = async () => {
     // Extract the "Topic" from the last few messages or just use the whole history as intent
-    const chatHistory = messages.map(m => `${m.role}: ${m.text}`).join('\n');
-    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')?.text || "General learning";
+    const userMessages = messages.filter(m => m.role === 'user');
+    const userHistory = userMessages.map(m => m.text).join('\n');
+    const intentMeta = buildIntentMeta(userMessages);
+    const lastUserMsg = [...userMessages].reverse().find(m => m.role === 'user')?.text || "General learning";
 
     setIsGenerating(true);
     setError(null);
@@ -119,7 +167,7 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
             };
 
             // Use the whole chat as the "intent" for deep personalization
-            const course = await generateCourse(lastUserMsg, modelType, profileToUse, undefined, assessment || undefined, chatHistory);
+            const course = await generateCourse(lastUserMsg, modelType, profileToUse, undefined, assessment || undefined, userHistory, intentMeta);
             onCourseGenerated(course);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'カリキュラム生成に失敗しました。');

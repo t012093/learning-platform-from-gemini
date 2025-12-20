@@ -110,6 +110,10 @@ We are currently transitioning from a Python-based gTTS architecture to a **Node
   - Implement "5-Element Prompting" (Audio Profile, Scene, Director's Notes, Context, Transcript) for expressive narration.
 - **Issue #4**: **Voice Selection Feature**
   - Goal: Allow users to select different voice personalities (e.g., 'Kore', 'Puck') for the AI tutor.
+- **Issue #6**: **Blender HTML Embeddings for Curriculum RAG**
+  - Goal: Embed Blender manual HTML and retrieve relevant context to enrich curriculum generation (option 2).
+- **Issue #7**: **User Intent Metadata DB + Embedding Memory**
+  - Goal: Extract structured intent from chat, embed it, and persist personalized context for future sessions.
 
 ### How to Contribute
 1. Check the [Issues](https://github.com/t012093/learning-platform-from-gemini/issues) tab.
