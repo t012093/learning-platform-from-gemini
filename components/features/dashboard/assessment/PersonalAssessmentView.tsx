@@ -35,9 +35,9 @@ const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onNavig
       
       const newProfile: AssessmentProfile = {
         scores: finalScores,
-        personalityType: advice.personalityType as PersonalityType,
-        learningStyle: advice.learningStrategy.title,
-        motivation: advice.learningStrategy.approach,
+        personalityType: (advice?.personalityType || 'バランサー') as PersonalityType,
+        learningStyle: advice?.learningStrategy?.title || 'バランス型学習',
+        motivation: advice?.learningStrategy?.approach || '継続的な改善',
         completedAt: new Date().toISOString(),
         aiAdvice: advice
       };
@@ -47,7 +47,16 @@ const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onNavig
       setStep(Step.INTRO);
     } catch (error) {
       console.error("Personality analysis failed:", error);
-      // フォールバック
+      // エラー時も最低限のプロファイルを作成して結果画面を表示（無限ロード回避）
+      const fallbackProfile: AssessmentProfile = {
+        scores: finalScores,
+        personalityType: 'バランサー',
+        learningStyle: '標準学習モード',
+        motivation: '安定した成長',
+        completedAt: new Date().toISOString(),
+        // aiAdvice は undefined になるが、ComprehensiveResults 側で ?. チェックが必要
+      };
+      setProfile(fallbackProfile);
       setStep(Step.RESULTS); 
     }
   };

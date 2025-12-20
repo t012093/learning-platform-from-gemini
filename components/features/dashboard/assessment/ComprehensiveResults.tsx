@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Eye, Compass, CheckCircle2, Wind, Zap, Moon, HeartHandshake, Scale, 
-  ShieldCheck, Gem, BarChart3, Quote, Briefcase, Sparkles, Fingerprint, Brain
+  ShieldCheck, Gem, BarChart3, Quote, Briefcase, Sparkles, Fingerprint, Brain, Infinity
 } from 'lucide-react';
 import { AssessmentProfile } from '../../../../types';
 
@@ -139,7 +139,7 @@ const ComprehensiveResults: React.FC<ComprehensiveResultsProps> = ({ profile, on
     'サポーター': { icon: <HeartHandshake className="w-full h-full" />, bg: 'from-pink-400 to-rose-500', description: '高い共感性と調和の精神で、チームの絆を強固にする調整役。' },
     '思想家': { icon: <Lightbulb className="w-full h-full" />, bg: 'from-purple-500 to-indigo-700', description: '深い洞察と知的好奇心で、物事の本質を追究する哲学者。' },
     '職人': { icon: <Box className="w-full h-full" />, bg: 'from-amber-400 to-orange-500', description: '緻密な技術と集中力で、完璧な成果物を創り上げる専門家。' },
-    'バランサー': { icon: <YinYang className="w-full h-full" />, bg: 'from-green-400 to-emerald-600', description: '柔軟な適応力と安定感で、あらゆる環境に調和をもたらす万能型。' },
+    'バランサー': { icon: <Infinity className="w-full h-full" />, bg: 'from-green-400 to-emerald-600', description: '柔軟な適応力と安定感で、あらゆる環境に調和をもたらす万能型。' },
   };
 
   const config = typeConfigs[profile.personalityType] || { icon: <Zap className="w-full h-full" />, bg: 'from-indigo-500 to-purple-600', description: '独自のバランスを持つユニークな特性。' };

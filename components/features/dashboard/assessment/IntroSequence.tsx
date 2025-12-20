@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wind, Swords, HeartHandshake, Lightbulb, Box, YinYang, Zap, Map, ChevronRight } from 'lucide-react';
+import { Wind, Swords, HeartHandshake, Lightbulb, Box, Infinity, Zap, Map, ChevronRight } from 'lucide-react';
 import { AssessmentProfile } from '../../../../types';
 
 interface IntroSequenceProps {
@@ -18,7 +18,7 @@ const IntroSequence: React.FC<IntroSequenceProps> = ({ profile, onFinish }) => {
     'サポーター': { icon: <HeartHandshake className="w-full h-full" />, bg: 'from-pink-400 to-rose-500', message: 'あなたは、調和をもたらす慈愛の人。', sub: '他者に寄り添い、絆を深めることで、集団に真の強さを与えます。' },
     '思想家': { icon: <Lightbulb className="w-full h-full" />, bg: 'from-purple-500 to-indigo-700', message: 'あなたは、深淵を覗く哲学者。', sub: '目に見える現象の裏にある本質を、誰よりも深く追求する性質です。' },
     '職人': { icon: <Box className="w-full h-full" />, bg: 'from-amber-400 to-orange-500', message: 'あなたは、卓越を追求する専門家。', sub: '一つのことを極め、完璧な形にするための執念と技術を持っています。' },
-    'バランサー': { icon: <YinYang className="w-full h-full" />, bg: 'from-green-400 to-emerald-600', message: 'あなたは、自在に適応する柔軟な人。', sub: 'どんな環境でも自分の場所を見つけ、調和を保つことができる希有な才能です。' },
+    'バランサー': { icon: <Infinity className="w-full h-full" />, bg: 'from-green-400 to-emerald-600', message: 'あなたは、自在に適応する柔軟な人。', sub: 'どんな環境でも自分の場所を見つけ、調和を保つことができる希有な才能です。' },
   };
 
   const config = typeConfigs[profile.personalityType] || typeConfigs['バランサー'];
