@@ -24,6 +24,27 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const lastMousePos = useRef({ x: 0, y: 0 });
 
+  // Reset viewport state for specific step
+  const resetViewportForStep = useCallback((step: number) => {
+      // Default reset
+      setPos({ x: 0, y: 0, z: 0 });
+      setRot({ x: -20, y: 45, z: 0 });
+      setScale(1);
+      setCurrentMode('idle');
+      setActiveAxis(null);
+      setIsDemoPlaying(false);
+      setDemoMessage(null);
+
+      // If returning to a completed step, maybe set to 'done' state?
+      // For practice, it's better to reset to start state so they can try again.
+  }, []);
+
+  const handleStepClick = (idx: number) => {
+      if (isDemoPlaying) return; // Prevent switching during demo
+      setActiveStep(idx);
+      resetViewportForStep(idx);
+  };
+
   // --- DEMO ORCHESTRATION ---
   const runDemo = useCallback(async () => {
     if (isDemoPlaying) return;
@@ -108,6 +129,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
 
   // Auto-run demo when entering a new step (optional, maybe just button for now)
   useEffect(() => {
+      // Only auto-run if the step hasn't been completed before
       if (activeStep > 0 && !completedSteps.includes(activeStep)) {
           runDemo();
       }
@@ -171,7 +193,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
                 
                 // Check mission completion (G + Z)
                 if (activeStep === 1 && activeAxis === 'Z' && Math.abs(newY) > 50) {
-                     setActiveStep(2);
+                     // Don't auto advance immediately, let them click to confirm
                 }
                 return { x: newX, y: newY, z: newZ };
             });
@@ -209,9 +231,31 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
 
   const handleMouseDown = (e: React.MouseEvent) => {
       if (isDemoPlaying) return;
+      
+      // Confirm action (Click)
       if (currentMode !== 'idle') {
+          // Check for completion on confirm
+          if (activeStep === 1 && currentMode === 'grab' && activeAxis === 'Z' && Math.abs(pos.y) > 50) {
+              if (!completedSteps.includes(1)) {
+                  setCompletedSteps(prev => [...new Set([...prev, 1])]);
+                  setActiveStep(2); // Auto advance on success confirm
+              }
+          }
+          else if (activeStep === 2 && (currentMode === 'rotate' || currentMode === 'scale')) {
+               if (!completedSteps.includes(2)) {
+                  setCompletedSteps(prev => [...new Set([...prev, 2])]);
+                  // No next step, stay here
+              }
+          }
+
           setCurrentMode('idle');
           setActiveAxis(null);
+      } else {
+          // Selecting object (Mission 1)
+          if (activeStep === 0) {
+              setCompletedSteps(prev => [...new Set([...prev, 0])]);
+              setActiveStep(1);
+          }
       }
   };
 
@@ -256,12 +300,18 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
 
         <div className="space-y-4">
           {block.steps.map((step, idx) => (
-            <div key={idx} className={`p-6 rounded-[2rem] border-2 transition-all ${idx === activeStep ? 'border-orange-500 bg-white shadow-xl shadow-orange-100' : 'border-slate-100 bg-slate-50 opacity-60'}`}>
-               <div className="flex gap-4">
-                    <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center ${completedSteps.includes(idx) ? 'bg-orange-500 border-transparent text-white' : 'text-slate-300'}`}>
+            <div 
+              key={idx}
+              className={`p-6 rounded-[2rem] border-2 transition-all duration-300 cursor-pointer flex gap-4 items-start ${
+                idx === activeStep ? 'border-orange-500 bg-white shadow-xl shadow-orange-100 scale-[1.02]' : 'border-slate-100 bg-slate-50 opacity-60 hover:opacity-80'
+              }`}
+              onClick={() => handleStepClick(idx)}
+            >
+               <div className="flex gap-4 w-full">
+                    <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${completedSteps.includes(idx) ? 'bg-orange-500 border-transparent text-white' : 'text-slate-300'}`}>
                         {completedSteps.includes(idx) && <CheckCircle2 size={14} />}
                     </div>
-                    <div>
+                    <div className="flex-1">
                         <h3 className="font-bold text-slate-900 mb-1">Step {idx + 1}</h3>
                         <p className="text-sm text-slate-600 font-medium">{step}</p>
                     </div>
@@ -342,14 +392,6 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
              <div 
                 style={getCubeStyle()} 
                 className="group/cube"
-                onClick={(e) => {
-                    if (isDemoPlaying) return;
-                    e.stopPropagation();
-                    if (activeStep === 0) {
-                        setCompletedSteps(prev => [...new Set([...prev, 0])]);
-                        setActiveStep(1);
-                    }
-                }}
              >
                 {[
                   { transform: 'rotateY(0deg) translateZ(50px)', bg: 'bg-orange-500' },
