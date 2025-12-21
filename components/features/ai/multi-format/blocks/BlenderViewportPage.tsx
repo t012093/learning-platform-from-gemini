@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Move, RotateCw, Maximize, Grid3X3, Command, CheckCircle2, MousePointer2 } from 'lucide-react';
 import { WorkshopBlock } from '../../../../types';
 
@@ -18,6 +18,10 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
   const [rot, setRot] = useState({ x: -20, y: 45, z: 0 });
   const [scale, setScale] = useState(1);
 
+  // Mouse Interaction Refs
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const lastMousePos = useRef({ x: 0, y: 0 });
+
   // Handle Keyboard Inputs
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const key = e.key.toUpperCase();
@@ -25,10 +29,10 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
     setTimeout(() => setLastKeyPressed(null), 200);
 
     // Mode switching
-    if (key === 'G') setCurrentMode('grab');
-    if (key === 'R') setCurrentMode('rotate');
-    if (key === 'S') setCurrentMode('scale');
-    if (key === 'ESCAPE') {
+    if (key === 'G') { setCurrentMode('grab'); setActiveAxis(null); }
+    if (key === 'R') { setCurrentMode('rotate'); setActiveAxis(null); }
+    if (key === 'S') { setCurrentMode('scale'); setActiveAxis(null); }
+    if (key === 'ESCAPE' || key === 'ENTER') {
         setCurrentMode('idle');
         setActiveAxis(null);
     }
@@ -37,37 +41,111 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
     if (['X', 'Y', 'Z'].includes(key) && currentMode !== 'idle') {
         setActiveAxis(key);
     }
-
-    // Simple interaction simulation: Apply change when key is pressed
-    if (currentMode === 'grab') {
-        if (key === 'Z') setPos(p => ({ ...p, y: p.y - 20 })); // Blender's Z is up (CSS Y)
-        if (key === 'X') setPos(p => ({ ...p, x: p.x + 20 }));
-    }
-    if (currentMode === 'rotate') {
-        setRot(r => ({ ...r, y: r.y + 15 }));
-    }
-    if (currentMode === 'scale') {
-        if (key === 'ARROWUP') setScale(s => s + 0.1);
-        if (key === 'ARROWDOWN') setScale(s => Math.max(0.1, s - 0.1));
-    }
     
     // Auto-complete missions based on actions
     if (key === 'G' && activeStep === 1) setCompletedSteps(prev => [...new Set([...prev, 1])]);
-    if (key === 'Z' && currentMode === 'grab' && activeStep === 1) setActiveStep(2);
+    if (key === 'R' && activeStep === 2) setCompletedSteps(prev => [...new Set([...prev, 2])]);
+    
   }, [currentMode, activeStep]);
+
+  // Handle Mouse Movement for Interaction
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (currentMode !== 'idle' && viewportRef.current) {
+        const deltaX = e.clientX - lastMousePos.current.x;
+        const deltaY = e.clientY - lastMousePos.current.y;
+        
+        // --- GRAB (Move) ---
+        if (currentMode === 'grab') {
+            setPos(prev => {
+                let newX = prev.x;
+                let newY = prev.y; 
+                let newZ = prev.z;
+
+                if (activeAxis === 'X') {
+                    newX += deltaX;
+                } else if (activeAxis === 'Z') {
+                    newY += deltaY; 
+                } else if (activeAxis === 'Y') {
+                    newX += deltaX * 0.5;
+                    newY -= deltaY * 0.5;
+                } else {
+                    newX += deltaX;
+                    newY += deltaY;
+                }
+                
+                // Check mission completion (G + Z)
+                if (activeStep === 1 && activeAxis === 'Z' && Math.abs(newY) > 50) {
+                     setActiveStep(2);
+                }
+                return { x: newX, y: newY, z: newZ };
+            });
+        }
+
+        // --- ROTATE ---
+        if (currentMode === 'rotate') {
+            setRot(prev => {
+                const speed = 2;
+                let dx = prev.x;
+                let dy = prev.y;
+                let dz = prev.z;
+
+                // Simple rotation mapping: X movement -> Y axis rotation
+                if (activeAxis === 'X') dx += deltaX * speed;
+                else if (activeAxis === 'Y') dy += deltaX * speed;
+                else if (activeAxis === 'Z') dz += deltaX * speed;
+                else {
+                    // Viewport rotation (Trackball-ish)
+                    dy += deltaX * speed;
+                    dx += deltaY * speed;
+                }
+                return { x: dx, y: dy, z: dz };
+            });
+        }
+
+        // --- SCALE ---
+        if (currentMode === 'scale') {
+            setScale(prev => {
+                // Moving right increases scale, left decreases
+                const factor = 1 + (deltaX * 0.01);
+                const newScale = Math.max(0.1, prev * factor);
+                
+                // Axis constraint for scale is complex in CSS, applying global scale for now
+                return newScale;
+            });
+        }
+    }
+    lastMousePos.current = { x: e.clientX, y: e.clientY };
+  }, [currentMode, activeAxis, activeStep]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+      // Confirm action
+      if (currentMode !== 'idle') {
+          setCurrentMode('idle');
+          setActiveAxis(null);
+      }
+  };
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [handleKeyDown, handleMouseMove]);
+
 
   const getCubeStyle = (): React.CSSProperties => {
     return {
       width: '100px', height: '100px', position: 'relative', transformStyle: 'preserve-3d',
-      transition: 'all 0.3s ease-out',
-      transform: `rotateX(${rot.x}deg) rotateY(${rot.y}deg) rotateZ(${rot.z}deg) translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) scale(${scale})`
+      transition: currentMode === 'idle' ? 'all 0.3s ease-out' : 'none', // Smooth only when not interacting
+      transform: `rotateX(${rot.x}deg) rotateY(${rot.y}deg) rotateZ(${rot.z}deg) translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) scale(${scale})`,
+      cursor: currentMode === 'idle' ? 'pointer' : 'none' // Hide cursor during interaction like Blender
     };
   };
+
+  // Selection Glow Style
+  const isSelected = activeStep >= 1; 
 
   return (
     <div className="h-full flex flex-col lg:flex-row gap-8 lg:h-[80vh]">
@@ -114,7 +192,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
                 </div>
             </div>
             <div className="grid grid-cols-3 gap-2 font-mono text-[10px] text-orange-400">
-                <div>LOC: {pos.x},{Math.round(pos.y*-1)},{pos.z}</div>
+                <div>LOC: {Math.round(pos.x)},{Math.round(pos.y*-1)},{Math.round(pos.z)}</div>
                 <div>ROT: {Math.round(rot.y)}°</div>
                 <div>SCL: {scale.toFixed(2)}</div>
             </div>
@@ -122,7 +200,11 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
       </div>
 
       {/* Right: Actual Viewport */}
-      <div className="flex-[1.5] min-w-0 h-[600px] lg:h-auto bg-[#393939] rounded-[3rem] overflow-hidden border-4 border-[#282828] relative shadow-2xl group flex flex-col cursor-crosshair">
+      <div 
+        ref={viewportRef}
+        className={`flex-[1.5] min-w-0 h-[600px] lg:h-auto bg-[#393939] rounded-[3rem] overflow-hidden border-4 border-[#282828] relative shadow-2xl group flex flex-col ${currentMode === 'idle' ? 'cursor-default' : 'cursor-none'}`}
+        onMouseDown={handleMouseDown}
+      >
         
         {/* Interaction Info Overlay */}
         <div className="absolute top-8 left-8 z-10 space-y-2">
@@ -144,12 +226,23 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
              {/* Dynamic Axis Lines */}
              {activeAxis === 'Z' && <div className="absolute h-full w-0.5 bg-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.5)] z-0"></div>}
              {activeAxis === 'X' && <div className="absolute w-full h-0.5 bg-red-400 shadow-[0_0_15px_rgba(248,113,113,0.5)] z-0"></div>}
+             {activeAxis === 'Y' && <div className="absolute w-full h-0.5 bg-green-400 shadow-[0_0_15px_rgba(74,222,128,0.5)] z-0 rotate-45"></div>}
 
              {/* Grid */}
              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:40px_40px] [transform:rotateX(75deg)_translateY(200px)] opacity-40"></div>
 
              {/* The Interactive Cube */}
-             <div style={getCubeStyle()} className="group/cube">
+             <div 
+                style={getCubeStyle()} 
+                className="group/cube"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (activeStep === 0) {
+                        setCompletedSteps(prev => [...new Set([...prev, 0])]);
+                        setActiveStep(1);
+                    }
+                }}
+             >
                 {[
                   { transform: 'rotateY(0deg) translateZ(50px)', bg: 'bg-orange-500' },
                   { transform: 'rotateY(180deg) translateZ(50px)', bg: 'bg-orange-600' },
@@ -158,10 +251,27 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
                   { transform: 'rotateX(90deg) translateZ(50px)', bg: 'bg-orange-300' },
                   { transform: 'rotateX(-90deg) translateZ(50px)', bg: 'bg-orange-700' },
                 ].map((face, i) => (
-                    <div key={i} className={`absolute inset-0 border border-white/20 ${face.bg} ${currentMode !== 'idle' ? 'opacity-80' : ''}`} style={{ transform: face.transform, backfaceVisibility: 'hidden' }} />
+                    <div 
+                        key={i} 
+                        className={`
+                            absolute inset-0 border border-white/20 ${face.bg} transition-opacity duration-300
+                            ${currentMode !== 'idle' ? 'opacity-90' : ''}
+                        `} 
+                        style={{ 
+                            transform: face.transform, 
+                            backfaceVisibility: 'hidden',
+                            boxShadow: isSelected ? '0 0 15px rgba(255, 165, 0, 0.6) inset' : 'none',
+                            borderColor: isSelected ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.2)'
+                        }} 
+                    />
                 ))}
-                {/* Outline */}
-                <div className={`absolute -inset-1 border-2 border-white transition-opacity ${currentMode !== 'idle' ? 'opacity-100' : 'opacity-20'}`}></div>
+                
+                {/* Outline (Selection Halo) */}
+                <div className={`
+                    absolute -inset-1 border-2 transition-all duration-300 pointer-events-none rounded-sm
+                    ${isSelected ? 'border-orange-400 opacity-100 shadow-[0_0_20px_rgba(251,146,60,0.6)]' : 'border-white opacity-0'}
+                    ${currentMode !== 'idle' ? 'border-white opacity-100 scale-105' : ''}
+                `}></div>
              </div>
         </div>
 
@@ -189,7 +299,6 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
                     <Command size={10} className="text-slate-500" />
                     <span className="text-[9px] font-mono text-slate-400 uppercase">Press ESC to Cancel</span>
                 </div>
-                <div className="text-[8px] text-white/20 font-bold uppercase tracking-widest mt-1">Lumina Viewport Engine v1.0</div>
             </div>
         </div>
       </div>
