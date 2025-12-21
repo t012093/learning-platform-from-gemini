@@ -4,6 +4,15 @@ import path from 'node:path';
 const ROOT = path.join(process.cwd(), 'data/curricula/blender/blender_manual_v500_en.html');
 const OUTPUT = path.join(process.cwd(), 'data/curricula/blender/image_index.jsonl');
 
+const CONTEXT_LIMIT = 240;
+const MAX_KEYWORDS = 14;
+const STOPWORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'to', 'of', 'in', 'on', 'for', 'with', 'by', 'from', 'as',
+  'is', 'are', 'was', 'were', 'be', 'been', 'this', 'that', 'these', 'those', 'it', 'its',
+  'at', 'into', 'out', 'over', 'under', 'above', 'below', 'between', 'after', 'before',
+  'about', 'within', 'without', 'via', 'using', 'use', 'used', 'using', 'example'
+]);
+
 const skipDirs = new Set(['_static', '_images', '_sources']);
 const skipFiles = new Set(['genindex.html', 'search.html', 'versions.html', 'copyright.html', '404.html']);
 
@@ -21,6 +30,11 @@ const stripTags = (html) => html.replace(/<[^>]+>/g, ' ');
 const cleanText = (text) => {
   const cleaned = decodeEntities(stripTags(text)).replace(/\s+/g, ' ').trim();
   return cleaned.replace(/¶\s*$/, '').trim();
+};
+
+const extractArticle = (html) => {
+  const match = html.match(/<article[^>]*id="furo-main-content"[^>]*>([\s\S]*?)<\/article>/i);
+  return match ? match[1] : html;
 };
 
 const extractTitle = (html) => {
@@ -59,6 +73,31 @@ const extractFigureRanges = (html) => {
   return figures;
 };
 
+const trimToLength = (text, maxLen) => {
+  if (!text) return null;
+  if (text.length <= maxLen) return text;
+  if (maxLen <= 3) return text.slice(0, maxLen);
+  return `${text.slice(0, maxLen - 3).trim()}...`;
+};
+
+const findPrevBlock = (html, pos) => {
+  const slice = html.slice(0, pos);
+  const blockRe = /<(p|li)[^>]*>([\s\S]*?)<\/\1>/gi;
+  let match;
+  let last = null;
+  while ((match = blockRe.exec(slice)) !== null) {
+    last = match;
+  }
+  return last ? cleanText(last[2]) : null;
+};
+
+const findNextBlock = (html, pos) => {
+  const slice = html.slice(pos);
+  const blockRe = /<(p|li)[^>]*>([\s\S]*?)<\/\1>/gi;
+  const match = blockRe.exec(slice);
+  return match ? cleanText(match[2]) : null;
+};
+
 const normalizeImagePath = (relHtml, src) => {
   const posixRel = relHtml.split(path.sep).join('/');
   const baseDir = path.posix.dirname(posixRel);
@@ -90,6 +129,15 @@ const extractImages = (html, relHtml, figureRanges) => {
     images.push({ pos, image: normalized, alt: alt || null, caption: caption || null });
   }
   return images;
+};
+
+const attachContext = (images, html) => {
+  images.forEach((image) => {
+    const before = findPrevBlock(html, image.pos);
+    const after = findNextBlock(html, image.pos + 1);
+    image.contextBefore = trimToLength(before, CONTEXT_LIMIT);
+    image.contextAfter = trimToLength(after, CONTEXT_LIMIT);
+  });
 };
 
 const collectHtmlFiles = async (dir) => {
@@ -125,6 +173,49 @@ const assignHeadings = (images, headings) => {
   }
 };
 
+const tokenize = (text) =>
+  text
+    .toLowerCase()
+    .split(/[\s、。,.!?:"'()\\/\[\]-]+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+const pathTokens = (value) =>
+  value
+    .replace(/\.html$/i, '')
+    .split(/[\\/]/)
+    .flatMap((part) => part.split(/[_-]+/))
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+const buildKeywords = ({ caption, headingPath, pageTitle, contextBefore, contextAfter, alt, file, image }) => {
+  const sources = [
+    caption,
+    headingPath,
+    pageTitle,
+    contextBefore,
+    contextAfter,
+    alt,
+    ...pathTokens(file || ''),
+    ...pathTokens(image || '')
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const tokens = tokenize(sources);
+  const keywords = [];
+  const seen = new Set();
+  for (const token of tokens) {
+    if (STOPWORDS.has(token)) continue;
+    if (token.length <= 2) continue;
+    if (seen.has(token)) continue;
+    seen.add(token);
+    keywords.push(token);
+    if (keywords.length >= MAX_KEYWORDS) break;
+  }
+  return keywords;
+};
+
 const main = async () => {
   const htmlFiles = await collectHtmlFiles(ROOT);
   const lines = [];
@@ -135,15 +226,27 @@ const main = async () => {
     const html = await fs.readFile(file, 'utf8');
 
     const pageTitle = extractTitle(html) || relPosix;
-    const headings = extractHeadings(html);
-    const figureRanges = extractFigureRanges(html);
-    const images = extractImages(html, relPosix, figureRanges).sort((a, b) => a.pos - b.pos);
+    const articleHtml = extractArticle(html);
+    const headings = extractHeadings(articleHtml);
+    const figureRanges = extractFigureRanges(articleHtml);
+    const images = extractImages(articleHtml, relPosix, figureRanges).sort((a, b) => a.pos - b.pos);
 
     if (!images.length) continue;
 
     assignHeadings(images, headings);
+    attachContext(images, articleHtml);
 
     images.forEach((image, idx) => {
+      const keywords = buildKeywords({
+        caption: image.caption,
+        headingPath: image.headingPath,
+        pageTitle,
+        contextBefore: image.contextBefore,
+        contextAfter: image.contextAfter,
+        alt: image.alt,
+        file: relPosix,
+        image: image.image
+      });
       const record = {
         id: `blender-manual-v500-en::${relPosix}::${path.posix.basename(image.image)}::${idx + 1}`,
         source: 'Blender Manual',
@@ -156,7 +259,10 @@ const main = async () => {
         headings: image.headings || [],
         image: image.image,
         caption: image.caption,
-        alt: image.alt
+        alt: image.alt,
+        contextBefore: image.contextBefore,
+        contextAfter: image.contextAfter,
+        keywords
       };
       lines.push(JSON.stringify(record));
     });

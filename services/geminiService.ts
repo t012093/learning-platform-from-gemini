@@ -1,6 +1,7 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Profile, AIAdvice, AssessmentProfile, LearningBlock } from '../types';
 import { retrieveBlenderContext } from './blenderRagService';
+import { retrieveBlenderImages } from './blenderImageRagService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -62,6 +63,11 @@ const parseJsonFromResponse = (text: string) => {
 
 const extractKeywords = (text: string): string[] => {
   return text.split(/[\\s、。,.]+/).map(t => t.trim()).filter(Boolean).slice(0, 6);
+};
+
+const truncateText = (text: string, maxLen: number = 200): string => {
+  if (text.length <= maxLen) return text;
+  return `${text.slice(0, maxLen - 3).trim()}...`;
 };
 
 // --- Chat & Analysis ---
@@ -430,7 +436,18 @@ export const generateCourse = async (
   
   const ragKeywords = extractKeywords(topic);
   const blenderDocs = await retrieveBlenderContext(topic, 2);
-  const ragSection = blenderDocs.length ? `【参考情報】\n${blenderDocs.map(doc => `- ${doc.text}`).join('\n')}` : '';
+  const blenderImages = await retrieveBlenderImages(topic, 3);
+  const docSection = blenderDocs.length ? `【参考情報】\n${blenderDocs.map(doc => `- ${doc.text}`).join('\n')}` : '';
+  const imageSection = blenderImages.length
+    ? `【画像候補】\n${blenderImages.map(img => {
+        const caption = img.caption || img.alt || '';
+        const heading = img.headingPath || img.pageTitle || '';
+        const context = [img.contextBefore, img.contextAfter].filter(Boolean).join(' ');
+        const contextText = context ? ` context=${truncateText(context, 180)}` : '';
+        return `- image=${img.image}${caption ? ` caption=${caption}` : ''}${heading ? ` heading=${heading}` : ''}${contextText}`;
+      }).join('\n')}`
+    : '';
+  const ragSection = [docSection, imageSection].filter(Boolean).join('\n');
 
   const outline = await generateCourseOutline(topic, strategy, config || DEFAULT_CONFIG, ragSection, modelName, intent);
   const chapterPromises = outline.chapters.map((ch: any, idx: number) => generateChapterDetails(idx, ch, topic, strategy, config || DEFAULT_CONFIG, modelName));

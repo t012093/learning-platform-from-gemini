@@ -21,7 +21,8 @@ import {
   Brain,
   FileText,
   Users,
-  CheckCircle2
+  CheckCircle2,
+  Image
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -107,6 +108,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
       children: [
         { view: ViewState.DEMO_SHOWCASE, label: 'Showcase Page', icon: Box },
         { view: ViewState.DEMO_CHECKLIST, label: 'Checklist Page', icon: CheckCircle2 },
+        { view: ViewState.DEMO_CHECKLIST_GENERATOR, label: 'Checklist Generator', icon: Image },
         { view: ViewState.DEMO_CONCEPT, label: 'Concept Page', icon: Box },
         { view: ViewState.DEMO_DIALOGUE, label: 'Dialogue Page', icon: Users },
         { view: ViewState.DEMO_WORKSHOP, label: 'Workshop Page', icon: Terminal },

@@ -97,14 +97,40 @@ const ChecklistPage: React.FC<ChecklistPageProps> = ({ block }) => {
                     <p className="text-slate-600 leading-relaxed">
                       {task.details}
                     </p>
-                    
-                    {task.imageKeyword && (
-                      <div className="bg-slate-100 rounded-lg p-4 border border-slate-200 flex flex-col items-center justify-center h-48 text-slate-400">
+                    {task.linkUrl && (
+                      <a
+                        href={task.linkUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                      >
+                        {task.linkUrl}
+                      </a>
+                    )}
+                  </div>
+
+                  {task.imageUrl ? (
+                    <figure className="mt-4 bg-slate-100 rounded-lg p-4 border border-slate-200 flex flex-col items-center justify-center">
+                      <img
+                        src={task.imageUrl}
+                        alt={task.imageCaption || task.label}
+                        className="w-full h-auto max-h-[520px] object-contain rounded-md bg-white"
+                        loading="lazy"
+                      />
+                      {task.imageCaption && (
+                        <figcaption className="mt-2 text-xs text-slate-500 text-center">
+                          {task.imageCaption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  ) : (
+                    task.imageKeyword && (
+                      <div className="mt-4 bg-slate-100 rounded-lg p-4 border border-slate-200 flex flex-col items-center justify-center h-56 text-slate-400">
                         <Image size={32} className="mb-2" />
                         <span className="text-xs font-medium">Screenshot: "{task.imageKeyword}"</span>
                       </div>
-                    )}
-                  </div>
+                    )
+                  )}
                 </div>
               )}
             </div>

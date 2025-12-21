@@ -25,6 +25,7 @@ import CourseGeneratorView from './components/features/ai/CourseGeneratorView';
 import GeneratedCourseView from './components/features/ai/GeneratedCourseView';
 import GeneratedLessonView from './components/features/ai/GeneratedLessonView';
 import LuminaConciergeView from './components/features/ai/LuminaConciergeView';
+import BlenderChecklistGeneratorView from './components/features/ai/BlenderChecklistGeneratorView';
 import PersonalAssessmentView from './components/features/dashboard/assessment/PersonalAssessmentView';
 import AICharacterIntroView from './components/features/ai/AICharacterIntroView';
 import AICharacterDetailView from './components/features/ai/AICharacterDetailView';
@@ -198,6 +199,8 @@ const App: React.FC = () => {
         return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="showcase" />;
       case ViewState.DEMO_CHECKLIST:
         return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="checklist" />;
+      case ViewState.DEMO_CHECKLIST_GENERATOR:
+        return <BlenderChecklistGeneratorView onBack={() => setCurrentView(ViewState.DASHBOARD)} />;
       case ViewState.DASHBOARD:
         return <Dashboard onNavigate={setCurrentView} />;
       case ViewState.COURSE_GENERATOR:

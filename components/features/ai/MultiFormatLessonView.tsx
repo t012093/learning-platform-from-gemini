@@ -29,9 +29,9 @@ const MOCK_BLOCKS: LearningBlock[] = [
     type: 'checklist',
     title: 'Blenderの冒険を始める準備',
     tasks: [
-        { id: 't1', label: 'Blender公式サイトからダウンロード', details: '最新の安定版をダウンロードしましょう。', imageKeyword: 'Blender download page' },
-        { id: 't2', label: 'インストールを実行', details: 'ダウンロードしたファイルを開き、画面の指示に従ってインストールします。', imageKeyword: 'Blender install wizard' },
-        { id: 't3', label: '言語設定を日本語に変更', details: 'Edit > Preferences > Interface > Translation から日本語を選択します。', imageKeyword: 'Blender language settings' },
+        { id: 't1', label: 'Blender公式サイトからダウンロード', details: '安定版を公式サイトから入手します。必要なら要件も確認してください。', imageKeyword: 'Blender download page', linkUrl: 'https://www.blender.org/download/', imageUrl: '/data/curricula/blender/_static/blender-download-page.png', imageCaption: 'Blender download page' },
+        { id: 't2', label: 'インストールを実行', details: 'Windows: x64/arm64を選択。Installer版は開始メニュー登録と関連付けあり。Zip版は解凍して実行(管理者不要)。macOS: Intel/Apple Siliconを選択し、.dmgを開いて Blender.app をApplicationsへドラッグ。初回起動は承認が必要。', imageKeyword: 'Blender install wizard' },
+        { id: 't3', label: '言語設定を日本語に変更', details: 'Edit > Preferences > Interface > Language を日本語に。TranslateのInterface/Tooltips/New Dataを必要に応じてオン。', imageKeyword: 'Blender language settings' },
     ]
   },
   {

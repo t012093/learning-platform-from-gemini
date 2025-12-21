@@ -138,7 +138,8 @@ export enum ViewState {
   DEMO_REFLECTION = 'DEMO_REFLECTION',
   DEMO_BLENDER = 'DEMO_BLENDER',
   DEMO_SHOWCASE = 'DEMO_SHOWCASE',
-  DEMO_CHECKLIST = 'DEMO_CHECKLIST'
+  DEMO_CHECKLIST = 'DEMO_CHECKLIST',
+  DEMO_CHECKLIST_GENERATOR = 'DEMO_CHECKLIST_GENERATOR'
 }
 
 // Generated Content Types
@@ -211,6 +212,9 @@ export interface ChecklistBlock {
       label: string;
       details: string;
       imageKeyword?: string;
+      imageUrl?: string;
+      imageCaption?: string;
+      linkUrl?: string;
     }[];
 }
 
