@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Move, RotateCw, Maximize, Grid3X3, Command, CheckCircle2, MousePointer2 } from 'lucide-react';
+import { Box, Move, RotateCw, Maximize, Grid3X3, Command, CheckCircle2, MousePointer2, Play, RefreshCw } from 'lucide-react';
 import { WorkshopBlock } from '../../../../types';
 
 interface BlenderViewportPageProps {
@@ -12,6 +12,8 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
   const [currentMode, setCurrentMode] = useState<'idle' | 'grab' | 'rotate' | 'scale'>('idle');
   const [activeAxis, setActiveAxis] = useState<string | null>(null);
   const [lastKeyPressed, setLastKeyPressed] = useState<string | null>(null);
+  const [isDemoPlaying, setIsDemoPlaying] = useState(false);
+  const [demoMessage, setDemoMessage] = useState<string | null>(null);
   
   // 3D Transform States
   const [pos, setPos] = useState({ x: 0, y: 0, z: 0 });
@@ -22,8 +24,100 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const lastMousePos = useRef({ x: 0, y: 0 });
 
+  // --- DEMO ORCHESTRATION ---
+  const runDemo = useCallback(async () => {
+    if (isDemoPlaying) return;
+    setIsDemoPlaying(true);
+    
+    // Reset state
+    setPos({ x: 0, y: 0, z: 0 });
+    setRot({ x: -20, y: 45, z: 0 });
+    setScale(1);
+    setCurrentMode('idle');
+    setActiveAxis(null);
+
+    const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+    const showKey = (k: string) => { setLastKeyPressed(k); setTimeout(() => setLastKeyPressed(null), 300); };
+
+    try {
+        if (activeStep === 1) { // Grab Demo
+            setDemoMessage("Watch: Press G to Grab");
+            await wait(1000);
+            showKey('G');
+            setCurrentMode('grab');
+            await wait(800);
+
+            setDemoMessage("Watch: Press Z to lock Axis");
+            showKey('Z');
+            setActiveAxis('Z');
+            await wait(800);
+
+            setDemoMessage("Watch: Move mouse up");
+            // Animate movement
+            const startY = 0;
+            const targetY = -100;
+            const steps = 30;
+            for (let i = 0; i <= steps; i++) {
+                setPos(p => ({ ...p, y: startY + (targetY - startY) * (i / steps) }));
+                await wait(20);
+            }
+            await wait(500);
+            
+            setDemoMessage("Watch: Click to Confirm");
+            setCurrentMode('idle'); // Confirm
+            setActiveAxis(null);
+            await wait(1000);
+        } 
+        else if (activeStep === 2) { // Rotate & Scale Demo
+            setDemoMessage("Watch: Press R to Rotate");
+            await wait(1000);
+            showKey('R');
+            setCurrentMode('rotate');
+            await wait(500);
+            
+            // Animate Rotation
+            for (let i = 0; i <= 30; i++) {
+                setRot(r => ({ ...r, y: 45 + (180 * (i / 30)) }));
+                await wait(20);
+            }
+            setCurrentMode('idle'); // Click
+            await wait(500);
+
+            setDemoMessage("Watch: Press S to Scale");
+            showKey('S');
+            setCurrentMode('scale');
+            await wait(500);
+
+            // Animate Scale
+            for (let i = 0; i <= 30; i++) {
+                setScale(1 + (-0.5 * (i / 30)));
+                await wait(20);
+            }
+            setCurrentMode('idle');
+            await wait(1000);
+        }
+    } finally {
+        setIsDemoPlaying(false);
+        setDemoMessage(null);
+        // Reset for user
+        setPos({ x: 0, y: 0, z: 0 });
+        setRot({ x: -20, y: 45, z: 0 });
+        setScale(1);
+    }
+  }, [activeStep, isDemoPlaying]);
+
+  // Auto-run demo when entering a new step (optional, maybe just button for now)
+  useEffect(() => {
+      if (activeStep > 0 && !completedSteps.includes(activeStep)) {
+          runDemo();
+      }
+  }, [activeStep]); // Run only once per step entry
+
+
   // Handle Keyboard Inputs
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (isDemoPlaying) return; // Block input during demo
+
     const key = e.key.toUpperCase();
     setLastKeyPressed(key);
     setTimeout(() => setLastKeyPressed(null), 200);
@@ -46,10 +140,12 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
     if (key === 'G' && activeStep === 1) setCompletedSteps(prev => [...new Set([...prev, 1])]);
     if (key === 'R' && activeStep === 2) setCompletedSteps(prev => [...new Set([...prev, 2])]);
     
-  }, [currentMode, activeStep]);
+  }, [currentMode, activeStep, isDemoPlaying]);
 
   // Handle Mouse Movement for Interaction
   const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDemoPlaying) return; // Block input during demo
+
     if (currentMode !== 'idle' && viewportRef.current) {
         const deltaX = e.clientX - lastMousePos.current.x;
         const deltaY = e.clientY - lastMousePos.current.y;
@@ -89,12 +185,10 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
                 let dy = prev.y;
                 let dz = prev.z;
 
-                // Simple rotation mapping: X movement -> Y axis rotation
                 if (activeAxis === 'X') dx += deltaX * speed;
                 else if (activeAxis === 'Y') dy += deltaX * speed;
                 else if (activeAxis === 'Z') dz += deltaX * speed;
                 else {
-                    // Viewport rotation (Trackball-ish)
                     dy += deltaX * speed;
                     dx += deltaY * speed;
                 }
@@ -105,20 +199,16 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
         // --- SCALE ---
         if (currentMode === 'scale') {
             setScale(prev => {
-                // Moving right increases scale, left decreases
                 const factor = 1 + (deltaX * 0.01);
-                const newScale = Math.max(0.1, prev * factor);
-                
-                // Axis constraint for scale is complex in CSS, applying global scale for now
-                return newScale;
+                return Math.max(0.1, prev * factor);
             });
         }
     }
     lastMousePos.current = { x: e.clientX, y: e.clientY };
-  }, [currentMode, activeAxis, activeStep]);
+  }, [currentMode, activeAxis, activeStep, isDemoPlaying]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-      // Confirm action
+      if (isDemoPlaying) return;
       if (currentMode !== 'idle') {
           setCurrentMode('idle');
           setActiveAxis(null);
@@ -138,9 +228,9 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
   const getCubeStyle = (): React.CSSProperties => {
     return {
       width: '100px', height: '100px', position: 'relative', transformStyle: 'preserve-3d',
-      transition: currentMode === 'idle' ? 'all 0.3s ease-out' : 'none', // Smooth only when not interacting
+      transition: (currentMode === 'idle' || isDemoPlaying) ? 'all 0.3s ease-out' : 'none', 
       transform: `rotateX(${rot.x}deg) rotateY(${rot.y}deg) rotateZ(${rot.z}deg) translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) scale(${scale})`,
-      cursor: currentMode === 'idle' ? 'pointer' : 'none' // Hide cursor during interaction like Blender
+      cursor: currentMode === 'idle' ? 'pointer' : 'none'
     };
   };
 
@@ -160,8 +250,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
             {block.goal}
           </h2>
           <p className="text-slate-500 mt-2 text-sm font-medium leading-relaxed">
-            実際のキーボードでショートカットを押してください。<br/>
-            (G: 移動, R: 回転, S: 拡大, X/Y/Z: 軸制限, ESC: 戻る)
+            {isDemoPlaying ? "デモ再生中... 画面を見て操作を覚えてください。" : "デモの通りに操作してください。"}
           </p>
         </div>
 
@@ -180,6 +269,18 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
             </div>
           ))}
         </div>
+
+        {/* Demo Controls */}
+        {!isDemoPlaying && activeStep > 0 && (
+            <div className="mt-6 text-center">
+                <button 
+                    onClick={runDemo}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full text-xs font-bold uppercase tracking-widest transition-colors"
+                >
+                    <RefreshCw size={12} /> Replay Demo
+                </button>
+            </div>
+        )}
 
         {/* Real-time Status */}
         <div className="mt-auto p-6 bg-slate-900 rounded-[2rem] text-white">
@@ -207,11 +308,11 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
       >
         
         {/* Interaction Info Overlay */}
-        <div className="absolute top-8 left-8 z-10 space-y-2">
+        <div className="absolute top-8 left-8 z-10 space-y-2 pointer-events-none">
             <div className="bg-[#282828]/90 backdrop-blur px-4 py-2 rounded-xl border border-white/5 flex items-center gap-3 shadow-xl">
                 <div className={`w-2 h-2 rounded-full ${currentMode !== 'idle' ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`}></div>
                 <span className="text-[10px] font-black text-white uppercase tracking-widest">
-                    {currentMode === 'idle' ? 'Object Selection' : `${currentMode} mode active`}
+                    {isDemoPlaying ? 'DEMO MODE' : currentMode === 'idle' ? 'Object Selection' : `${currentMode} mode active`}
                 </span>
             </div>
             {lastKeyPressed && (
@@ -221,12 +322,18 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
             )}
         </div>
 
+        {/* Demo Instruction Overlay */}
+        {demoMessage && (
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-20 bg-black/80 text-white px-6 py-3 rounded-full font-bold text-sm shadow-2xl backdrop-blur animate-in fade-in zoom-in duration-300 pointer-events-none border border-white/10">
+                {demoMessage}
+            </div>
+        )}
+
         {/* Viewport View */}
         <div className="flex-1 relative flex items-center justify-center perspective-[1000px] overflow-hidden">
              {/* Dynamic Axis Lines */}
              {activeAxis === 'Z' && <div className="absolute h-full w-0.5 bg-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.5)] z-0"></div>}
              {activeAxis === 'X' && <div className="absolute w-full h-0.5 bg-red-400 shadow-[0_0_15px_rgba(248,113,113,0.5)] z-0"></div>}
-             {activeAxis === 'Y' && <div className="absolute w-full h-0.5 bg-green-400 shadow-[0_0_15px_rgba(74,222,128,0.5)] z-0 rotate-45"></div>}
 
              {/* Grid */}
              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:40px_40px] [transform:rotateX(75deg)_translateY(200px)] opacity-40"></div>
@@ -236,6 +343,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
                 style={getCubeStyle()} 
                 className="group/cube"
                 onClick={(e) => {
+                    if (isDemoPlaying) return;
                     e.stopPropagation();
                     if (activeStep === 0) {
                         setCompletedSteps(prev => [...new Set([...prev, 0])]);
@@ -266,7 +374,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
                     />
                 ))}
                 
-                {/* Outline (Selection Halo) */}
+                {/* Outline */}
                 <div className={`
                     absolute -inset-1 border-2 transition-all duration-300 pointer-events-none rounded-sm
                     ${isSelected ? 'border-orange-400 opacity-100 shadow-[0_0_20px_rgba(251,146,60,0.6)]' : 'border-white opacity-0'}
