@@ -5,6 +5,7 @@ import ConceptPage from './multi-format/blocks/ConceptPage';
 import DialoguePage from './multi-format/blocks/DialoguePage';
 import WorkshopPage from './multi-format/blocks/WorkshopPage';
 import ReflectionPage from './multi-format/blocks/ReflectionPage';
+import BlenderViewportPage from './multi-format/blocks/BlenderViewportPage';
 
 // --- Mock Data (Static) ---
 const MOCK_BLOCKS: LearningBlock[] = [
@@ -24,7 +25,7 @@ const MOCK_BLOCKS: LearningBlock[] = [
     ]
   },
   {
-    id: '3',
+    id: '3-code',
     type: 'workshop',
     subType: 'code',
     goal: 'Pythonで量子回路を作ってみよう',
@@ -57,6 +58,17 @@ const MOCK_BLOCKS: LearningBlock[] = [
     ]
   },
   {
+    id: '3-blender',
+    type: 'workshop',
+    subType: 'blender',
+    goal: 'オブジェクトの基本操作（G/R/S）',
+    steps: [
+      '3D空間での選択：クリックして立方体をアクティブにします。',
+      '移動（Grab）：Gキーを押して、立方体をZ軸方向に持ち上げます。',
+      '回転とスケール：Rキーで回転させ、Sキーでサイズを調整して完成です。'
+    ]
+  },
+  {
     id: '4',
     type: 'reflection',
     question: '量子もつれを活用できそうな未来の技術はどれ？',
@@ -67,21 +79,24 @@ const MOCK_BLOCKS: LearningBlock[] = [
 interface MultiFormatLessonViewProps {
     onBack: () => void;
     forceBlockType?: 'concept' | 'dialogue' | 'workshop' | 'reflection';
+    forceSubType?: 'code' | 'design' | 'logic' | 'blender';
 }
 
-const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, forceBlockType }) => {
+const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, forceBlockType, forceSubType }) => {
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
 
-  // If a specific block type is forced (for demo menu), find its index
+  // Filter or find the block based on forced props
   useEffect(() => {
-    if (forceBlockType) {
+    if (forceSubType) {
+        const idx = MOCK_BLOCKS.findIndex(b => b.type === 'workshop' && (b as any).subType === forceSubType);
+        if (idx !== -1) setActiveBlockIndex(idx);
+    } else if (forceBlockType) {
         const idx = MOCK_BLOCKS.findIndex(b => b.type === forceBlockType);
         if (idx !== -1) setActiveBlockIndex(idx);
     }
-  }, [forceBlockType]);
+  }, [forceBlockType, forceSubType]);
 
-  // In "Single Mode", show only that block and simplified header
-  const isSingleMode = !!forceBlockType;
+  const isSingleMode = !!forceBlockType || !!forceSubType;
 
   return (
     <div className="min-h-screen bg-white font-sans flex flex-col">
@@ -92,7 +107,7 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
         </button>
         <div className="flex flex-col items-center">
             <span className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1">
-                {isSingleMode ? `${forceBlockType?.toUpperCase()} DEMO` : 'Quantum Mechanics 101'}
+                {isSingleMode ? `${(forceSubType || forceBlockType)?.toUpperCase()} PREVIEW` : 'Multi-Format Curriculum'}
             </span>
             {!isSingleMode && (
                 <div className="flex items-center gap-1.5">
@@ -109,30 +124,33 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
             )}
         </div>
         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
-            {isSingleMode ? 'Preview Mode' : `Step ${(activeBlockIndex + 1)} / ${MOCK_BLOCKS.length}`}
+            {isSingleMode ? 'Lab Demo' : `Step ${(activeBlockIndex + 1)} / ${MOCK_BLOCKS.length}`}
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto bg-slate-50/30">
-        <div className="max-w-5xl mx-auto w-full min-h-full flex flex-col pt-12 pb-24 px-6 md:px-12">
+        <div className="max-w-6xl mx-auto w-full min-h-full flex flex-col pt-12 pb-24 px-6 md:px-12">
             <div className="flex-1">
                 {MOCK_BLOCKS.map((block, index) => {
-                    // Only render the active block
                     if (index !== activeBlockIndex) return null;
                     
                     return (
                         <div key={block.id} className="animate-in fade-in slide-in-from-bottom-6 duration-700">
                             {block.type === 'concept' && <ConceptPage block={block} />}
                             {block.type === 'dialogue' && <DialoguePage block={block} />}
-                            {block.type === 'workshop' && <WorkshopPage block={block} />}
+                            {block.type === 'workshop' && (
+                                (block as any).subType === 'blender' 
+                                ? <BlenderViewportPage block={block as any} /> 
+                                : <WorkshopPage block={block as any} />
+                            )}
                             {block.type === 'reflection' && <ReflectionPage block={block} />}
                         </div>
                     );
                 })}
             </div>
 
-            {/* Navigation Controls (Only show in Full Course mode) */}
+            {/* Navigation Controls */}
             {!isSingleMode && (
                 <div className="mt-24 pt-12 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-8">
                     <button 
@@ -143,7 +161,7 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
                         disabled={activeBlockIndex === 0}
                         className="flex items-center gap-2 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-0 transition-all"
                     >
-                        <ArrowLeft size={18} /> Back to Previous Step
+                        <ArrowLeft size={18} /> Previous
                     </button>
 
                     {activeBlockIndex < MOCK_BLOCKS.length - 1 ? (
@@ -154,7 +172,7 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
                             }}
                             className="flex items-center gap-4 px-12 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 active:scale-[0.98] transition-all"
                         >
-                            <span>Continue to Next Step</span>
+                            <span>Continue</span>
                             <ArrowRight size={20} />
                         </button>
                     ) : (
@@ -162,7 +180,7 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
                             onClick={onBack}
                             className="flex items-center gap-4 px-12 py-6 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-slate-200 hover:bg-slate-800 hover:-translate-y-1 active:scale-[0.98] transition-all"
                         >
-                            <span>Complete Curriculum</span>
+                            <span>Complete</span>
                             <CheckCircle2 size={20} />
                         </button>
                     )}

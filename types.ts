@@ -135,7 +135,8 @@ export enum ViewState {
   DEMO_CONCEPT = 'DEMO_CONCEPT',
   DEMO_DIALOGUE = 'DEMO_DIALOGUE',
   DEMO_WORKSHOP = 'DEMO_WORKSHOP',
-  DEMO_REFLECTION = 'DEMO_REFLECTION'
+  DEMO_REFLECTION = 'DEMO_REFLECTION',
+  DEMO_BLENDER = 'DEMO_BLENDER'
 }
 
 // Generated Content Types
@@ -203,7 +204,7 @@ export interface DialogueBlock {
 export interface WorkshopBlock {
   id: string;
   type: 'workshop';
-  subType?: 'code' | 'design' | 'logic'; // 'code' is default
+  subType?: 'code' | 'design' | 'logic' | 'blender'; // Added blender
   goal: string;
   steps: string[];
 }

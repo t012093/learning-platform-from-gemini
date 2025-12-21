@@ -108,6 +108,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
         { view: ViewState.DEMO_CONCEPT, label: 'Concept Page', icon: Box },
         { view: ViewState.DEMO_DIALOGUE, label: 'Dialogue Page', icon: Users },
         { view: ViewState.DEMO_WORKSHOP, label: 'Workshop Page', icon: Terminal },
+        { view: ViewState.DEMO_BLENDER, label: 'Blender Viewport', icon: Box },
         { view: ViewState.DEMO_REFLECTION, label: 'Reflection Page', icon: Brain },
       ]
     },
