@@ -100,6 +100,18 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
 
     { view: ViewState.AI_DIAGNOSIS, label: 'AI学習診断', icon: Brain }, // New Item
     {
+      id: 'lab',
+      label: 'Lumina Lab',
+      icon: Sparkles,
+      children: [
+        { view: ViewState.MULTI_FORMAT_DEMO, label: 'Full Course Demo', icon: Activity },
+        { view: ViewState.DEMO_CONCEPT, label: 'Concept Page', icon: Box },
+        { view: ViewState.DEMO_DIALOGUE, label: 'Dialogue Page', icon: Users },
+        { view: ViewState.DEMO_WORKSHOP, label: 'Workshop Page', icon: Terminal },
+        { view: ViewState.DEMO_REFLECTION, label: 'Reflection Page', icon: Brain },
+      ]
+    },
+    {
       id: 'documents',
       label: 'ドキュメント',
       icon: FileText,

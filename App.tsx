@@ -109,6 +109,8 @@ const ProfilePlaceholder: React.FC = () => (
   </div>
 );
 
+import MultiFormatLessonView from './components/features/ai/MultiFormatLessonView';
+
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.DASHBOARD);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -120,7 +122,7 @@ const App: React.FC = () => {
   // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [isLoginPageVisible, setIsLoginPageVisible] = useState(false); // Toggle Landing vs Login
+  const [isLoginPageVisible, setIsLoginPageVisible] = useState(false);
 
   // Art Language State
   const [artLanguage, setArtLanguage] = useState<'en' | 'jp'>('en');
@@ -130,7 +132,7 @@ const App: React.FC = () => {
   // Selected Craft/Tribal State
   const [selectedCraftId, setSelectedCraftId] = useState<string | null>(null);
   const [selectedTribalId, setSelectedTribalId] = useState<string | null>(null);
-  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null); // New
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
   const handleCourseSelect = (courseId: string) => {
     setSelectedCourseId(courseId);
@@ -180,10 +182,20 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentView) {
+      case ViewState.MULTI_FORMAT_DEMO:
+        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} />;
+      case ViewState.DEMO_CONCEPT:
+        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="concept" />;
+      case ViewState.DEMO_DIALOGUE:
+        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="dialogue" />;
+      case ViewState.DEMO_WORKSHOP:
+        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="workshop" />;
+      case ViewState.DEMO_REFLECTION:
+        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="reflection" />;
       case ViewState.DASHBOARD:
         return <Dashboard onNavigate={setCurrentView} />;
       case ViewState.COURSE_GENERATOR:
-        return <CourseGeneratorView onBack={() => setCurrentView(ViewState.DASHBOARD)} onCourseGenerated={handleCourseGenerated} />;
+        return <CourseGeneratorView onBack={() => setCurrentView(ViewState.DASHBOARD)} onCourseGenerated={handleCourseGenerated} onNavigate={setCurrentView} />;
       case ViewState.LEARNING_HUB:
         return <LearningHub onNavigate={setCurrentView} />;
       case ViewState.COURSES:

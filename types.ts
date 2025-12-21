@@ -130,7 +130,12 @@ export enum ViewState {
   GENERATED_COURSE_PATH = 'GENERATED_COURSE_PATH', // The roadmap for a generated course
   GENERATED_LESSON_VIEW = 'GENERATED_LESSON_VIEW', // The actual player for generated content
   BALANCE = 'BALANCE', // Wallet and Earnings
-  COURSE_GENERATOR = 'COURSE_GENERATOR' // New: AI Course Generator Input View
+  COURSE_GENERATOR = 'COURSE_GENERATOR', // New: AI Course Generator Input View
+  MULTI_FORMAT_DEMO = 'MULTI_FORMAT_DEMO', // Full demo
+  DEMO_CONCEPT = 'DEMO_CONCEPT',
+  DEMO_DIALOGUE = 'DEMO_DIALOGUE',
+  DEMO_WORKSHOP = 'DEMO_WORKSHOP',
+  DEMO_REFLECTION = 'DEMO_REFLECTION'
 }
 
 // Generated Content Types
@@ -178,6 +183,40 @@ export interface AssessmentProfile {
   aiAdvice?: AIAdvice;
 }
 
+// Multi-Format Content Types
+export type BlockType = 'concept' | 'dialogue' | 'workshop' | 'reflection';
+
+export interface ConceptBlock {
+  id: string;
+  type: 'concept';
+  title: string;
+  content: string;
+  analogy?: string;
+}
+
+export interface DialogueBlock {
+  id: string;
+  type: 'dialogue';
+  lines: { speaker: 'AI' | 'User'; text: string; emotion?: string }[];
+}
+
+export interface WorkshopBlock {
+  id: string;
+  type: 'workshop';
+  subType?: 'code' | 'design' | 'logic'; // 'code' is default
+  goal: string;
+  steps: string[];
+}
+
+export interface ReflectionBlock {
+  id: string;
+  type: 'reflection';
+  question: string;
+  options?: string[];
+}
+
+export type LearningBlock = ConceptBlock | DialogueBlock | WorkshopBlock | ReflectionBlock;
+
 export interface GeneratedChapter {
   id: string | number;
   title: string;
@@ -186,16 +225,28 @@ export interface GeneratedChapter {
   content: string; // Overview
   
   // Rich Content for Personalized Learning
-  whyItMatters: string; // Motivation aligned with values
-  keyConcepts: string[]; // 3-5 Core keywords
-  actionStep: string; // Concrete task to do NOW
-  analogy: string; // Metaphor to explain complex idea
-  quizQuestion?: string; // Quick check
+  whyItMatters: string;
+  keyConcepts: string[];
+  actionStep: string;
+  analogy: string;
+  quizQuestion?: string;
+  
+  // Multi-Format Content (New Standard)
+  blocks?: LearningBlock[];
+
+  // Legacy Slide Format (Deprecated but kept for compatibility)
   slides?: {
     title: string;
     bullets: string[];
     timing?: string;
-  }[]; // Optional: per-chapter slides
+    visualStyle?: string;
+    motionCue?: string;
+    accentIcon?: string;
+    layoutHint?: string;
+    imagePrompt?: string;
+    highlightBox?: string;
+    speechScript?: string;
+  }[];
 }
 
 export interface GeneratedCourse {

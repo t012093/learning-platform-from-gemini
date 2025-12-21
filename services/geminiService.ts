@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
-import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Profile, AIAdvice, AssessmentProfile } from '../types';
+import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Profile, AIAdvice, AssessmentProfile, LearningBlock } from '../types';
 import { retrieveBlenderContext } from './blenderRagService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -38,7 +38,7 @@ const DEFAULT_CONFIG: GenerateCourseConfig = {
 const CREATIVE_CONFIG: GenerateCourseConfig = {
   targetAudience: "クリエイター/アーティスト",
   slideDesignTheme: "クリエイター向けダークテーマ。グラスモーフィズム、ネオンエフェクト、奥行きのあるレイヤー構造。",
-  slideGranularity: `詳細かつ具体的.`,
+  slideGranularity: `詳細かつ具体的.`, 
   courseType: 'creative',
   knowledgeDepth: 'Deep',
   difficultyLevel: 'Intermediate',
@@ -80,18 +80,7 @@ export const createChatSession = (systemInstruction?: string, modelType: 'standa
 /**
  * Creates a chat session for scoping the user's learning intent.
  */
-export const createScopingChat = (
-  profile: Big5Profile | null,
-  modelType: 'standard' | 'pro' | 'gemini-2.5-flash' | 'gemini-2.5-pro' = 'gemini-2.5-flash'
-): Chat => {
-  const modelName =
-    modelType === 'gemini-2.5-pro'
-      ? 'gemini-2.5-pro'
-      : modelType === 'gemini-2.5-flash'
-      ? 'gemini-2.5-flash'
-      : modelType === 'pro'
-      ? 'gemini-3.0-pro'
-      : 'gemini-2.0-flash';
+export const createScopingChat = (profile: Big5Profile | null): Chat => {
   const instruction = `
     あなたは「Lumina 学習コンシェルジュ」です。
     ユーザーが何を学びたいかをヒアリングし、最高のパーソナライズカリキュラムを作るための準備をします。
@@ -110,7 +99,7 @@ export const createScopingChat = (
   `;
 
   return ai.chats.create({
-    model: modelName,
+    model: 'gemini-2.5-flash',
     config: { systemInstruction: instruction }
   });
 };
@@ -118,7 +107,7 @@ export const createScopingChat = (
 export const sendMessageStream = async (chat: Chat, message: string) => {
   try {
     const result = await chat.sendMessageStream({ message });
-    return result;
+    return result.stream;
   } catch (error) {
     console.error("Error sending message to Gemini:", error);
     throw error;
@@ -181,14 +170,24 @@ const analyzeCorePersonality = async (scores: Big5Profile, modelName: string) =>
 };
 
 const analyzeCareer = async (scores: Big5Profile, modelName: string) => {
-  const prompt = `あなたは「The Career Coach」です。日本語。スコア: ${JSON.stringify(scores)}. @@@区切りで careerCompatibility, role, bestSync, warning, hiddenTalentを。`;
+  const prompt = `
+    あなたは「The Career Coach (キャリア戦略家)」です。日本語で回答。
+    スコア: ${JSON.stringify(scores)}
+    @@@で区切り、careerCompatibility, role, bestSync, warning, hiddenTalentの順に、詳細な解説（各2〜3文）を含めて出力してください。
+    role, bestSync, warningは「タイトル: 詳細解説」の形式にしてください。
+  `;
   const response = await ai.models.generateContent({ model: modelName, contents: prompt });
   const parts = (response.text || '').split('@@@').map(p => p.trim());
-  const getVal = (key: string) => (parts.find(p => p.toLowerCase().includes(key.toLowerCase())) || '').split(':').slice(1).join(':').trim();
+  
+  const getVal = (key: string) => {
+      const found = parts.find(p => p.toLowerCase().includes(key.toLowerCase()));
+      return found ? found.split(':').slice(1).join(':').trim() : '';
+  };
+
   const htParts = getVal('hiddenTalent').split('|').map(s => s.trim());
 
   return {
-    careerCompatibility: getVal('careerCompatibility') || 'Analyzing...',
+    careerCompatibility: getVal('careerCompatibility') || '分析中...',
     businessPartnership: {
       role: getVal('role') || 'Expert',
       bestSync: getVal('bestSync') || 'Partner',
@@ -199,7 +198,7 @@ const analyzeCareer = async (scores: Big5Profile, modelName: string) => {
 };
 
 const analyzeRelationships = async (scores: Big5Profile, modelName: string) => {
-  const prompt = `あなたは「The Relationship Expert」です。日本語。スコア: ${JSON.stringify(scores)}. style, idealPartner, adviceをパイプ|区切りで。`;
+  const prompt = `あなたは「The Relationship Expert」です。日本語で回答。スコア: ${JSON.stringify(scores)}. style, idealPartner, adviceをパイプ|区切りで。`;
   const response = await ai.models.generateContent({ model: modelName, contents: prompt });
   const val = (response.text || '').split('|').map(s => s.trim());
   return {
@@ -245,27 +244,19 @@ const generatePedagogicalStrategy = (profile: Big5Profile, assessment?: Assessme
 
   if (assessment?.aiAdvice) {
     const advice = assessment.aiAdvice;
-    strategy += `\n- **強みの活用**: ${advice.strengths.map(s => s.title).join('、')}を活かした構成。\n`;
+    strategy += `\n【固有の特性に基づく追加指示】\n`;
+    strategy += `- **学習戦略**: ${advice.learningStrategy.approach} (${advice.learningStrategy.title}) を反映。\n`;
+    strategy += `- **強みの活用**: 強み「${advice.strengths.map(s => s.title).join('、')}」を活かした演習を用意。\n`;
   }
 
   return { strategy, persona, reasoning };
 };
 
-const generateCourseOutline = async (
-  topic: string,
-  strategy: PedagogicalStrategy,
-  config: GenerateCourseConfig,
-  ragSection: string,
-  modelName: string,
-  intent?: string,
-  intentMeta?: string
-) => {
+const generateCourseOutline = async (topic: string, strategy: PedagogicalStrategy, config: GenerateCourseConfig, ragSection: string, modelName: string, intent?: string) => {
     const prompt = `
       あなたは「Architect (設計士)」です。必ず日本語で回答してください。
       トピック: ${topic}
       具体的要望: ${intent || '特になし'}
-      ユーザー意図(構造化メタ):
-      ${intentMeta || 'なし'}
       ペルソナ: ${strategy.persona}
       教育戦略: ${strategy.strategy}
       ${ragSection}
@@ -311,48 +302,118 @@ const generateCourseOutline = async (
     return parseJsonFromResponse(response.text || '{}');
 };
 
-const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: string, strategy: PedagogicalStrategy, config: GenerateCourseConfig, modelName: string) => {
+const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: string, strategy: PedagogicalStrategy, config: GenerateCourseConfig, modelName: string): Promise<GeneratedChapter> => {
     const prompt = `
-      あなたは「Creator (作家)」です。必ず日本語で回答してください。
-      チャプター: ${idx + 1}. ${ch.title}
-      ペルソナ: ${strategy.persona} (この口調でナレーションを記述)
-      教育戦略: ${strategy.strategy}
-      【要件】
-      - Slides: 3〜6枚。
-      - 各スライドに speechScript (ナレーション原稿) を必ず含めること。
-      - 内容は具体的かつ濃密に。
-      回答はJSONのみ。
+    あなたは「Creator (作家)」です。必ず日本語で回答してください。
+    チャプター: ${idx + 1}. ${ch.title}
+    概要: ${ch.content}
+    ペルソナ: ${strategy.persona} (この口調で記述)
+    教育戦略: ${strategy.strategy}
+
+    このチャプターを構成する「学習ブロック（3〜5個）」を作成してください。
+    以下の4種類のブロックを効果的に組み合わせてください。
+    1. concept: 概念解説（図解や比喩を含む）
+    2. dialogue: 先生と生徒の対話（疑問解消）
+    3. workshop: 実践的な手順やコード（手を動かす）
+    4. reflection: クイズや内省（理解度チェック）
+
+    【出力フォーマット（厳守）】
+    ブロック間は「@@@」で区切る。
+    各ブロックの先頭は「BLOCK: [type]」で始める。
+
+    例:
+    BLOCK: concept
+    TITLE: ...
+    CONTENT: ...
+    ANALOGY: ...
+    @@@
+    BLOCK: dialogue
+    AI: こんにちは！
+    User: 質問です。
+    AI: それはね...
+    @@@
+    BLOCK: workshop
+    GOAL: ...
+    STEP: ...
+    STEP: ...
+    @@@
+    BLOCK: reflection
+    QUESTION: ...
+    OPTION: ...
+    OPTION: ...
     `;
+
     const response = await ai.models.generateContent({
         model: modelName,
         contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            maxOutputTokens: 8192,
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    slides: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                title: { type: Type.STRING },
-                                speechScript: { type: Type.STRING },
-                                bullets: { type: Type.ARRAY, items: { type: Type.STRING } },
-                                imagePrompt: { type: Type.STRING },
-                                highlightBox: { type: Type.STRING }
-                            },
-                            required: ["title", "speechScript", "bullets", "imagePrompt"]
-                        }
-                    }
-                },
-                required: ["slides"]
-            }
-        }
+        config: { maxOutputTokens: 8192 } // Plain text mode
     });
-    const parsed = parseJsonFromResponse(response.text || '{}');
-    return { ...ch, id: idx + 1, slides: parsed.slides || [] };
+
+    const text = response.text || '';
+    const rawBlocks = text.split('@@@').map(b => b.trim()).filter(b => b.length > 0);
+
+    const blocks: LearningBlock[] = rawBlocks.map((raw, bIdx) => {
+        const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
+        const typeLine = lines.find(l => l.startsWith('BLOCK:'));
+        const type = typeLine ? typeLine.split(':')[1].trim().toLowerCase() : 'concept';
+        const id = `ch${idx + 1}-bk${bIdx + 1}`;
+
+        const getValue = (key: string) => {
+            const line = lines.find(l => l.startsWith(key + ':'));
+            return line ? line.substring(key.length + 1).trim() : '';
+        };
+
+        if (type === 'concept') {
+             // Fallback for content extraction
+             const contentIdx = lines.findIndex(l => l.startsWith('CONTENT:'));
+             let content = contentIdx !== -1 ? lines[contentIdx].substring(8).trim() : raw;
+             // If content is very short, maybe it spans multiple lines? Simplified for now.
+             
+             return {
+                id, type: 'concept',
+                title: getValue('TITLE') || ch.title,
+                content: content,
+                analogy: getValue('ANALOGY')
+            };
+        }
+
+        if (type === 'dialogue') {
+            const dialogueLines = lines.filter(l => l.startsWith('AI:') || l.startsWith('User:') || l.startsWith('Lumina:')).map(l => {
+                const speaker = l.startsWith('User:') ? 'User' : 'AI';
+                const text = l.substring(l.indexOf(':') + 1).trim();
+                return { speaker, text } as any; // Cast to bypass strict type check for now
+            });
+            return { id, type: 'dialogue', lines: dialogueLines };
+        }
+
+        if (type === 'workshop') {
+            const steps = lines.filter(l => l.startsWith('STEP:')).map(l => l.substring(5).trim());
+            return {
+                id, type: 'workshop',
+                goal: getValue('GOAL') || '実践演習',
+                steps: steps.length ? steps : ['準備中...']
+            };
+        }
+
+        if (type === 'reflection') {
+             const options = lines.filter(l => l.startsWith('OPTION:')).map(l => l.substring(7).trim());
+             return {
+                id, type: 'reflection',
+                question: getValue('QUESTION') || '理解度チェック',
+                options: options
+             };
+        }
+
+        return { id, type: 'concept', title: 'Summary', content: raw };
+    });
+
+    return { 
+        ...ch, 
+        id: idx + 1, 
+        blocks: blocks,
+        // Compatibility: Generate a dummy slide array if needed by older components
+        slides: [] 
+    };
 };
 
 export const generateCourse = async (
@@ -361,16 +422,17 @@ export const generateCourse = async (
   profile?: Big5Profile,
   config?: GenerateCourseConfig,
   assessment?: AssessmentProfile,
-  intent?: string,
-  intentMeta?: string
+  intent?: string
 ): Promise<GeneratedCourse> => {
   const modelName = modelType === 'gemini-2.5-pro' ? 'gemini-2.5-pro' : modelType === 'gemini-2.5-flash' ? 'gemini-2.5-flash' : modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.0-flash';
   const targetProfile = profile || { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
   const strategy = generatePedagogicalStrategy(targetProfile, assessment);
+  
   const ragKeywords = extractKeywords(topic);
   const blenderDocs = await retrieveBlenderContext(topic, 2);
   const ragSection = blenderDocs.length ? `【参考情報】\n${blenderDocs.map(doc => `- ${doc.text}`).join('\n')}` : '';
-  const outline = await generateCourseOutline(topic, strategy, config || DEFAULT_CONFIG, ragSection, modelName, intent, intentMeta);
+
+  const outline = await generateCourseOutline(topic, strategy, config || DEFAULT_CONFIG, ragSection, modelName, intent);
   const chapterPromises = outline.chapters.map((ch: any, idx: number) => generateChapterDetails(idx, ch, topic, strategy, config || DEFAULT_CONFIG, modelName));
   const fullChapters = await Promise.all(chapterPromises);
 
