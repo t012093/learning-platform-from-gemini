@@ -6,9 +6,34 @@ import DialoguePage from './multi-format/blocks/DialoguePage';
 import WorkshopPage from './multi-format/blocks/WorkshopPage';
 import ReflectionPage from './multi-format/blocks/ReflectionPage';
 import BlenderViewportPage from './multi-format/blocks/BlenderViewportPage';
+import ShowcasePage from './multi-format/blocks/ShowcasePage';
+import ChecklistPage from './multi-format/blocks/ChecklistPage';
 
 // --- Mock Data (Static) ---
 const MOCK_BLOCKS: LearningBlock[] = [
+  {
+    id: '0-showcase',
+    type: 'showcase',
+    title: 'Welcome to Blender',
+    subtitle: 'あなたの想像力を、無限の3D空間で解き放つ旅へ。',
+    features: [
+        { title: 'VFX & Film', description: 'ハリウッド級の映像効果を作成。', icon: 'film' },
+        { title: 'Game Assets', description: 'UnityやUnreal向けのモデル制作。', icon: 'game' },
+        { title: 'Architecture', description: 'フォトリアルな建築パース。', icon: 'arch' },
+        { title: 'Character', description: '魅力的な3Dキャラクターデザイン。', icon: 'char' },
+    ],
+    mentorMessage: 'Blenderは最初は難しく見えるかもしれません。でも大丈夫。このコースでは、一つ一つの操作を「手で触って」覚えられるように設計されています。さあ、最初のキューブを動かしに行きましょう！'
+  },
+  {
+    id: '0-checklist',
+    type: 'checklist',
+    title: 'Blenderの冒険を始める準備',
+    tasks: [
+        { id: 't1', label: 'Blender公式サイトからダウンロード', details: '最新の安定版をダウンロードしましょう。', imageKeyword: 'Blender download page' },
+        { id: 't2', label: 'インストールを実行', details: 'ダウンロードしたファイルを開き、画面の指示に従ってインストールします。', imageKeyword: 'Blender install wizard' },
+        { id: 't3', label: '言語設定を日本語に変更', details: 'Edit > Preferences > Interface > Translation から日本語を選択します。', imageKeyword: 'Blender language settings' },
+    ]
+  },
   {
     id: '1',
     type: 'concept',
@@ -78,7 +103,7 @@ const MOCK_BLOCKS: LearningBlock[] = [
 
 interface MultiFormatLessonViewProps {
     onBack: () => void;
-    forceBlockType?: 'concept' | 'dialogue' | 'workshop' | 'reflection';
+    forceBlockType?: 'concept' | 'dialogue' | 'workshop' | 'reflection' | 'showcase' | 'checklist';
     forceSubType?: 'code' | 'design' | 'logic' | 'blender';
 }
 
@@ -137,14 +162,16 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
                     
                     return (
                         <div key={block.id} className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-                            {block.type === 'concept' && <ConceptPage block={block} />}
-                            {block.type === 'dialogue' && <DialoguePage block={block} />}
+                            {block.type === 'showcase' && <ShowcasePage block={block as any} />}
+                            {block.type === 'checklist' && <ChecklistPage block={block as any} />}
+                            {block.type === 'concept' && <ConceptPage block={block as any} />}
+                            {block.type === 'dialogue' && <DialoguePage block={block as any} />}
                             {block.type === 'workshop' && (
                                 (block as any).subType === 'blender' 
                                 ? <BlenderViewportPage block={block as any} /> 
                                 : <WorkshopPage block={block as any} />
                             )}
-                            {block.type === 'reflection' && <ReflectionPage block={block} />}
+                            {block.type === 'reflection' && <ReflectionPage block={block as any} />}
                         </div>
                     );
                 })}

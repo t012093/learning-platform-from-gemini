@@ -20,7 +20,8 @@ import {
   ChevronDown,
   Brain,
   FileText,
-  Users
+  Users,
+  CheckCircle2
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -41,7 +42,7 @@ type NavItem = {
 const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>('settings');
+  const [expandedMenu, setExpandedMenu] = useState<string | null>('lab');
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -104,7 +105,8 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
       label: 'Lumina Lab',
       icon: Sparkles,
       children: [
-        { view: ViewState.MULTI_FORMAT_DEMO, label: 'Full Course Demo', icon: Activity },
+        { view: ViewState.DEMO_SHOWCASE, label: 'Showcase Page', icon: Box },
+        { view: ViewState.DEMO_CHECKLIST, label: 'Checklist Page', icon: CheckCircle2 },
         { view: ViewState.DEMO_CONCEPT, label: 'Concept Page', icon: Box },
         { view: ViewState.DEMO_DIALOGUE, label: 'Dialogue Page', icon: Users },
         { view: ViewState.DEMO_WORKSHOP, label: 'Workshop Page', icon: Terminal },
@@ -237,7 +239,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
                   </button>
 
                   {/* Sub Items */}
-                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded && !isCollapsed ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded && !isCollapsed ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="pt-1 pb-2 space-y-1">
                       {item.children.map((child) => {
                         const isActive = isNavItemActive(child);

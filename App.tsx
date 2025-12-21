@@ -189,11 +189,15 @@ const App: React.FC = () => {
       case ViewState.DEMO_DIALOGUE:
         return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="dialogue" />;
       case ViewState.DEMO_WORKSHOP:
-        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="workshop" />;
+        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceSubType="code" />;
       case ViewState.DEMO_REFLECTION:
         return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="reflection" />;
       case ViewState.DEMO_BLENDER:
         return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceSubType="blender" />;
+      case ViewState.DEMO_SHOWCASE:
+        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="showcase" />;
+      case ViewState.DEMO_CHECKLIST:
+        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="checklist" />;
       case ViewState.DASHBOARD:
         return <Dashboard onNavigate={setCurrentView} />;
       case ViewState.COURSE_GENERATOR:
