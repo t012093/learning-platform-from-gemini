@@ -114,6 +114,8 @@ We are currently transitioning from a Python-based gTTS architecture to a **Node
   - Goal: Embed Blender manual HTML and retrieve relevant context to enrich curriculum generation (option 2).
 - **Issue #7**: **User Intent Metadata DB + Embedding Memory**
   - Goal: Extract structured intent from chat, embed it, and persist personalized context for future sessions.
+- **Issue #8**: **Blender Image Metadata & Retrieval**
+  - Goal: Enrich image metadata (caption/context/tags), improve search (BM25/vector), and support JP queries for curriculum generation.
 
 ### How to Contribute
 1. Check the [Issues](https://github.com/t012093/learning-platform-from-gemini/issues) tab.
