@@ -67,6 +67,18 @@ const LearningHub: React.FC<LearningHubProps> = ({ onNavigate }) => {
             image: "https://images.unsplash.com/photo-1617791160536-598cf32026fb?auto=format&fit=crop&q=80&w=800"
         },
         {
+            id: 'teacher-bot-live',
+            title: 'Teacher Bot Live',
+            subtitle: 'Blender サイドカー',
+            icon: Terminal,
+            view: ViewState.TEACHER_BOT_LIVE,
+            color: 'text-emerald-500',
+            bg: 'bg-emerald-50',
+            borderColor: 'border-emerald-100',
+            description: "Blenderの現在ステップを大画面で同期表示。",
+            image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=800"
+        },
+        {
             id: 'art',
             title: 'Art Atelier',
             subtitle: '美術史 & 哲学',

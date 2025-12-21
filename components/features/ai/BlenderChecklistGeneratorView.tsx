@@ -14,6 +14,7 @@ type ChecklistTaskSpec = {
   linkUrl?: string;
   staticImageUrl?: string;
   staticImageCaption?: string;
+  disableImageSearch?: boolean;
 };
 
 const BASE_TASKS: ChecklistTaskSpec[] = [
@@ -34,15 +35,29 @@ const BASE_TASKS: ChecklistTaskSpec[] = [
     details: 'Windows: x64/arm64を選択。Installer版は開始メニュー登録と関連付けあり。Zip版は解凍して実行(管理者不要)。macOS: Intel/Apple Siliconを選択し、.dmgを開いて Blender.app をApplicationsへドラッグ。初回起動は承認が必要。',
     query: 'install windows blender',
     fallback: 'Blender install wizard',
-    allowedPaths: ['getting_started/installing/windows', 'getting_started/installing/macos']
+    allowedPaths: ['getting_started/installing/windows', 'getting_started/installing/macos'],
+    staticImageUrl: '/data/curricula/blender/_images/about_contribute_install_windows_installer.png',
+    staticImageCaption: 'Installer example'
   },
   {
     id: 't3',
+    label: '画面構成をざっと把握',
+    details: '上部メニュー/ヘッダー、中央3Dビューポート、右のアウトライナー/プロパティ、下のタイムラインが基本。境界をドラッグで分割・結合、ワークスペースでレイアウト切替。',
+    query: 'blender interface overview',
+    fallback: 'Blender interface overview',
+    allowedPaths: ['interface/'],
+    staticImageUrl: '/data/curricula/blender/_images/interface_window-system_introduction_default-screen.png',
+    staticImageCaption: 'Default layout'
+  },
+  {
+    id: 't4',
     label: '言語設定を日本語に変更',
     details: 'Edit > Preferences > Interface > Language を日本語に。TranslateのInterface/Tooltips/New Dataを必要に応じてオン。',
     query: 'blender preferences interface',
     fallback: 'Blender language settings',
-    allowedPaths: ['editors/preferences/interface', 'editors/preferences']
+    allowedPaths: ['editors/preferences/interface', 'editors/preferences'],
+    staticImageUrl: '/data/curricula/blender/_static/blender-language-ui.png',
+    staticImageCaption: 'Language settings'
   }
 ];
 
@@ -74,6 +89,16 @@ const BlenderChecklistGeneratorView: React.FC<{ onBack: () => void }> = ({ onBac
             details: task.details,
             imageUrl: task.staticImageUrl,
             imageCaption: task.staticImageCaption || '',
+            linkUrl: task.linkUrl
+          });
+          continue;
+        }
+        if (task.disableImageSearch) {
+          tasks.push({
+            id: task.id,
+            label: task.label,
+            details: task.details,
+            imageKeyword: task.fallback,
             linkUrl: task.linkUrl
           });
           continue;

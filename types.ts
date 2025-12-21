@@ -93,6 +93,7 @@ export enum ViewState {
   BLENDER = 'BLENDER', // Overview
   BLENDER_PATH = 'BLENDER_PATH', // Detailed Project Path
   BLENDER_LESSON = 'BLENDER_LESSON', // Actual Video/Task Lesson
+  TEACHER_BOT_LIVE = 'TEACHER_BOT_LIVE', // Blender sidecar live view
   // Programming Paths Deep Links
   PROGRAMMING_WEB = 'programming_web',
   PROGRAMMING_AI = 'programming_ai',

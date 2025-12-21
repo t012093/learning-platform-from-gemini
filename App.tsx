@@ -34,6 +34,7 @@ import AICharacterDetailView from './components/features/ai/AICharacterDetailVie
 import BlenderCurriculum from './components/features/blender/BlenderCurriculum';
 import BlenderPathView from './components/features/blender/BlenderPathView';
 import BlenderLessonView from './components/features/blender/BlenderLessonView';
+import TeacherBotLiveView from './components/features/blender/TeacherBotLiveView';
 
 // Programming Features
 import ProgrammingCurriculum from './components/features/programming/ProgrammingCurriculum';
@@ -231,6 +232,8 @@ const App: React.FC = () => {
           onBack={() => setCurrentView(ViewState.BLENDER_PATH)}
           onComplete={() => setCurrentView(ViewState.BLENDER_PATH)}
         />;
+      case ViewState.TEACHER_BOT_LIVE:
+        return <TeacherBotLiveView onBack={() => setCurrentView(ViewState.LEARNING_HUB)} />;
       case ViewState.PROGRAMMING:
       case ViewState.PROGRAMMING_WEB:
         return <ProgrammingCurriculum onNavigate={setCurrentView} initialTrack="web" />;

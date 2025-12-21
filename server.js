@@ -15,6 +15,81 @@ const PORT = 3006;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
+const teacherBotStore = {
+    sessions: new Map(),
+    lastEvent: null,
+};
+
+const normalizeEvent = (event) => {
+    const now = Date.now() / 1000;
+    return {
+        schema_version: event.schema_version || '0.1',
+        event_id: event.event_id || `${now}-${Math.random().toString(16).slice(2)}`,
+        event: event.event || 'unknown',
+        timestamp: event.timestamp || now,
+        session_id: event.session_id || '',
+        tour: event.tour || {},
+        step: event.step || {},
+        user: event.user || {},
+        state: event.state || {},
+        extra: event.extra || {},
+        client: event.client || {},
+    };
+};
+
+const storeEvent = (event) => {
+    const sessionId =
+        event.session_id ||
+        event.user?.id ||
+        event.user?.course ||
+        'default';
+    const current = teacherBotStore.sessions.get(sessionId) || {
+        session_id: sessionId,
+        events: [],
+        last_event: null,
+        updated_at: null,
+    };
+    current.events.push(event);
+    if (current.events.length > 50) {
+        current.events.shift();
+    }
+    current.last_event = event;
+    current.updated_at = Date.now();
+    teacherBotStore.sessions.set(sessionId, current);
+    teacherBotStore.lastEvent = event;
+    return current;
+};
+
+app.post('/api/teacher-bot/events', (req, res) => {
+    const incoming = req.body;
+    if (!incoming || !incoming.event) {
+        return res.status(400).json({ error: 'Invalid payload' });
+    }
+    const normalized = normalizeEvent(incoming);
+    const session = storeEvent(normalized);
+    res.json({ ok: true, session_id: session.session_id });
+});
+
+app.get('/api/teacher-bot/state', (req, res) => {
+    const sessionId = req.query.session_id;
+    let payload;
+    if (sessionId && teacherBotStore.sessions.has(sessionId)) {
+        payload = teacherBotStore.sessions.get(sessionId);
+    } else if (teacherBotStore.lastEvent) {
+        const fallbackId = teacherBotStore.lastEvent.session_id || 'default';
+        payload = teacherBotStore.sessions.get(fallbackId) || {
+            session_id: fallbackId,
+            events: [teacherBotStore.lastEvent],
+            last_event: teacherBotStore.lastEvent,
+            updated_at: Date.now(),
+        };
+    }
+    if (!payload) {
+        return res.json({ ok: false, message: 'No events yet' });
+    }
+    res.json({ ok: true, ...payload });
+});
+
 // エンドポイント: 音声生成を開始
 app.post('/api/generate-audio', async (req, res) => {
     const courseData = req.body;
