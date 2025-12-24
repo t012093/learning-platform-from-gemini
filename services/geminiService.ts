@@ -113,7 +113,7 @@ export const createScopingChat = (profile: Big5Profile | null): Chat => {
 export const sendMessageStream = async (chat: Chat, message: string) => {
   try {
     const result = await chat.sendMessageStream({ message });
-    return result.stream;
+    return (result as any).stream || result;
   } catch (error) {
     console.error("Error sending message to Gemini:", error);
     throw error;
