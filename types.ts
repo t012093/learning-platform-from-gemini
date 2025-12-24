@@ -291,6 +291,10 @@ export interface GeneratedCourse {
   createdAt: Date;
   modelUsed: 'standard' | 'pro' | 'gemini-2.5-flash' | 'gemini-2.5-pro';
   targetProfile?: Big5Profile; // The profile this was generated for
-  teacherPersona?: TeacherPersona;
+  teacherPersona?: { name: string; role: string; tone: string; greeting: string; };
   personalizationReasoning?: string;
+  preferredTemplate?: CourseTemplate;
 }
+
+export type CourseTemplate = 'focus_slide' | 'workshop_split' | 'dialogue_chat' | 'explore_map';
+

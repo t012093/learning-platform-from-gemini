@@ -242,12 +242,47 @@ export const analyzePersonality = async (scores: Big5Profile): Promise<AIAdvice 
 
 // --- AGENTIC FUNCTIONS (Pedagogical) ---
 
-interface PedagogicalStrategy { strategy: string; persona: string; reasoning: string; }
+interface PedagogicalStrategy { 
+  strategy: string; 
+  persona: string; 
+  reasoning: string; 
+  template: 'focus_slide' | 'workshop_split' | 'dialogue_chat' | 'explore_map';
+}
 
-const generatePedagogicalStrategy = (profile: Big5Profile, assessment?: AssessmentProfile): PedagogicalStrategy => {
+const generatePedagogicalStrategy = (
+    profile: Big5Profile, 
+    assessment?: AssessmentProfile,
+    topic: string = '',
+    intent: string = ''
+): PedagogicalStrategy => {
   let strategy = "教育スタイルガイド:\n";
   let persona = "AI Tutor Lumina.";
   let reasoning = "Optimized for user profile.";
+  let template: PedagogicalStrategy['template'] = 'focus_slide';
+
+  // 1. Base Logic by Personality
+  if (profile.conscientiousness > 65 || profile.openness < 40) {
+      template = 'workshop_split'; // Practical, structured
+      reasoning += " 誠実性の高さに合わせ、実践的なワークショップ形式を採用。";
+  } else if (profile.extraversion > 65 || profile.agreeableness > 65) {
+      template = 'dialogue_chat'; // Interactive, social
+      reasoning += " 外向的・協調的な特性に合わせ、対話型学習を採用。";
+  } else if (profile.openness > 70) {
+      template = 'explore_map'; // Exploratory, non-linear
+      reasoning += " 高い開放性を満たすため、自由な探索モードを採用。";
+  } else {
+      template = 'focus_slide'; // Default, focused
+      reasoning += " 集中力を維持しやすいスライド形式を採用。";
+  }
+
+  // 2. Override Logic by Topic & Intent (Prioritize Content Type)
+  const techKeywords = /python|code|script|react|program|algo|logic|unity|blender|sql|aws|docker|css|html|js|ts|rust|go|java|c\+\+/i;
+  const handsOnKeywords = /作|書|実装|構築|ハンズオン|実践|work|build|create|try|dev|lab/i;
+  
+  if (techKeywords.test(topic) || techKeywords.test(intent) || handsOnKeywords.test(intent)) {
+      template = 'workshop_split';
+      reasoning = `トピック「${topic}」の実践的性質を考慮し、解説と作業エリアを併設したワークショップ形式を優先採用。`;
+  }
 
   if (profile.openness > 70) {
     strategy += "- **抽象的・概念的アプローチ**: メタファー多用。\n";
@@ -264,7 +299,7 @@ const generatePedagogicalStrategy = (profile: Big5Profile, assessment?: Assessme
     strategy += `- **強みの活用**: 強み「${advice.strengths.map(s => s.title).join('、')}」を活かした演習を用意。\n`;
   }
 
-  return { strategy, persona, reasoning };
+  return { strategy, persona, reasoning, template };
 };
 
 const generateCourseOutline = async (topic: string, strategy: PedagogicalStrategy, config: GenerateCourseConfig, ragSection: string, modelName: string, intent?: string) => {
@@ -402,11 +437,22 @@ const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: 
         }
 
         if (type === 'workshop') {
-            const steps = lines.filter(l => l.startsWith('STEP:')).map(l => l.substring(5).trim());
+            let steps = lines.filter(l => l.startsWith('STEP:')).map(l => l.substring(5).trim());
+            
+            // Fallback: Try bullets or numbered lists if no explicit steps found
+            if (steps.length === 0) {
+                 steps = lines.filter(l => (/^[-*•]/.test(l) || /^\d+\./.test(l)) && !l.startsWith('BLOCK:') && !l.startsWith('GOAL:')).map(l => l.replace(/^[-*•\d.]+\s*/, '').trim());
+            }
+            
+            // Final Fallback: Take all non-meta lines
+            if (steps.length === 0) {
+                 steps = lines.filter(l => !l.startsWith('BLOCK:') && !l.startsWith('GOAL:') && l.length > 0);
+            }
+
             return {
                 id, type: 'workshop',
                 goal: getValue('GOAL') || '実践演習',
-                steps: steps.length ? steps : ['準備中...']
+                steps: steps.length ? steps : ['手順を生成できませんでした。']
             };
         }
 
@@ -422,12 +468,46 @@ const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: 
         return { id, type: 'concept', title: 'Summary', content: raw };
     });
 
+    // --- ADAPTER: Blocks to Slides Conversion ---
+    // Convert generic blocks into the specific slide format required by the current UI
+    const slides = blocks.map(block => {
+        let slide: any = {
+            title: block.title || ch.title,
+            bullets: [],
+            speechScript: '',
+            imagePrompt: '' // Optional
+        };
+
+        if (block.type === 'concept') {
+            slide.title = block.title || ch.title;
+            // Split content into bullets if it looks like a list, otherwise single bullet
+            slide.bullets = [block.content]; 
+            slide.speechScript = block.content; // Use content as script for now
+            if (block.analogy) {
+                slide.bullets.push(`💡 ${block.analogy}`);
+            }
+        } else if (block.type === 'dialogue') {
+            slide.title = "Discussion";
+            slide.bullets = block.lines?.map(l => `${l.speaker}: ${l.text}`) || [];
+            slide.speechScript = block.lines?.map(l => l.text).join(' ');
+        } else if (block.type === 'workshop') {
+            slide.title = "Workshop: " + (block.goal || 'Practice');
+            slide.bullets = block.steps || [];
+            slide.speechScript = `Let's practice. ${block.goal}. Follow the steps displayed.`;
+        } else if (block.type === 'reflection') {
+            slide.title = "Check your understanding";
+            slide.bullets = [block.question, ...(block.options || []).map(o => `• ${o}`)];
+            slide.speechScript = block.question;
+        }
+
+        return slide;
+    });
+
     return { 
         ...ch, 
         id: idx + 1, 
         blocks: blocks,
-        // Compatibility: Generate a dummy slide array if needed by older components
-        slides: [] 
+        slides: slides 
     };
 };
 
@@ -441,7 +521,7 @@ export const generateCourse = async (
 ): Promise<GeneratedCourse> => {
   const modelName = modelType === 'gemini-2.5-pro' ? 'gemini-2.5-pro' : modelType === 'gemini-2.5-flash' ? 'gemini-2.5-flash' : modelType === 'pro' ? 'gemini-3.0-pro' : 'gemini-2.0-flash';
   const targetProfile = profile || { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
-  const strategy = generatePedagogicalStrategy(targetProfile, assessment);
+  const strategy = generatePedagogicalStrategy(targetProfile, assessment, topic, intent);
   
   const ragKeywords = extractKeywords(topic);
   const blenderDocs = await retrieveBlenderContext(topic, 2);
@@ -472,7 +552,8 @@ export const generateCourse = async (
     modelUsed: modelType,
     targetProfile: targetProfile,
     teacherPersona: { name: "Lumina", role: "AI Tutor", tone: strategy.persona, greeting: "こんにちは！" },
-    personalizationReasoning: strategy.reasoning
+    personalizationReasoning: strategy.reasoning,
+    preferredTemplate: strategy.template
   };
 };
 

@@ -103,24 +103,26 @@ const MOCK_BLOCKS: LearningBlock[] = [
 ];
 
 interface MultiFormatLessonViewProps {
+    blocks?: LearningBlock[];
     onBack: () => void;
     forceBlockType?: 'concept' | 'dialogue' | 'workshop' | 'reflection' | 'showcase' | 'checklist';
     forceSubType?: 'code' | 'design' | 'logic' | 'blender';
 }
 
-const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, forceBlockType, forceSubType }) => {
+const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ blocks, onBack, forceBlockType, forceSubType }) => {
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
+  const displayBlocks = blocks && blocks.length > 0 ? blocks : MOCK_BLOCKS;
 
   // Filter or find the block based on forced props
   useEffect(() => {
     if (forceSubType) {
-        const idx = MOCK_BLOCKS.findIndex(b => b.type === 'workshop' && (b as any).subType === forceSubType);
+        const idx = displayBlocks.findIndex(b => b.type === 'workshop' && (b as any).subType === forceSubType);
         if (idx !== -1) setActiveBlockIndex(idx);
     } else if (forceBlockType) {
-        const idx = MOCK_BLOCKS.findIndex(b => b.type === forceBlockType);
+        const idx = displayBlocks.findIndex(b => b.type === forceBlockType);
         if (idx !== -1) setActiveBlockIndex(idx);
     }
-  }, [forceBlockType, forceSubType]);
+  }, [forceBlockType, forceSubType, displayBlocks]);
 
   const isSingleMode = !!forceBlockType || !!forceSubType;
 
@@ -137,7 +139,7 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
             </span>
             {!isSingleMode && (
                 <div className="flex items-center gap-1.5">
-                    {MOCK_BLOCKS.map((_, idx) => (
+                    {displayBlocks.map((_, idx) => (
                         <div 
                             key={idx} 
                             className={`h-1 rounded-full transition-all duration-500 ${
@@ -150,7 +152,7 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
             )}
         </div>
         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
-            {isSingleMode ? 'Lab Demo' : `Step ${(activeBlockIndex + 1)} / ${MOCK_BLOCKS.length}`}
+            {isSingleMode ? 'Lab Demo' : `Step ${(activeBlockIndex + 1)} / ${displayBlocks.length}`}
         </div>
       </div>
 
@@ -158,7 +160,7 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
       <div className="flex-1 overflow-y-auto bg-slate-50/30">
         <div className="max-w-6xl mx-auto w-full min-h-full flex flex-col pt-12 pb-24 px-6 md:px-12">
             <div className="flex-1">
-                {MOCK_BLOCKS.map((block, index) => {
+                {displayBlocks.map((block, index) => {
                     if (index !== activeBlockIndex) return null;
                     
                     return (
@@ -192,11 +194,11 @@ const MultiFormatLessonView: React.FC<MultiFormatLessonViewProps> = ({ onBack, f
                         <ArrowLeft size={18} /> Previous
                     </button>
 
-                    {activeBlockIndex < MOCK_BLOCKS.length - 1 ? (
+                    {activeBlockIndex < displayBlocks.length - 1 ? (
                         <button 
                             onClick={() => {
                                 window.scrollTo(0, 0);
-                                setActiveBlockIndex(Math.min(MOCK_BLOCKS.length - 1, activeBlockIndex + 1));
+                                setActiveBlockIndex(Math.min(displayBlocks.length - 1, activeBlockIndex + 1));
                             }}
                             className="flex items-center gap-4 px-12 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 active:scale-[0.98] transition-all"
                         >

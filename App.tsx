@@ -356,6 +356,15 @@ const App: React.FC = () => {
             setCurrentView(ViewState.GENERATED_LESSON_VIEW);
           }} />;
       case ViewState.GENERATED_LESSON_VIEW:
+        if (generatedCourse?.preferredTemplate === 'workshop_split') {
+             const allBlocks = generatedCourse.chapters.flatMap(ch => ch.blocks || []);
+             return (
+                <MultiFormatLessonView 
+                    blocks={allBlocks} 
+                    onBack={() => setCurrentView(ViewState.GENERATED_COURSE_PATH)} 
+                />
+             );
+        }
         return <GeneratedLessonView course={generatedCourse} onBack={() => setCurrentView(ViewState.GENERATED_COURSE_PATH)} onComplete={() => setCurrentView(ViewState.GENERATED_COURSE_PATH)} />;
       case ViewState.LESSON:
         return <LessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} />;
