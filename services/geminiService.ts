@@ -360,37 +360,22 @@ const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: 
     ペルソナ: ${strategy.persona} (この口調で記述)
     教育戦略: ${strategy.strategy}
 
-    このチャプターを構成する「学習ブロック（3〜5個）」を作成してください。
-    以下の4種類のブロックを効果的に組み合わせてください。
-    1. concept: 概念解説（図解や比喩を含む）
-    2. dialogue: 先生と生徒の対話（疑問解消）
-    3. workshop: 実践的な手順やコード（手を動かす）
-    4. reflection: クイズや内省（理解度チェック）
+    【重要ルール】
+    1. 「承知しました」「こんにちは」等の前置き・挨拶は一切禁止。即座に「BLOCK:」から開始すること。
+    2. ブロック間は必ず「@@@」で区切ること。
+    3. 以下の4種類のブロックを効果的に組み合わせてください。
 
-    【出力フォーマット（厳守）】
-    ブロック間は「@@@」で区切る。
-    各ブロックの先頭は「BLOCK: [type]」で始める。
+    - concept: 概念解説。TITLE: と CONTENT: を含む。
+    - dialogue: 先生と生徒の対話。中身がない場合は作成しない。
+    - workshop: 実践的な手順。必ず SUBTYPE: (code | design | logic | blender) を指定すること。
+    - reflection: クイズ。
 
-    例:
-    BLOCK: concept
-    TITLE: ...
-    CONTENT: ...
-    ANALOGY: ...
-    @@@
-    BLOCK: dialogue
-    AI: こんにちは！
-    User: 質問です。
-    AI: それはね...
-    @@@
+    【Workshopの記述形式】
     BLOCK: workshop
+    SUBTYPE: code  <-- 必ず指定
     GOAL: ...
     STEP: ...
     STEP: ...
-    @@@
-    BLOCK: reflection
-    QUESTION: ...
-    OPTION: ...
-    OPTION: ...
     `;
 
     const response = await ai.models.generateContent({
@@ -400,7 +385,11 @@ const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: 
     });
 
     const text = response.text || '';
-    const rawBlocks = text.split('@@@').map(b => b.trim()).filter(b => b.length > 0);
+    // --- CLEANING: Remove any conversational prefix before the first BLOCK: ---
+    const startIndex = text.indexOf('BLOCK:');
+    const cleanedText = startIndex !== -1 ? text.substring(startIndex) : text;
+    
+    const rawBlocks = cleanedText.split('@@@').map(b => b.trim()).filter(b => b.length > 0);
 
     const blocks: LearningBlock[] = rawBlocks.map((raw, bIdx) => {
         const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
@@ -414,16 +403,17 @@ const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: 
         };
 
         if (type === 'concept') {
-             // Fallback for content extraction
-             const contentIdx = lines.findIndex(l => l.startsWith('CONTENT:'));
-             let content = contentIdx !== -1 ? lines[contentIdx].substring(8).trim() : raw;
-             // If content is very short, maybe it spans multiple lines? Simplified for now.
+             // Clean up content: Remove meta labels that AI might have included
+             const contentLines = lines.filter(l => {
+                 const isMeta = l.startsWith('BLOCK:') || l.startsWith('TITLE:') || l.startsWith('ANALOGY:') || l.startsWith('CONTENT:');
+                 return !isMeta;
+             });
              
              return {
                 id, type: 'concept',
-                title: getValue('TITLE') || ch.title,
-                content: content,
-                analogy: getValue('ANALOGY')
+                title: getValue('TITLE').replace(/^TITLE:\s*/, '') || ch.title,
+                content: contentLines.join('\n').trim(),
+                analogy: getValue('ANALOGY').replace(/^ANALOGY:\s*/, '')
             };
         }
 
@@ -431,28 +421,28 @@ const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: 
             const dialogueLines = lines.filter(l => l.startsWith('AI:') || l.startsWith('User:') || l.startsWith('Lumina:')).map(l => {
                 const speaker = l.startsWith('User:') ? 'User' : 'AI';
                 const text = l.substring(l.indexOf(':') + 1).trim();
-                return { speaker, text } as any; // Cast to bypass strict type check for now
+                return { speaker, text } as any; 
             });
             return { id, type: 'dialogue', lines: dialogueLines };
         }
 
         if (type === 'workshop') {
-            let steps = lines.filter(l => l.startsWith('STEP:')).map(l => l.substring(5).trim());
+            // Priority 1: Explicitly tagged steps
+            let steps = lines.filter(l => l.startsWith('STEP:')).map(l => l.substring(5).trim()).filter(Boolean);
             
-            // Fallback: Try bullets or numbered lists if no explicit steps found
+            // Priority 2: If no explicit steps, take all lines that aren't meta-tags
             if (steps.length === 0) {
-                 steps = lines.filter(l => (/^[-*•]/.test(l) || /^\d+\./.test(l)) && !l.startsWith('BLOCK:') && !l.startsWith('GOAL:')).map(l => l.replace(/^[-*•\d.]+\s*/, '').trim());
-            }
-            
-            // Final Fallback: Take all non-meta lines
-            if (steps.length === 0) {
-                 steps = lines.filter(l => !l.startsWith('BLOCK:') && !l.startsWith('GOAL:') && l.length > 0);
+                 steps = lines.filter(l => {
+                     const isMeta = l.startsWith('BLOCK:') || l.startsWith('GOAL:') || l.startsWith('SUBTYPE:') || l.startsWith('TITLE:') || l.startsWith('STEP:');
+                     return !isMeta && l.length > 0;
+                 }).map(l => l.replace(/^[-*•\d.]+\s*/, '').trim()).filter(Boolean);
             }
 
             return {
                 id, type: 'workshop',
-                goal: getValue('GOAL') || '実践演習',
-                steps: steps.length ? steps : ['手順を生成できませんでした。']
+                subType: (getValue('SUBTYPE').toLowerCase() as any) || 'code',
+                goal: getValue('GOAL').replace(/^GOAL:\s*/, '') || '実践演習',
+                steps: steps.length ? steps : ['手順の詳細は解説文を確認してください。']
             };
         }
 
@@ -466,6 +456,11 @@ const generateChapterDetails = async (idx: number, ch: GeneratedChapter, topic: 
         }
 
         return { id, type: 'concept', title: 'Summary', content: raw };
+    }).filter(b => {
+        // Filter out empty blocks
+        if (b.type === 'dialogue' && (!b.lines || b.lines.length === 0)) return false;
+        if (b.type === 'reflection' && !b.question) return false;
+        return true;
     });
 
     // --- ADAPTER: Blocks to Slides Conversion ---
@@ -542,7 +537,7 @@ export const generateCourse = async (
   const chapterPromises = outline.chapters.map((ch: any, idx: number) => generateChapterDetails(idx, ch, topic, strategy, config || DEFAULT_CONFIG, modelName));
   const fullChapters = await Promise.all(chapterPromises);
 
-  return {
+  const course: GeneratedCourse = {
     id: crypto.randomUUID(),
     title: outline.title,
     description: outline.description,
@@ -555,6 +550,17 @@ export const generateCourse = async (
     personalizationReasoning: strategy.reasoning,
     preferredTemplate: strategy.template
   };
+
+  // --- DEBUG: Send generated data to server for inspection ---
+  try {
+      fetch('/api/debug/log-course', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(course)
+      }).catch(() => {}); // Ignore error if server not running
+  } catch (e) {}
+
+  return course;
 };
 
 export const getMockBlenderCourse = (): GeneratedCourse => ({

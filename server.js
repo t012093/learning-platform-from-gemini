@@ -15,6 +15,17 @@ const PORT = 3006;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
+app.post('/api/debug/log-course', async (req, res) => {
+    console.log("======== DEBUG: RECEIVED COURSE DATA ========");
+    try {
+        await fs.writeFile('curriculum_debug.json', JSON.stringify(req.body, null, 2));
+        console.log("Saved to curriculum_debug.json");
+    } catch (e) {
+        console.error("Failed to save debug log:", e);
+    }
+    res.sendStatus(200);
+});
+
 const teacherBotStore = {
     sessions: new Map(),
     lastEvent: null,
