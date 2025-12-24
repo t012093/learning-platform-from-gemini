@@ -56,27 +56,27 @@ const ImageSlider = ({ before, after, alt }: { before: string, after: string, al
   return (
     <div 
       ref={containerRef}
-      className="relative w-full aspect-video rounded-xl overflow-hidden cursor-col-resize group select-none"
+      className="relative w-full aspect-video rounded-[2rem] overflow-hidden cursor-col-resize group select-none shadow-inner border border-slate-100"
       onMouseMove={handleMove}
       onTouchMove={handleMove}
     >
       <img src={after} alt={alt} className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute top-4 right-4 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-md uppercase tracking-wider">Smooth Shading</div>
+      <div className="absolute top-4 right-4 bg-white/90 text-slate-900 text-[10px] font-black px-3 py-1.5 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm">Smooth Shading</div>
 
       <div 
-        className="absolute inset-0 w-full h-full overflow-hidden"
-        style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
+        className="absolute inset-0 w-full h-full overflow-hidden rounded-[2rem]"
+        style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
       >
         <img src={before} alt={alt} className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute top-4 left-4 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-md uppercase tracking-wider">Flat Shading</div>
+        <div className="absolute top-4 left-4 bg-white/90 text-slate-900 text-[10px] font-black px-3 py-1.5 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm">Flat Shading</div>
       </div>
 
       <div 
-        className="absolute top-0 bottom-0 w-0.5 bg-white cursor-col-resize z-20"
+        className="absolute top-0 bottom-0 w-1 bg-white cursor-col-resize z-20 shadow-[0_0_10px_rgba(0,0,0,0.2)]"
         style={{ left: `${sliderPosition}%` }}
       >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg text-slate-900 ring-4 ring-black/10">
-          <MoveHorizontal size={16} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-xl text-slate-900 ring-4 ring-black/5">
+          <MoveHorizontal size={20} />
         </div>
       </div>
     </div>
@@ -86,21 +86,21 @@ const ImageSlider = ({ before, after, alt }: { before: string, after: string, al
 // 2. X-Ray Overlay (Hold to reveal)
 const XRayOverlay = ({ base, overlay }: { base: string, overlay: string }) => {
   return (
-    <div className="relative w-full aspect-video rounded-xl overflow-hidden group cursor-pointer">
+    <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden group cursor-pointer border border-slate-100 shadow-inner bg-slate-100">
       {/* Base Image */}
       <img src={base} className="absolute inset-0 w-full h-full object-cover" alt="Base" />
       
       {/* Overlay Image (Hidden by default, shown on hover/active) */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 z-10 bg-slate-900">
-         <img src={overlay} className="w-full h-full object-cover opacity-80" alt="Wireframe" />
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300 z-10 bg-slate-900/5 backdrop-blur-[2px]">
+         <img src={overlay} className="w-full h-full object-cover" alt="Wireframe" />
       </div>
 
       {/* Label/Instruction */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/80 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-bold border border-white/20 flex items-center gap-2 pointer-events-none group-hover:opacity-0 transition-opacity">
-         <Eye size={14} className="text-orange-400" />
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md text-slate-900 px-5 py-2.5 rounded-full text-xs font-black border border-white/50 flex items-center gap-2 pointer-events-none group-hover:opacity-0 transition-opacity shadow-lg">
+         <Eye size={16} className="text-orange-500" />
          Hover to see Wireframe
       </div>
-       <div className="absolute top-4 right-4 bg-orange-500/90 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-md uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+       <div className="absolute top-4 right-4 bg-orange-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 shadow-lg">
          X-Ray Mode
       </div>
     </div>
@@ -152,19 +152,19 @@ const ParameterGrid = ({ params }: { params: Parameter[] }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
       {params.map((p, idx) => (
-        <div key={idx} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 flex justify-between items-center group">
+        <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex justify-between items-center group hover:bg-white hover:shadow-md transition-all">
           <div>
-            <div className="text-xs text-slate-400 font-bold uppercase mb-0.5">{p.label}</div>
-            <div className="text-slate-200 font-mono font-medium">{p.value}</div>
+            <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">{p.label}</div>
+            <div className="text-slate-900 font-mono font-bold text-lg">{p.value}</div>
           </div>
           <button 
             onClick={() => handleCopy(p.value, idx)}
-            className="p-2 text-slate-500 hover:text-white hover:bg-slate-700 rounded transition-colors"
+            className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-slate-100"
             title="Copy value"
           >
-            {copiedIndex === idx ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+            {copiedIndex === idx ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
           </button>
         </div>
       ))}
@@ -175,19 +175,21 @@ const ParameterGrid = ({ params }: { params: Parameter[] }) => {
 const Troubleshooting = ({ title, text }: { title: string, text: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="mt-4 border border-orange-500/30 bg-orange-500/5 rounded-xl overflow-hidden">
+    <div className="mt-4 border border-orange-200 bg-orange-50/30 rounded-[2rem] overflow-hidden transition-all">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-orange-500/10 transition-colors"
+        className="w-full flex items-center justify-between p-6 text-left hover:bg-orange-50 transition-colors"
       >
-        <div className="flex items-center gap-3 text-orange-400">
-          <AlertTriangle size={18} />
-          <span className="font-bold text-sm">Troubleshooting: {title}</span>
+        <div className="flex items-center gap-4 text-orange-600">
+          <div className="bg-orange-500 text-white p-1.5 rounded-lg shadow-orange-200 shadow-lg">
+             <AlertTriangle size={18} />
+          </div>
+          <span className="font-black text-sm uppercase tracking-wider">Troubleshooting: {title}</span>
         </div>
-        {isOpen ? <ChevronUp size={16} className="text-orange-400"/> : <ChevronDown size={16} className="text-orange-400"/>}
+        {isOpen ? <ChevronUp size={20} className="text-orange-400"/> : <ChevronDown size={20} className="text-orange-400"/>}
       </button>
       {isOpen && (
-        <div className="p-4 pt-0 text-slate-300 text-sm leading-relaxed border-t border-orange-500/10">
+        <div className="p-6 pt-0 text-slate-600 text-base leading-relaxed border-t border-orange-100 font-medium">
           {text}
         </div>
       )}
@@ -204,79 +206,79 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
 
   // Enhanced Lesson Data with new patterns
   const lessonData = {
-    title: "Stage 1: Modeling the Base",
-    subtitle: "The Donut Tutorial • Part 1",
+    title: "Blender 4.0 Mastery: The Beginning",
+    subtitle: "Chapter 1: Mastering the 3D Space",
     level: "Beginner",
     steps: [
       {
         id: 's1',
-        title: 'Clear the Scene',
-        description: 'Blender opens with a default Cube, Camera, and Light. For this project, we want a completely empty scene to start fresh. Hover your mouse in the viewport, select everything, and delete.',
+        title: 'Master the Viewport',
+        description: '3D空間を自由に動き回ることが全ての基本です。中マウスボタンを使って、世界をあらゆる角度から観察してみましょう。',
         imageType: 'static',
-        imageUrl: 'https://images.unsplash.com/photo-1626808642875-0aa545482dfb?auto=format&fit=crop&q=80&w=1200',
-        hotkeys: ['A (Select All)', 'X (Delete)'],
+        imageUrl: 'https://images.unsplash.com/photo-1633412802994-5c058f151b66?auto=format&fit=crop&q=80&w=1200',
+        hotkeys: ['Middle Mouse (Rotate)', 'Shift + Middle Mouse (Pan)', 'Scroll (Zoom)'],
         troubleshooting: {
-          title: "I can't delete everything?",
-          text: "Make sure your mouse cursor is hovering inside the 3D Viewport window, not the timeline or menus, before pressing 'A'."
+          title: "視点がどこかへ飛んでしまったら？",
+          text: "オブジェクトを選択してテンキーの '.' (ピリオド) を押すと、そのオブジェクトに視点をリセットできます。"
         }
       },
       {
         id: 's2',
-        title: 'Add a Torus',
-        description: 'The torus is the perfect primitive shape for a donut. Open the Add menu and select Mesh > Torus. It will appear at the 3D Cursor (center of the world).',
+        title: 'Selection Basics',
+        description: '操作したいものを正確に選ぶ練習です。Blender 4.0では左クリック選択が標準です。複数のものを選んだり、全てを選択解除する操作を覚えましょう。',
         imageType: 'static',
-        imageUrl: 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?auto=format&fit=crop&q=80&w=1200',
-        hotkeys: ['Shift + A'],
-        tip: "If the menu doesn't appear, ensure you are in 'Object Mode' (top left corner)."
+        imageUrl: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=1200',
+        hotkeys: ['Left Click (Select)', 'A (Select All)', 'Alt + A (Deselect All)'],
+        tip: "オレンジ色の枠線がついているものが『アクティブ』なオブジェクトです。"
       },
       {
         id: 's3',
-        title: 'Adjust Dimensions',
-        description: 'Before clicking away, look at the bottom-left corner for the "Add Torus" panel. We need specific values to get a realistic dough shape.',
+        title: 'The Transformation Trinity',
+        description: '移動(Grab)、回転(Rotate)、拡大縮小(Scale)は3D制作の三種の神器です。ショートカットキーを使って、直感的にオブジェクトの形や位置を変えてみましょう。',
         imageType: 'static',
-        imageUrl: 'https://images.unsplash.com/photo-1595475207225-428b62bda831?auto=format&fit=crop&q=80&w=1200',
-        hotkeys: ['F9 (Restore Panel)'],
+        imageUrl: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&q=80&w=1200',
+        hotkeys: ['G (Grab/Move)', 'R (Rotate)', 'S (Scale)'],
         parameters: [
-          { label: 'Major Segments', value: '40' },
-          { label: 'Minor Segments', value: '16' },
-          { label: 'Major Radius', value: '0.1 m' },
-          { label: 'Minor Radius', value: '0.05 m' }
+          { label: 'Constraint X', value: 'G -> X' },
+          { label: 'Constraint Y', value: 'G -> Y' },
+          { label: 'Constraint Z', value: 'G -> Z' },
+          { label: 'Cancel', value: 'Right Click / Esc' }
         ]
       },
       {
         id: 's4',
-        title: 'Check Your Topology',
-        description: 'We want "Quads" (4-sided polygons), not triangles. This ensures the mesh deforms cleanly when we sculpt it later. Hover over the image to check the wireframe.',
-        imageType: 'overlay', // Using the new X-Ray pattern
-        imageUrl: 'https://images.unsplash.com/photo-1633412803524-d96562450871?auto=format&fit=crop&q=80&w=1200', // Solid
-        secondaryImageUrl: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1200', // Wireframe mock
-        hotkeys: ['Z (Shading Pie Menu)', 'Shift + Z (Toggle Wireframe)'],
-        tip: "A clean topology loop is crucial for the subdivision surface modifier we will add later."
+        title: 'Adding New Worlds',
+        description: '何もないところから形を生み出します。MeshメニューからCubeやSphere、あるいは有名なMonkey(Suzanne)を追加してみましょう。',
+        imageType: 'overlay',
+        imageUrl: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=1200', 
+        secondaryImageUrl: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1200', 
+        hotkeys: ['Shift + A (Add Menu)'],
+        tip: "新しいオブジェクトは常に『3D Cursor』がある場所に生成されます。"
       },
       {
         id: 's5',
-        title: 'Apply Shade Smooth',
-        description: 'Right now the donut looks blocky. Use "Shade Smooth" to fake a smooth surface.',
+        title: 'Shading & Visualization',
+        description: '見た目の切り替えです。作業しやすいソリッド表示と、内部構造が見えるワイヤーフレーム表示、そして完成イメージに近いレンダー表示を使い分けます。',
         imageType: 'compare', 
         beforeImageUrl: 'https://images.unsplash.com/photo-1595475207225-428b62bda831?auto=format&fit=crop&q=80&w=1200',
         imageUrl: 'https://images.unsplash.com/photo-1633412803524-d96562450871?auto=format&fit=crop&q=80&w=1200',
-        hotkeys: ['Right Click > Shade Smooth'],
+        hotkeys: ['Z (Shading Pie Menu)', 'Shift + Z (Toggle Wireframe)'],
       },
       {
         id: 's6',
-        title: 'Avoid Common Scale Issues',
-        description: 'When scaling objects, always apply your scale. Otherwise, modifiers will act unpredictably.',
-        imageType: 'dos_donts', // Using the new Do/Don't pattern
-        imageUrl: '', // Not used for this type
+        title: 'Enter the Edit Mode',
+        description: 'オブジェクトそのものの形を作り変える段階へ進みます。オブジェクトモードから編集モードへ切り替えると、点・辺・面を個別に操作できるようになります。',
+        imageType: 'dos_donts',
+        imageUrl: '',
         badExample: {
           image: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=800&sat=-100',
-          text: 'Stretched textures and weird sculpting brushes? You likely forgot to apply scale.'
+          text: 'オブジェクトモードで形を無理やり歪ませると、後の工程でトラブルの元になります。'
         },
         goodExample: {
           image: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=800',
-          text: 'Apply Scale (Ctrl+A) resets values to 1.0, ensuring predictable behavior.'
+          text: '詳細な形状変化は必ず編集モードで行いましょう。これがプロのワークフローです。'
         },
-        hotkeys: ['Ctrl + A > Scale'],
+        hotkeys: ['Tab (Switch Mode)'],
       }
     ] as LessonStep[]
   };
@@ -300,31 +302,31 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
   const progressPercentage = Math.round((completedSteps.length / lessonData.steps.length) * 100);
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900 text-slate-100">
+    <div className="flex flex-col h-screen bg-white text-slate-900">
       
       {/* Top Header */}
-      <div className="h-16 border-b border-slate-800 bg-slate-900 flex items-center justify-between px-6 shrink-0 z-20">
+      <div className="h-16 border-b border-slate-100 bg-white flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
         <div className="flex items-center gap-4">
           <button 
             onClick={onBack}
-            className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
+            className="p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
           >
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="font-bold text-sm md:text-base text-white">{lessonData.title}</h1>
-            <p className="text-xs text-slate-400">{lessonData.subtitle}</p>
+            <h1 className="font-bold text-sm md:text-base text-slate-900">{lessonData.title}</h1>
+            <p className="text-xs text-slate-500">{lessonData.subtitle}</p>
           </div>
         </div>
         
         <div className="flex items-center gap-6">
            <div className="hidden md:block w-48">
-              <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
+              <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
                  <span>Progress</span>
-                 <span className="text-orange-500">{progressPercentage}%</span>
+                 <span className="text-orange-600">{progressPercentage}%</span>
               </div>
-              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                 <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: `${progressPercentage}%` }}></div>
+              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                 <div className="h-full bg-orange-500 transition-all duration-500 shadow-[0_0_8px_rgba(249,115,22,0.3)]" style={{ width: `${progressPercentage}%` }}></div>
               </div>
            </div>
 
@@ -334,8 +336,8 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
              className={`
                px-5 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2
                ${progressPercentage === 100 
-                 ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-900/20' 
-                 : 'bg-slate-800 text-slate-500 cursor-not-allowed'}
+                 ? 'bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20' 
+                 : 'bg-slate-100 text-slate-400 cursor-not-allowed'}
              `}
            >
              Finish Stage <CheckCircle2 size={16} />
@@ -344,27 +346,27 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
       </div>
 
       {/* Main Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden bg-slate-50/50">
         
         {/* Left: Scrollable Tutorial Content */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700" ref={scrollContainerRef}>
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200" ref={scrollContainerRef}>
            <div className="max-w-3xl mx-auto px-6 py-12">
               
               {/* Intro Card */}
-              <div className="mb-12 text-center">
-                 <span className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-indigo-500/20">
+              <div className="mb-16 text-center">
+                 <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-[0.2em] border border-indigo-100 shadow-sm">
                    {lessonData.level}
                  </span>
-                 <h1 className="text-4xl font-bold text-white mt-4 mb-4">Let's make a donut.</h1>
-                 <p className="text-slate-400 text-lg leading-relaxed max-w-xl mx-auto">
-                   Follow these steps to create your first 3D mesh. We'll focus on getting the correct shape and scale.
+                 <h1 className="text-4xl md:text-5xl font-black text-slate-900 mt-6 mb-6 tracking-tight italic">Your 3D Journey Starts Here.</h1>
+                 <p className="text-slate-500 text-lg md:text-xl leading-relaxed max-w-xl mx-auto font-medium">
+                   3D制作の第一歩へようこそ。このレッスンでは、Blenderを自在に操るための基礎、視点操作とオブジェクト変形をマスターします。
                  </p>
               </div>
 
               {/* Steps Stream */}
               <div className="space-y-16 relative">
                  {/* Vertical Connector Line */}
-                 <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-slate-800 hidden md:block"></div>
+                 <div className="absolute left-[19px] top-4 bottom-4 w-1 bg-slate-100 hidden md:block"></div>
 
                  {lessonData.steps.map((step, index) => {
                     const isCompleted = completedSteps.includes(step.id);
@@ -374,24 +376,24 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
                       <div 
                         key={step.id} 
                         id={step.id}
-                        className={`relative pl-0 md:pl-16 transition-all duration-500 ${isCompleted ? 'opacity-50 grayscale-[0.5]' : 'opacity-100'}`}
+                        className={`relative pl-0 md:pl-16 transition-all duration-500 ${isCompleted ? 'opacity-40 grayscale-[0.5]' : 'opacity-100'}`}
                         onMouseEnter={() => setActiveStepId(step.id)}
                       >
                          {/* Number Badge */}
                          <div 
                             onClick={() => toggleStep(step.id)}
                             className={`
-                               absolute left-0 top-0 w-10 h-10 rounded-full border-4 flex items-center justify-center font-bold z-10 cursor-pointer transition-colors hidden md:flex
+                               absolute left-0 top-0 w-10 h-10 rounded-full border-4 flex items-center justify-center font-black z-10 cursor-pointer transition-all hidden md:flex
                                ${isCompleted 
-                                 ? 'bg-green-500 border-slate-900 text-white' 
-                                 : isActive ? 'bg-orange-500 border-slate-900 text-white' : 'bg-slate-800 border-slate-900 text-slate-400'}
+                                 ? 'bg-green-500 border-white text-white shadow-lg' 
+                                 : isActive ? 'bg-orange-500 border-white text-white shadow-lg scale-110' : 'bg-white border-slate-100 text-slate-400 shadow-sm'}
                             `}
                          >
                             {isCompleted ? <Check size={20} /> : index + 1}
                          </div>
 
                          {/* Content Card */}
-                         <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-1 overflow-hidden hover:border-slate-600 transition-colors">
+                         <div className="bg-white border border-slate-200/60 rounded-[2.5rem] p-1.5 overflow-hidden hover:border-indigo-200 transition-all hover:shadow-2xl hover:shadow-indigo-500/5 group shadow-sm">
                             
                             {/* Visual Area based on Type */}
                             {step.imageType === 'compare' && step.beforeImageUrl ? (
@@ -410,17 +412,17 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
                                  <DosAndDonts bad={step.badExample} good={step.goodExample} />
                                </div>
                             ) : (
-                              <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
+                              <div className="relative aspect-video rounded-[2rem] overflow-hidden bg-slate-100">
                                  <img src={step.imageUrl} alt={step.title} className="w-full h-full object-cover" />
                               </div>
                             )}
 
                             {/* Hotkey Bar */}
                             {step.hotkeys.length > 0 && (
-                              <div className={`${step.imageType === 'dos_donts' ? 'px-6 pb-4' : 'px-6 pt-4'} flex flex-wrap gap-2`}>
+                              <div className={`${step.imageType === 'dos_donts' ? 'px-6 pb-4' : 'px-8 pt-6'} flex flex-wrap gap-2`}>
                                 {step.hotkeys.map(hk => (
-                                  <div key={hk} className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 shadow-sm">
-                                     <Keyboard size={12} className="text-orange-400" />
+                                  <div key={hk} className="bg-slate-50 border border-slate-100 text-slate-600 px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 shadow-sm group-hover:bg-indigo-50/50 transition-colors">
+                                     <Keyboard size={12} className="text-orange-500" />
                                      {hk}
                                   </div>
                                 ))}
@@ -428,23 +430,23 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
                             )}
 
                             {/* Text Body */}
-                            <div className="p-6 md:p-8 pt-2">
-                               <div className="flex justify-between items-start mb-4">
-                                  <h2 className="text-2xl font-bold text-white">{step.title}</h2>
+                            <div className="p-8 md:p-10 pt-4">
+                               <div className="flex justify-between items-start mb-6">
+                                  <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-none">{step.title}</h2>
                                   <button 
                                     onClick={() => toggleStep(step.id)}
                                     className={`
-                                      flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors
+                                      flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black border transition-all uppercase tracking-widest
                                       ${isCompleted 
-                                        ? 'bg-green-500/10 border-green-500/20 text-green-500' 
-                                        : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700 hover:text-white'}
+                                        ? 'bg-green-50 border-green-100 text-green-600' 
+                                        : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-900'}
                                     `}
                                   >
                                      {isCompleted ? 'Completed' : 'Mark Done'}
                                   </button>
                                </div>
                                
-                               <p className="text-slate-300 leading-relaxed text-lg mb-6">
+                               <p className="text-slate-600 leading-relaxed text-lg font-medium mb-8">
                                   {step.description}
                                </p>
 
@@ -455,8 +457,10 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
 
                                {/* Tip Box */}
                                {step.tip && (
-                                  <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex gap-3 text-indigo-200 text-sm mb-2">
-                                     <Info size={18} className="shrink-0 mt-0.5" />
+                                  <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex gap-4 text-indigo-700 text-sm font-medium mb-4 shadow-sm">
+                                     <div className="bg-indigo-600 text-white p-1 rounded-lg shrink-0 h-fit">
+                                        <Info size={16} />
+                                     </div>
                                      <span>{step.tip}</span>
                                   </div>
                                )}
@@ -476,32 +480,32 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
               </div>
 
               {/* End of Section */}
-              <div className="mt-20 p-8 border-2 border-dashed border-slate-800 rounded-3xl text-center">
-                 <h3 className="text-xl font-bold text-slate-200 mb-2">Stage Complete</h3>
-                 <p className="text-slate-500 mb-6">You've successfully built the base mesh!</p>
+              <div className="mt-24 p-12 border-4 border-dashed border-slate-100 rounded-[3rem] text-center bg-white shadow-xl shadow-slate-200/20">
+                 <h3 className="text-2xl font-black text-slate-900 mb-2">Stage Complete</h3>
+                 <p className="text-slate-500 font-medium mb-8">You've successfully built the base mesh!</p>
                  <button 
                    onClick={onComplete}
                    disabled={progressPercentage < 100}
                    className={`
-                      mx-auto px-8 py-3 rounded-xl font-bold transition-all flex items-center gap-2
+                      mx-auto px-10 py-4 rounded-2xl font-black transition-all flex items-center gap-3 uppercase tracking-widest shadow-xl
                       ${progressPercentage === 100 
-                         ? 'bg-white text-slate-900 hover:scale-105 shadow-xl shadow-white/10' 
-                         : 'bg-slate-800 text-slate-500 cursor-not-allowed'}
+                         ? 'bg-slate-900 text-white hover:scale-105 active:scale-95 shadow-slate-900/20' 
+                         : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'}
                    `}
                  >
-                    Next Lesson <ChevronRight size={18} />
+                    Next Lesson <ChevronRight size={20} />
                  </button>
               </div>
            </div>
         </div>
 
         {/* Right: Sticky Sidebar Navigation (TOC) */}
-        <div className="w-80 border-l border-slate-800 bg-slate-900 hidden xl:flex flex-col">
-           <div className="p-6">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Table of Contents</h3>
-              <div className="space-y-1 relative">
+        <div className="w-80 border-l border-slate-100 bg-white hidden xl:flex flex-col">
+           <div className="p-8">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">Table of Contents</h3>
+              <div className="space-y-3 relative">
                  {/* Track Line */}
-                 <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-slate-800"></div>
+                 <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-slate-50"></div>
 
                  {lessonData.steps.map((step, idx) => {
                     const isDone = completedSteps.includes(step.id);
@@ -511,19 +515,19 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
                          key={step.id}
                          onClick={() => scrollToStep(step.id)}
                          className={`
-                           relative flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors group
-                           ${isActive ? 'bg-slate-800' : 'hover:bg-slate-800/50'}
+                           relative flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all group
+                           ${isActive ? 'bg-indigo-50 shadow-sm shadow-indigo-100/50' : 'hover:bg-slate-50'}
                          `}
                        >
                           <div className={`
-                             relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] font-bold transition-colors
+                             relative z-10 w-6 h-6 rounded-lg border-2 flex items-center justify-center text-[10px] font-black transition-all
                              ${isDone 
-                               ? 'bg-green-500 border-green-500 text-white' 
-                               : isActive ? 'bg-slate-900 border-orange-500 text-orange-500' : 'bg-slate-900 border-slate-600 text-slate-500 group-hover:border-slate-400'}
+                               ? 'bg-green-500 border-green-500 text-white shadow-md shadow-green-100' 
+                               : isActive ? 'bg-white border-indigo-600 text-indigo-600 scale-110' : 'bg-white border-slate-200 text-slate-400 group-hover:border-slate-400'}
                           `}>
                              {isDone ? <Check size={12} /> : idx + 1}
                           </div>
-                          <span className={`text-sm font-medium transition-colors ${isActive ? 'text-white' : isDone ? 'text-slate-500' : 'text-slate-400'}`}>
+                          <span className={`text-sm font-bold transition-colors ${isActive ? 'text-indigo-900' : isDone ? 'text-slate-400' : 'text-slate-500'}`}>
                              {step.title}
                           </span>
                        </div>
@@ -532,25 +536,27 @@ const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplet
               </div>
            </div>
 
-           <div className="mt-auto p-6 border-t border-slate-800 space-y-4">
-              <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-                  <div className="flex items-start gap-3">
-                      <div className="bg-blue-500/10 p-2 rounded-lg text-blue-400">
+           <div className="mt-auto p-8 border-t border-slate-50 space-y-6">
+              <div className="bg-slate-50 rounded-[2rem] p-5 border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer group">
+                  <div className="flex items-start gap-4">
+                      <div className="bg-white p-3 rounded-2xl text-blue-500 shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
                         <Download size={20} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-sm text-white">Reference_Ref.zip</h3>
-                        <p className="text-xs text-slate-400 mt-0.5">2.4 MB</p>
+                        <h3 className="font-bold text-sm text-slate-800">Reference_Ref.zip</h3>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">2.4 MB • Assets</p>
                       </div>
                   </div>
               </div>
               
-              <div className="bg-gradient-to-r from-orange-500/10 to-pink-500/10 border border-orange-500/20 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-orange-400 mb-2">
-                     <Zap size={16} />
-                     <span className="text-xs font-bold uppercase">Pro Tip</span>
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-[2rem] p-6 shadow-sm">
+                  <div className="flex items-center gap-3 text-orange-600 mb-3">
+                     <div className="bg-orange-500 text-white p-1 rounded-md shadow-orange-100 shadow-lg">
+                        <Zap size={14} fill="currentColor" />
+                     </div>
+                     <span className="text-[10px] font-black uppercase tracking-[0.2em]">Pro Tip</span>
                   </div>
-                  <p className="text-xs text-orange-100/80 leading-relaxed">
+                  <p className="text-xs text-orange-900/70 leading-relaxed font-bold">
                      Always apply scale (Ctrl+A) before sculpting, otherwise your brushes will be distorted!
                   </p>
               </div>
