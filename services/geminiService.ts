@@ -153,7 +153,16 @@ export const analyzeWriting = async (text: string, rubric: LessonRubric, modelTy
 // --- 1. STRATEGIST: Analysis Engine (The Insight Council) ---
 
 const analyzeCorePersonality = async (scores: Big5Profile, modelName: string) => {
-  const prompt = `あなたは「The Profiler」です。日本語で回答。スコア: ${JSON.stringify(scores)}. @@@区切りで personalityType, strengths, growthTips, learningStrategyを。`;
+  const prompt = `
+    あなたは「The Profiler (心理分析官)」です。日本語で回答。
+    スコア: ${JSON.stringify(scores)}
+    
+    以下の項目を「@@@」で区切って出力してください。
+    1. personalityType: あなたを表すキャッチコピー（15文字以内）
+    2. strengths: 強み1: 説明 | 強み2: 説明 | 強み3: 説明（各説明は25文字以内で簡潔に）
+    3. growthTips: アドバイス1: 説明 | アドバイス2: 説明（各説明は25文字以内）
+    4. learningStrategy: 戦略タイトル | 基本方針の説明（40文字以内） | ステップ1 | ステップ2 | ステップ3
+  `;
   const response = await ai.models.generateContent({ model: modelName, contents: prompt });
   const parts = (response.text || '').split('@@@').map(p => p.trim());
   const getVal = (key: string) => (parts.find(p => p.toLowerCase().includes(key.toLowerCase())) || '').split(':').slice(1).join(':').trim();

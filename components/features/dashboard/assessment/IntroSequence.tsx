@@ -90,7 +90,7 @@ const IntroSequence: React.FC<IntroSequenceProps> = ({ profile, onFinish }) => {
             {slide.title}
           </h2>
           <p className="text-lg md:text-xl font-medium max-w-xl mx-auto leading-relaxed opacity-90">
-            {slide.description}
+            {slide.description.length > 80 ? `${slide.description.slice(0, 77)}...` : slide.description}
           </p>
         </div>
       </div>
