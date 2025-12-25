@@ -6,282 +6,209 @@ import {
   Eye, XCircle, CheckCircle
 } from 'lucide-react';
 
+import { BLENDER_COURSE_DATA } from '../../../data/curricula/blender/courseData';
+
 interface BlenderLessonViewProps {
+  stageId: number;
   onBack: () => void;
   onComplete: () => void;
 }
 
-interface Parameter {
+interface ParameterItem {
   label: string;
   value: string;
 }
 
-interface LessonStep {
-  id: string;
-  title: string;
-  description: string;
-  imageType: 'static' | 'compare' | 'overlay' | 'dos_donts';
-  imageUrl: string; 
-  // For 'compare' or 'overlay'
-  secondaryImageUrl?: string; 
-  beforeImageUrl?: string;
-  // For 'dos_donts'
-  badExample?: { image: string, text: string };
-  goodExample?: { image: string, text: string };
-  
-  hotkeys: string[];
-  parameters?: Parameter[]; 
-  troubleshooting?: {
-    title: string;
-    text: string;
-  };
-  tip?: string;
+interface DosAndDontsExample {
+  image: string;
+  text: string;
 }
 
-// --- SUB-COMPONENTS ---
-
-// 1. Before/After Slider
-const ImageSlider = ({ before, after, alt }: { before: string, after: string, alt: string }) => {
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const pos = ((x - rect.left) / rect.width) * 100;
-    setSliderPosition(Math.min(Math.max(pos, 0), 100));
-  };
+const ImageSlider: React.FC<{ before: string; after: string; alt: string }> = ({ before, after, alt }) => {
+  const [split, setSplit] = useState(50);
 
   return (
-    <div 
-      ref={containerRef}
-      className="relative w-full aspect-video rounded-[2rem] overflow-hidden cursor-col-resize group select-none shadow-inner border border-slate-100"
-      onMouseMove={handleMove}
-      onTouchMove={handleMove}
-    >
-      <img src={after} alt={alt} className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute top-4 right-4 bg-white/90 text-slate-900 text-[10px] font-black px-3 py-1.5 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm">Smooth Shading</div>
-
-      <div 
-        className="absolute inset-0 w-full h-full overflow-hidden rounded-[2rem]"
-        style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
-      >
-        <img src={before} alt={alt} className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute top-4 left-4 bg-white/90 text-slate-900 text-[10px] font-black px-3 py-1.5 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm">Flat Shading</div>
+    <div className="relative aspect-video rounded-[2rem] overflow-hidden bg-slate-100">
+      <img src={after} alt={`${alt} after`} className="absolute inset-0 h-full w-full object-cover" />
+      <div className="absolute inset-0 overflow-hidden" style={{ width: `${split}%` }}>
+        <img src={before} alt={`${alt} before`} className="absolute inset-0 h-full w-full object-cover" />
       </div>
-
-      <div 
-        className="absolute top-0 bottom-0 w-1 bg-white cursor-col-resize z-20 shadow-[0_0_10px_rgba(0,0,0,0.2)]"
-        style={{ left: `${sliderPosition}%` }}
-      >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-xl text-slate-900 ring-4 ring-black/5">
-          <MoveHorizontal size={20} />
+      <div className="absolute inset-y-0" style={{ left: `calc(${split}% - 1px)` }}>
+        <div className="h-full w-0.5 bg-white/80 shadow-[0_0_10px_rgba(0,0,0,0.25)]" />
+        <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/90 p-2 text-slate-700 shadow-md">
+          <MoveHorizontal size={14} />
         </div>
+      </div>
+      <input
+        aria-label="Compare images"
+        className="absolute inset-0 h-full w-full cursor-ew-resize opacity-0"
+        max={100}
+        min={0}
+        type="range"
+        value={split}
+        onChange={(event) => setSplit(Number(event.target.value))}
+      />
+      <div className="absolute bottom-3 left-3 rounded-full bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-700">
+        Before
+      </div>
+      <div className="absolute bottom-3 right-3 rounded-full bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-700">
+        After
       </div>
     </div>
   );
 };
 
-// 2. X-Ray Overlay (Hold to reveal)
-const XRayOverlay = ({ base, overlay }: { base: string, overlay: string }) => {
-  return (
-    <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden group cursor-pointer border border-slate-100 shadow-inner bg-slate-100">
-      {/* Base Image */}
-      <img src={base} className="absolute inset-0 w-full h-full object-cover" alt="Base" />
-      
-      {/* Overlay Image (Hidden by default, shown on hover/active) */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300 z-10 bg-slate-900/5 backdrop-blur-[2px]">
-         <img src={overlay} className="w-full h-full object-cover" alt="Wireframe" />
-      </div>
-
-      {/* Label/Instruction */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md text-slate-900 px-5 py-2.5 rounded-full text-xs font-black border border-white/50 flex items-center gap-2 pointer-events-none group-hover:opacity-0 transition-opacity shadow-lg">
-         <Eye size={16} className="text-orange-500" />
-         Hover to see Wireframe
-      </div>
-       <div className="absolute top-4 right-4 bg-orange-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 shadow-lg">
-         X-Ray Mode
-      </div>
-    </div>
-  );
-};
-
-// 3. Do's and Don'ts Grid
-const DosAndDonts = ({ bad, good }: { bad: {image: string, text: string}, good: {image: string, text: string} }) => {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-      {/* Bad Example */}
-      <div className="bg-red-500/5 border border-red-500/20 rounded-xl overflow-hidden">
-        <div className="relative aspect-video">
-           <img src={bad.image} alt="Bad Example" className="w-full h-full object-cover opacity-80" />
-           <div className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-full shadow-lg">
-             <XCircle size={20} />
-           </div>
-        </div>
-        <div className="p-3">
-           <h4 className="text-red-400 font-bold text-xs uppercase mb-1">Don't Do This</h4>
-           <p className="text-slate-400 text-sm leading-snug">{bad.text}</p>
-        </div>
-      </div>
-
-      {/* Good Example */}
-      <div className="bg-green-500/5 border border-green-500/20 rounded-xl overflow-hidden">
-        <div className="relative aspect-video">
-           <img src={good.image} alt="Good Example" className="w-full h-full object-cover opacity-80" />
-           <div className="absolute top-2 left-2 bg-green-500 text-white p-1 rounded-full shadow-lg">
-             <CheckCircle size={20} />
-           </div>
-        </div>
-        <div className="p-3">
-           <h4 className="text-green-400 font-bold text-xs uppercase mb-1">Do This Instead</h4>
-           <p className="text-slate-400 text-sm leading-snug">{good.text}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ParameterGrid = ({ params }: { params: Parameter[] }) => {
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-
-  const handleCopy = (val: string, idx: number) => {
-    navigator.clipboard.writeText(val);
-    setCopiedIndex(idx);
-    setTimeout(() => setCopiedIndex(null), 1500);
-  };
+const XRayOverlay: React.FC<{ base: string; overlay: string }> = ({ base, overlay }) => {
+  const [opacity, setOpacity] = useState(0.55);
+  const [visible, setVisible] = useState(true);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-      {params.map((p, idx) => (
-        <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex justify-between items-center group hover:bg-white hover:shadow-md transition-all">
-          <div>
-            <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">{p.label}</div>
-            <div className="text-slate-900 font-mono font-bold text-lg">{p.value}</div>
+    <div className="space-y-4">
+      <div className="relative aspect-video rounded-[2rem] overflow-hidden bg-slate-100">
+        <img src={base} alt="Base view" className="absolute inset-0 h-full w-full object-cover" />
+        {visible && (
+          <img
+            src={overlay}
+            alt="Overlay view"
+            className="absolute inset-0 h-full w-full object-cover mix-blend-screen"
+            style={{ opacity }}
+          />
+        )}
+        <div className="absolute left-3 top-3 rounded-full bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-700">
+          Base
+        </div>
+        {visible && (
+          <div className="absolute right-3 top-3 rounded-full bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-700">
+            Overlay
           </div>
-          <button 
-            onClick={() => handleCopy(p.value, idx)}
-            className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-slate-100"
-            title="Copy value"
-          >
-            {copiedIndex === idx ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
-          </button>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-3 px-6 pb-2">
+        <button
+          type="button"
+          onClick={() => setVisible((prev) => !prev)}
+          className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-600 shadow-sm transition hover:border-slate-300"
+        >
+          <Eye size={14} />
+          {visible ? 'Hide overlay' : 'Show overlay'}
+        </button>
+        <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-500 shadow-sm">
+          <span>Opacity</span>
+          <input
+            aria-label="Overlay opacity"
+            className="h-1 w-28 accent-orange-500"
+            max={100}
+            min={0}
+            type="range"
+            value={Math.round(opacity * 100)}
+            onChange={(event) => setOpacity(Number(event.target.value) / 100)}
+          />
+          <span>{Math.round(opacity * 100)}%</span>
         </div>
-      ))}
+      </div>
     </div>
   );
 };
 
-const Troubleshooting = ({ title, text }: { title: string, text: string }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <div className="mt-4 border border-orange-200 bg-orange-50/30 rounded-[2rem] overflow-hidden transition-all">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-6 text-left hover:bg-orange-50 transition-colors"
-      >
-        <div className="flex items-center gap-4 text-orange-600">
-          <div className="bg-orange-500 text-white p-1.5 rounded-lg shadow-orange-200 shadow-lg">
-             <AlertTriangle size={18} />
-          </div>
-          <span className="font-black text-sm uppercase tracking-wider">Troubleshooting: {title}</span>
+const DosAndDonts: React.FC<{ bad: DosAndDontsExample; good: DosAndDontsExample }> = ({ bad, good }) => (
+  <div className="grid gap-4 md:grid-cols-2">
+    <div className="overflow-hidden rounded-[2rem] border border-rose-200 bg-rose-50">
+      <div className="relative aspect-video">
+        <img src={bad.image} alt="Bad example" className="h-full w-full object-cover" />
+        <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-rose-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
+          <XCircle size={14} />
+          Dont
         </div>
-        {isOpen ? <ChevronUp size={20} className="text-orange-400"/> : <ChevronDown size={20} className="text-orange-400"/>}
+      </div>
+      <p className="p-4 text-sm font-semibold text-rose-900">{bad.text}</p>
+    </div>
+    <div className="overflow-hidden rounded-[2rem] border border-emerald-200 bg-emerald-50">
+      <div className="relative aspect-video">
+        <img src={good.image} alt="Good example" className="h-full w-full object-cover" />
+        <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
+          <CheckCircle size={14} />
+          Do
+        </div>
+      </div>
+      <p className="p-4 text-sm font-semibold text-emerald-900">{good.text}</p>
+    </div>
+  </div>
+);
+
+const ParameterGrid: React.FC<{ params: ParameterItem[] }> = ({ params }) => (
+  <div className="mb-8 grid gap-3 sm:grid-cols-2">
+    {params.map((param) => (
+      <div
+        key={`${param.label}-${param.value}`}
+        className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+      >
+        <Circle size={12} className="text-orange-500" />
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">{param.label}</div>
+          <div className="font-bold text-slate-700">{param.value}</div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const Troubleshooting: React.FC<{ title: string; text: string }> = ({ title, text }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mt-6 overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/60 shadow-sm">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+      >
+        <div className="flex items-center gap-3 text-sm font-bold text-amber-900">
+          <span className="rounded-md bg-amber-500 p-1 text-white">
+            <AlertTriangle size={14} />
+          </span>
+          {title}
+        </div>
+        {open ? <ChevronUp size={16} className="text-amber-700" /> : <ChevronDown size={16} className="text-amber-700" />}
       </button>
-      {isOpen && (
-        <div className="p-6 pt-0 text-slate-600 text-base leading-relaxed border-t border-orange-100 font-medium">
-          {text}
-        </div>
-      )}
+      {open && <div className="px-5 pb-5 text-sm font-medium leading-relaxed text-amber-800">{text}</div>}
     </div>
   );
 };
 
-// --- MAIN COMPONENT ---
+// ... (Existing interfaces can be imported or kept for now if local types differ slightly, 
+// but ideally we should import LessonStep from courseData.ts. For now, let's keep local interfaces to minimize diff noise
+// and just map the data structure if needed, or rely on TS structural typing.)
 
-const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ onBack, onComplete }) => {
+// Update Component Definition
+const BlenderLessonView: React.FC<BlenderLessonViewProps> = ({ stageId, onBack, onComplete }) => {
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
-  const [activeStepId, setActiveStepId] = useState<string>('s1');
+  const [activeStepId, setActiveStepId] = useState<string>('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Enhanced Lesson Data with new patterns
-  const lessonData = {
-    title: "Blender 4.0 Mastery: The Beginning",
-    subtitle: "Chapter 1: Mastering the 3D Space",
-    level: "Beginner",
-    steps: [
-      {
-        id: 's1',
-        title: 'Master the Viewport',
-        description: '3D空間を自由に動き回ることが全ての基本です。中マウスボタンを使って、世界をあらゆる角度から観察してみましょう。',
-        imageType: 'static',
-        imageUrl: 'https://images.unsplash.com/photo-1633412802994-5c058f151b66?auto=format&fit=crop&q=80&w=1200',
-        hotkeys: ['Middle Mouse (Rotate)', 'Shift + Middle Mouse (Pan)', 'Scroll (Zoom)'],
-        troubleshooting: {
-          title: "視点がどこかへ飛んでしまったら？",
-          text: "オブジェクトを選択してテンキーの '.' (ピリオド) を押すと、そのオブジェクトに視点をリセットできます。"
-        }
-      },
-      {
-        id: 's2',
-        title: 'Selection Basics',
-        description: '操作したいものを正確に選ぶ練習です。Blender 4.0では左クリック選択が標準です。複数のものを選んだり、全てを選択解除する操作を覚えましょう。',
-        imageType: 'static',
-        imageUrl: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=1200',
-        hotkeys: ['Left Click (Select)', 'A (Select All)', 'Alt + A (Deselect All)'],
-        tip: "オレンジ色の枠線がついているものが『アクティブ』なオブジェクトです。"
-      },
-      {
-        id: 's3',
-        title: 'The Transformation Trinity',
-        description: '移動(Grab)、回転(Rotate)、拡大縮小(Scale)は3D制作の三種の神器です。ショートカットキーを使って、直感的にオブジェクトの形や位置を変えてみましょう。',
-        imageType: 'static',
-        imageUrl: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&q=80&w=1200',
-        hotkeys: ['G (Grab/Move)', 'R (Rotate)', 'S (Scale)'],
-        parameters: [
-          { label: 'Constraint X', value: 'G -> X' },
-          { label: 'Constraint Y', value: 'G -> Y' },
-          { label: 'Constraint Z', value: 'G -> Z' },
-          { label: 'Cancel', value: 'Right Click / Esc' }
-        ]
-      },
-      {
-        id: 's4',
-        title: 'Adding New Worlds',
-        description: '何もないところから形を生み出します。MeshメニューからCubeやSphere、あるいは有名なMonkey(Suzanne)を追加してみましょう。',
-        imageType: 'overlay',
-        imageUrl: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=1200', 
-        secondaryImageUrl: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1200', 
-        hotkeys: ['Shift + A (Add Menu)'],
-        tip: "新しいオブジェクトは常に『3D Cursor』がある場所に生成されます。"
-      },
-      {
-        id: 's5',
-        title: 'Shading & Visualization',
-        description: '見た目の切り替えです。作業しやすいソリッド表示と、内部構造が見えるワイヤーフレーム表示、そして完成イメージに近いレンダー表示を使い分けます。',
-        imageType: 'compare', 
-        beforeImageUrl: 'https://images.unsplash.com/photo-1595475207225-428b62bda831?auto=format&fit=crop&q=80&w=1200',
-        imageUrl: 'https://images.unsplash.com/photo-1633412803524-d96562450871?auto=format&fit=crop&q=80&w=1200',
-        hotkeys: ['Z (Shading Pie Menu)', 'Shift + Z (Toggle Wireframe)'],
-      },
-      {
-        id: 's6',
-        title: 'Enter the Edit Mode',
-        description: 'オブジェクトそのものの形を作り変える段階へ進みます。オブジェクトモードから編集モードへ切り替えると、点・辺・面を個別に操作できるようになります。',
-        imageType: 'dos_donts',
-        imageUrl: '',
-        badExample: {
-          image: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=800&sat=-100',
-          text: 'オブジェクトモードで形を無理やり歪ませると、後の工程でトラブルの元になります。'
-        },
-        goodExample: {
-          image: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=800',
-          text: '詳細な形状変化は必ず編集モードで行いましょう。これがプロのワークフローです。'
-        },
-        hotkeys: ['Tab (Switch Mode)'],
+  // Load Data dynamically
+  const lessonData = BLENDER_COURSE_DATA[stageId];
+
+  // Set initial active step
+  useEffect(() => {
+      if (lessonData && lessonData.steps.length > 0) {
+          setActiveStepId(lessonData.steps[0].id);
       }
-    ] as LessonStep[]
-  };
+  }, [lessonData]);
+
+  if (!lessonData) {
+      return (
+          <div className="flex items-center justify-center h-screen bg-white text-slate-900">
+              <div className="text-center">
+                  <h2 className="text-2xl font-bold mb-4">Content Not Found</h2>
+                  <p className="text-slate-500 mb-6">Stage {stageId} is currently under construction.</p>
+                  <button onClick={onBack} className="px-6 py-2 bg-slate-900 text-white rounded-lg">Go Back</button>
+              </div>
+          </div>
+      );
+  }
+
+  // Remove the old hardcoded lessonData object
+  // const lessonData = { ... } 
 
   const toggleStep = (id: string) => {
     if (completedSteps.includes(id)) {

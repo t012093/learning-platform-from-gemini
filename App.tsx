@@ -136,6 +136,9 @@ const App: React.FC = () => {
   const [selectedTribalId, setSelectedTribalId] = useState<string | null>(null);
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
+  // Blender State
+  const [selectedBlenderStageId, setSelectedBlenderStageId] = useState<number>(1);
+
   const handleCourseSelect = (courseId: string) => {
     setSelectedCourseId(courseId);
     setCurrentView(ViewState.COURSE_DETAILS);
@@ -174,6 +177,11 @@ const App: React.FC = () => {
   const handleCharacterSelect = (charId: string) => {
     setSelectedCharacterId(charId);
     setCurrentView(ViewState.AI_CHARACTER_DETAIL);
+  };
+
+  const handleBlenderStageStart = (stageId: number) => {
+    setSelectedBlenderStageId(stageId);
+    setCurrentView(ViewState.BLENDER_LESSON);
   };
   
   const handleCourseGenerated = (course: GeneratedCourse) => {
@@ -225,10 +233,11 @@ const App: React.FC = () => {
       case ViewState.BLENDER_PATH:
         return <BlenderPathView
           onBack={() => setCurrentView(ViewState.BLENDER)}
-          onStartLesson={() => setCurrentView(ViewState.BLENDER_LESSON)}
+          onStartLesson={handleBlenderStageStart}
         />;
       case ViewState.BLENDER_LESSON:
         return <BlenderLessonView
+          stageId={selectedBlenderStageId}
           onBack={() => setCurrentView(ViewState.BLENDER_PATH)}
           onComplete={() => setCurrentView(ViewState.BLENDER_PATH)}
         />;

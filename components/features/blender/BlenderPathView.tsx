@@ -6,47 +6,47 @@ import {
 
 interface BlenderPathViewProps {
    onBack: () => void;
-   onStartLesson: () => void;
+   onStartLesson: (stageId: number) => void;
 }
 
 const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson }) => {
    const project = {
-      title: "The Ultimate Blender Course",
-      description: "Master the art of 3D creation. From your first cube to a photorealistic render, this path guides you through every essential skill.",
-      level: "Beginner to Pro",
-      duration: "12h 00m",
+      title: "究極のBlenderコース",
+      description: "最初のキューブからフォトリアルなレンダーまで、必要なスキルをすべてこのパスで丁寧に学びます。",
+      level: "初心者からプロまで",
+      duration: "12時間",
       software: "Blender 4.0",
       thumbnail: "https://images.unsplash.com/photo-1617791160536-598cf32026fb?auto=format&fit=crop&q=80&w=1200",
       stages: [
          {
             id: 1,
-            title: "First Steps into 3D",
-            desc: "Master the viewport navigation, object manipulation (G/R/S), and the interface.",
-            tools: ["Viewport", "Transform"],
+            title: "3Dの第一歩",
+            desc: "ビューポート操作、オブジェクト移動（G/R/S）、インターフェイスをしっかりマスターします。",
+            tools: ["ビューポート", "変形"],
             status: "current",
             icon: Monitor
          },
          {
             id: 2,
-            title: "Modeling Essentials",
-            desc: "Dive into Edit Mode. Learn to extrude, inset, and bevel to create complex shapes like furniture.",
-            tools: ["Edit Mode", "Modifiers"],
+            title: "モデリングの基礎",
+            desc: "編集モードに入り、押し出し・インセット・ベベルで家具のような複雑な形状を作りましょう。",
+            tools: ["編集モード", "モディファイア"],
             status: "locked",
             icon: Box
          },
          {
             id: 3,
-            title: "Advanced Modeling",
-            desc: "Efficient workflows with array modifiers, boolean operations, and sculpting basics.",
-            tools: ["Sculpting", "Booleans"],
+            title: "上級モデリング",
+            desc: "配列モディファイアやブーリアン操作、スカルプトの基本を効率的なワークフローで学びます。",
+            tools: ["スカルプト", "ブーリアン"],
             status: "locked",
             icon: MousePointer2
          },
          {
             id: 4,
-            title: "Bringing it to Life",
-            desc: "The final touch. Apply realistic materials, set up lighting, and render your scene.",
-            tools: ["Shading", "Cycles"],
+            title: "仕上げとレンダー",
+            desc: "質感設定とライティングで雰囲気を整え、レンダリングでシーンを完成させます。",
+            tools: ["シェーディング", "Cycles"],
             status: "locked",
             icon: Camera
          }
@@ -72,7 +72,7 @@ const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson
                   onClick={onBack}
                   className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-xs font-black uppercase tracking-widest bg-black/30 backdrop-blur-md px-4 py-2 rounded-full hover:bg-black/50"
                >
-                  <ChevronLeft size={14} /> Back to Lab
+                  <ChevronLeft size={14} /> ラボに戻る
                </button>
             </div>
 
@@ -102,15 +102,15 @@ const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson
                   </div>
                   <div>
                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Current Mission</div>
-                     <div className="text-2xl font-black text-slate-900 tracking-tight">{currentStage?.title || "Complete"}</div>
+                     <div className="text-2xl font-black text-slate-900 tracking-tight">{currentStage?.title || "完了"}</div>
                   </div>
                </div>
 
                <button
-                  onClick={onStartLesson}
+                  onClick={() => onStartLesson(currentStage?.id || 1)}
                   className="w-full md:w-auto bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-xl shadow-slate-900/20 hover:-translate-y-1 hover:shadow-2xl active:translate-y-0 uppercase tracking-widest"
                >
-                  Resume <Play size={16} fill="currentColor" />
+                  再開 <Play size={16} fill="currentColor" />
                </button>
             </div>
 
@@ -131,7 +131,7 @@ const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson
                               : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-500/5'}
                      ${isLocked ? 'opacity-50 grayscale-[0.8] bg-slate-50' : 'cursor-pointer'}
                    `}
-                        onClick={() => !isLocked && isCurrent && onStartLesson()}
+                        onClick={() => !isLocked && onStartLesson(stage.id)}
                      >
                         {/* Status Icon */}
                         <div className={`
@@ -152,7 +152,7 @@ const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson
                               </h3>
                               {isCurrent && (
                                  <span className="hidden sm:inline-block text-[9px] font-black text-orange-500 uppercase tracking-[0.2em] bg-orange-50 px-3 py-1 rounded-full border border-orange-100">
-                                    In Progress
+                                    進行中
                                  </span>
                               )}
                            </div>
