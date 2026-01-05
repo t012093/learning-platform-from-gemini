@@ -1,6 +1,7 @@
 import React from 'react';
 import { Course } from '../../../types';
 import { ArrowLeft, CheckCircle, Lock, Play, Star } from 'lucide-react';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface CoursePathViewProps {
   course: Course;
@@ -9,13 +10,39 @@ interface CoursePathViewProps {
 }
 
 const CoursePathView: React.FC<CoursePathViewProps> = ({ course, onStartLesson, onBack }) => {
-  // Mock Weeks Structure
-  const weeks = [
-    { id: 1, title: 'Week 1: Core Templates', desc: 'Master the "I’m exploring..." pattern.', status: 'completed' },
-    { id: 2, title: 'Week 2: Logic & Linking', desc: 'Connecting ideas with "Therefore" & "However".', status: 'current' },
-    { id: 3, title: 'Week 3: Softening & Safety', desc: 'Sounding professional, not aggressive.', status: 'locked' },
-    { id: 4, title: 'Week 4: Public Output', desc: 'Bio, Event intro, and Q&A statements.', status: 'locked' },
-  ];
+  const { language } = useLanguage();
+  const copy = {
+    en: {
+      back: 'Back to Curriculum',
+      pathTitle: 'Your Learning Path',
+      pathMeta: '4 Weeks / 12 Lessons',
+      start: 'Start',
+      lessonsCount: '3 Lessons',
+      quizCount: '1 Quiz',
+      weeks: [
+        { id: 1, title: 'Week 1: Core Templates', desc: 'Master the "I’m exploring..." pattern.', status: 'completed' },
+        { id: 2, title: 'Week 2: Logic & Linking', desc: 'Connecting ideas with "Therefore" & "However".', status: 'current' },
+        { id: 3, title: 'Week 3: Softening & Safety', desc: 'Sounding professional, not aggressive.', status: 'locked' },
+        { id: 4, title: 'Week 4: Public Output', desc: 'Bio, Event intro, and Q&A statements.', status: 'locked' },
+      ]
+    },
+    jp: {
+      back: 'カリキュラムへ戻る',
+      pathTitle: '学習パス',
+      pathMeta: '4週間 / 12レッスン',
+      start: '開始',
+      lessonsCount: '3レッスン',
+      quizCount: '1クイズ',
+      weeks: [
+        { id: 1, title: '第1週: コアテンプレート', desc: '「I’m exploring...」パターンを習得。', status: 'completed' },
+        { id: 2, title: '第2週: ロジック & 接続', desc: 'Therefore / However で論理をつなぐ。', status: 'current' },
+        { id: 3, title: '第3週: ソフトニング & 安全性', desc: '丁寧でプロフェッショナルな表現。', status: 'locked' },
+        { id: 4, title: '第4週: 公開アウトプット', desc: '自己紹介、イベント紹介、Q&A文。', status: 'locked' },
+      ]
+    }
+  } as const;
+  const t = copy[language];
+  const weeks = t.weeks;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -31,7 +58,7 @@ const CoursePathView: React.FC<CoursePathViewProps> = ({ course, onStartLesson, 
             onClick={onBack}
             className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors mb-6 font-medium"
           >
-            <ArrowLeft size={20} /> Back to Curriculum
+            <ArrowLeft size={20} /> {t.back}
           </button>
           
           <div className="flex flex-col md:flex-row gap-6 items-start">
@@ -55,10 +82,10 @@ const CoursePathView: React.FC<CoursePathViewProps> = ({ course, onStartLesson, 
       <div className="max-w-3xl mx-auto px-6 -mt-12 relative z-10 pb-12">
         <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-slate-900">Your Learning Path</h2>
+            <h2 className="text-2xl font-bold text-slate-900">{t.pathTitle}</h2>
             <div className="flex items-center gap-2 text-sm font-bold text-slate-500">
                <Star className="text-yellow-400 fill-yellow-400" size={18} />
-               <span>4 Weeks / 12 Lessons</span>
+               <span>{t.pathMeta}</span>
             </div>
           </div>
 
@@ -105,15 +132,15 @@ const CoursePathView: React.FC<CoursePathViewProps> = ({ course, onStartLesson, 
                             onClick={onStartLesson}
                             className="bg-indigo-600 text-white px-5 py-2 rounded-xl font-bold text-sm shadow-md hover:bg-indigo-700 transition-transform active:scale-95 flex items-center gap-2"
                           >
-                            Start <Play size={14} fill="currentColor" />
+                            {t.start} <Play size={14} fill="currentColor" />
                           </button>
                         )}
                       </div>
                       
                       {isCurrent && (
                         <div className="mt-4 flex gap-2">
-                           <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">3 Lessons</span>
-                           <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">1 Quiz</span>
+                           <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">{t.lessonsCount}</span>
+                           <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">{t.quizCount}</span>
                         </div>
                       )}
                    </div>

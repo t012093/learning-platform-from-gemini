@@ -5,6 +5,7 @@ import {
   BookOpen, PlayCircle, Info
 } from 'lucide-react';
 import { ViewState } from '../../../types';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface HtmlCssViewProps {
   onBack: () => void;
@@ -12,6 +13,7 @@ interface HtmlCssViewProps {
 }
 
 const HtmlCssView: React.FC<HtmlCssViewProps> = ({ onBack, onNavigate }) => {
+  const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'html' | 'css'>('html');
   const [htmlCode, setHtmlCode] = useState<string>(`<div class="card">
   <div class="avatar">
@@ -82,6 +84,45 @@ button:hover {
   const [srcDoc, setSrcDoc] = useState('');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [isCompleted, setIsCompleted] = useState(false);
+
+  const copy = {
+    en: {
+      headerTitle: 'Responsive Web Design',
+      headerSubtitle: 'Part 1: Flexbox Layouts',
+      draftSaved: 'Draft Saved',
+      articleTitle: 'Mastering Flexbox Alignment',
+      articleBody: 'Flexbox is a one-dimensional layout method for laying out items in rows or columns. Items flex to fill additional space and shrink to fit into smaller spaces. In this lesson, we will focus on the most common use case:',
+      articleHighlight: 'centering content',
+      keyConceptTitle: 'Key Concept: justify-content & align-items',
+      keyConceptBody: 'justify-content controls alignment along the main axis (horizontal by default), while align-items controls the cross axis (vertical).',
+      challengeTitle: 'Your Challenge',
+      challengeBody: 'Below is a profile card component. Currently, it is just styled with basic CSS. Your task is to center the card perfectly in the middle of the preview window using Flexbox on the body tag.',
+      interactiveEditor: 'Interactive Editor',
+      niceJob: 'Nice job!',
+      keepTrying: 'Keep trying!',
+      hint: 'Use display: flex to center the card.',
+      nextSection: 'Next Section: CSS Grid'
+    },
+    jp: {
+      headerTitle: 'レスポンシブWebデザイン',
+      headerSubtitle: 'パート1：Flexboxレイアウト',
+      draftSaved: '下書きを保存しました',
+      articleTitle: 'Flexboxの整列をマスター',
+      articleBody: 'Flexboxは行や列に並べるための1次元レイアウト手法です。要素は余白を埋めたり小さく縮んだりします。このレッスンでは、最も一般的なユースケースである',
+      articleHighlight: '中央揃え',
+      keyConceptTitle: '重要概念：justify-content と align-items',
+      keyConceptBody: 'justify-contentは主軸（通常は水平）での整列を、align-itemsは交差軸（垂直）での整列を制御します。',
+      challengeTitle: 'チャレンジ',
+      challengeBody: '以下はプロフィールカードのコンポーネントです。今は基本的なCSSだけが当たっています。bodyタグにFlexboxを使って、プレビュー画面の中央にカードを正確に配置してください。',
+      interactiveEditor: 'インタラクティブエディタ',
+      niceJob: 'いい感じ！',
+      keepTrying: 'もう少し！',
+      hint: 'display: flex を使ってカードを中央に配置しましょう。',
+      nextSection: '次のセクション：CSS Grid'
+    }
+  } as const;
+
+  const t = copy[language];
 
   // Update preview with debounce
   useEffect(() => {
@@ -173,8 +214,8 @@ button:hover {
               <Layout size={18} />
             </div>
             <div>
-              <h1 className="font-bold text-slate-900 text-sm">Responsive Web Design</h1>
-              <p className="text-[10px] text-slate-500 font-mono">Part 1: Flexbox Layouts</p>
+              <h1 className="font-bold text-slate-900 text-sm">{t.headerTitle}</h1>
+              <p className="text-[10px] text-slate-500 font-mono">{t.headerSubtitle}</p>
             </div>
           </div>
         </div>
@@ -182,7 +223,7 @@ button:hover {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-white rounded-full text-xs font-bold text-slate-500 border border-slate-200">
             <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-            Draft Saved
+            {t.draftSaved}
           </div>
         </div>
       </div>
@@ -191,23 +232,23 @@ button:hover {
 
         {/* Article Content */}
         <article className="prose prose-invert prose-lg max-w-none mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-6">Mastering Flexbox Alignment</h1>
+          <h1 className="text-4xl font-bold text-slate-900 mb-6">{t.articleTitle}</h1>
           <p className="text-lg text-slate-600 leading-relaxed">
-            Flexbox is a one-dimensional layout method for laying out items in rows or columns. Items flex to fill additional space and shrink to fit into smaller spaces. In this lesson, we will focus on the most common use case: <strong className="text-cyan-400">centering content</strong>.
+            {t.articleBody} <strong className="text-cyan-400">{t.articleHighlight}</strong>.
           </p>
 
           <div className="bg-white border-l-4 border-cyan-500 p-6 my-8 rounded-r-xl shadow-sm border-y border-r border-slate-100">
             <h3 className="text-cyan-600 font-bold text-lg mt-0 mb-2 flex items-center gap-2">
-              <BookOpen size={20} /> Key Concept: justify-content & align-items
+              <BookOpen size={20} /> {t.keyConceptTitle}
             </h3>
             <p className="text-slate-600 text-sm mb-0">
-              <code>justify-content</code> controls alignment along the main axis (horizontal by default), while <code>align-items</code> controls the cross axis (vertical).
+              {t.keyConceptBody}
             </p>
           </div>
 
-          <h3 className="text-2xl font-bold text-slate-900 mt-12 mb-4">Your Challenge</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mt-12 mb-4">{t.challengeTitle}</h3>
           <p className="text-slate-600 mb-6">
-            Below is a profile card component. Currently, it's just styled with basic CSS. Your task is to center the card perfectly in the middle of the preview window using Flexbox on the <code>body</code> tag.
+            {t.challengeBody}
           </p>
         </article>
 
@@ -217,7 +258,7 @@ button:hover {
           <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
             <div className="flex gap-2">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded text-xs font-bold text-slate-500 border border-slate-200 shadow-sm">
-                <Code2 size={14} className="text-cyan-600" /> Interactive Editor
+                <Code2 size={14} className="text-cyan-600" /> {t.interactiveEditor}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -296,8 +337,8 @@ button:hover {
               {isCompleted ? <CheckCircle2 size={24} /> : <PlayCircle size={24} />}
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 text-lg">{isCompleted ? 'Nice job!' : 'Keep trying!'}</h4>
-              <p className="text-slate-500 text-sm">Use <code>display: flex</code> to center the card.</p>
+              <h4 className="font-bold text-slate-900 text-lg">{isCompleted ? t.niceJob : t.keepTrying}</h4>
+              <p className="text-slate-500 text-sm">{t.hint}</p>
             </div>
           </div>
 
@@ -310,7 +351,7 @@ button:hover {
                 : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'}
              `}
           >
-            Next Section: CSS Grid <ChevronRight size={18} />
+            {t.nextSection} <ChevronRight size={18} />
           </button>
         </div>
 

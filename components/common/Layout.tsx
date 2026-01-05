@@ -25,6 +25,7 @@ import {
   Image
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface LayoutProps {
   currentView: ViewState;
@@ -45,6 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState<string | null>('lab');
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
 
   useEffect(() => {
     const view = currentView.toString();
@@ -96,41 +98,85 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
 
   const styles = getThemeStyles();
 
-  const navItems: NavItem[] = [
-    { view: ViewState.DASHBOARD, label: 'ダッシュボード', icon: LayoutDashboard },
-    { view: ViewState.LEARNING_HUB, label: '学習コンテンツ', icon: Layers },
+  const copy = {
+    en: {
+      dashboard: 'Dashboard',
+      learningHub: 'Learning Hub',
+      aiDiagnosis: 'AI Learning Diagnosis',
+      luminaLab: 'Design Samples',
+      checklist: 'Checklist Page',
+      checklistGenerator: 'Checklist Generator',
+      concept: 'Concept Page',
+      dialogue: 'Dialogue Page',
+      workshop: 'Workshop Page',
+      blender: 'Blender Viewport',
+      reflection: 'Reflection Page',
+      documents: 'Documents',
+      aiCharacters: 'AI Characters',
+      account: 'Account',
+      profile: 'Profile',
+      myContent: 'My Content',
+      logOut: 'Log Out',
+      language: 'Language'
+    },
+    jp: {
+      dashboard: 'ダッシュボード',
+      learningHub: '学習コンテンツ',
+      aiDiagnosis: 'AI学習診断',
+      luminaLab: 'デザインサンプル',
+      checklist: 'チェックリストページ',
+      checklistGenerator: 'チェックリスト生成',
+      concept: 'コンセプトページ',
+      dialogue: '対話ページ',
+      workshop: 'ワークショップページ',
+      blender: 'Blenderビューポート',
+      reflection: 'リフレクションページ',
+      documents: 'ドキュメント',
+      aiCharacters: 'AIキャラクター',
+      account: 'アカウント',
+      profile: 'プロフィール',
+      myContent: 'マイコンテンツ',
+      logOut: 'ログアウト',
+      language: '言語'
+    }
+  } as const;
 
-    { view: ViewState.AI_DIAGNOSIS, label: 'AI学習診断', icon: Brain }, // New Item
+  const t = copy[language];
+
+  const navItems: NavItem[] = [
+    { view: ViewState.DASHBOARD, label: t.dashboard, icon: LayoutDashboard },
+    { view: ViewState.LEARNING_HUB, label: t.learningHub, icon: Layers },
+
+    { view: ViewState.AI_DIAGNOSIS, label: t.aiDiagnosis, icon: Brain },
     {
       id: 'lab',
-      label: 'Lumina Lab',
+      label: t.luminaLab,
       icon: Sparkles,
       children: [
-        { view: ViewState.DEMO_SHOWCASE, label: 'Showcase Page', icon: Box },
-        { view: ViewState.DEMO_CHECKLIST, label: 'Checklist Page', icon: CheckCircle2 },
-        { view: ViewState.DEMO_CHECKLIST_GENERATOR, label: 'Checklist Generator', icon: Image },
-        { view: ViewState.DEMO_CONCEPT, label: 'Concept Page', icon: Box },
-        { view: ViewState.DEMO_DIALOGUE, label: 'Dialogue Page', icon: Users },
-        { view: ViewState.DEMO_WORKSHOP, label: 'Workshop Page', icon: Terminal },
-        { view: ViewState.DEMO_BLENDER, label: 'Blender Viewport', icon: Box },
-        { view: ViewState.DEMO_REFLECTION, label: 'Reflection Page', icon: Brain },
+        { view: ViewState.DEMO_CHECKLIST, label: t.checklist, icon: CheckCircle2 },
+        { view: ViewState.DEMO_CHECKLIST_GENERATOR, label: t.checklistGenerator, icon: Image },
+        { view: ViewState.DEMO_CONCEPT, label: t.concept, icon: Box },
+        { view: ViewState.DEMO_DIALOGUE, label: t.dialogue, icon: Users },
+        { view: ViewState.DEMO_WORKSHOP, label: t.workshop, icon: Terminal },
+        { view: ViewState.DEMO_BLENDER, label: t.blender, icon: Box },
+        { view: ViewState.DEMO_REFLECTION, label: t.reflection, icon: Brain },
       ]
     },
     {
       id: 'documents',
-      label: 'ドキュメント',
+      label: t.documents,
       icon: FileText,
       children: [
-        { view: ViewState.AI_CHARACTERS, label: 'AIキャラクター', icon: Users },
+        { view: ViewState.AI_CHARACTERS, label: t.aiCharacters, icon: Users },
       ]
     },
     {
       id: 'account',
-      label: 'Account',
+      label: t.account,
       icon: User,
       children: [
-        { view: ViewState.PROFILE, label: 'Profile', icon: User },
-        { view: ViewState.MY_CONTENT, label: 'My Content', icon: LibraryIcon }
+        { view: ViewState.PROFILE, label: t.profile, icon: User },
+        { view: ViewState.MY_CONTENT, label: t.myContent, icon: LibraryIcon }
       ]
     },
   ];
@@ -297,6 +343,45 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
               </button>
             );
           })}
+          <div className={`mt-6 ${isCollapsed ? 'px-0' : 'px-1'}`}>
+            <div
+              className={`
+                flex items-center rounded-lg border px-2 py-2
+                ${isCollapsed ? 'flex-col gap-2' : 'justify-between'}
+                ${theme === 'default' ? 'bg-slate-100 border-slate-200' : 'bg-white/10 border-white/10'}
+              `}
+            >
+              {!isCollapsed && (
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'default' ? 'text-slate-500' : 'text-white/70'}`}>
+                  {t.language}
+                </span>
+              )}
+              <div className={`flex items-center ${isCollapsed ? 'flex-col gap-1' : 'gap-2'}`}>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  className={`px-2 py-1 rounded-full text-[10px] font-bold transition-all ${language === 'en'
+                    ? (theme === 'default' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900')
+                    : (theme === 'default' ? 'text-slate-500 hover:text-slate-700' : 'text-white/60 hover:text-white')
+                  }`}
+                  aria-pressed={language === 'en'}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('jp')}
+                  className={`px-2 py-1 rounded-full text-[10px] font-bold transition-all ${language === 'jp'
+                    ? (theme === 'default' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900')
+                    : (theme === 'default' ? 'text-slate-500 hover:text-slate-700' : 'text-white/60 hover:text-white')
+                  }`}
+                  aria-pressed={language === 'jp'}
+                >
+                  JP
+                </button>
+              </div>
+            </div>
+          </div>
           {/* Sign Out - Unified */}
           <button
             className={`
@@ -307,11 +392,11 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
                 : 'w-full gap-3 px-3 py-2.5'
               }
             `}
-            title={isCollapsed ? "ログアウト" : ""}
+            title={isCollapsed ? t.logOut : ""}
           >
             <LogOut size={18} className="shrink-0" />
             <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-              ログアウト
+              {t.logOut}
             </span>
           </button>
         </nav>

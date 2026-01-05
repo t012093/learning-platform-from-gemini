@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ViewState, GeneratedCourse } from './types';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { getCourseById } from './services/curriculumData';
 
 // Common Components
@@ -113,7 +114,8 @@ const ProfilePlaceholder: React.FC = () => (
 
 import MultiFormatLessonView from './components/features/ai/MultiFormatLessonView';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { language, setLanguage } = useLanguage();
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.DASHBOARD);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   
@@ -125,11 +127,6 @@ const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isLoginPageVisible, setIsLoginPageVisible] = useState(false);
-
-  // Art Language State
-  const [artLanguage, setArtLanguage] = useState<'en' | 'jp'>('en');
-  // Vibe Language State
-  const [vibeLanguage, setVibeLanguage] = useState<'en' | 'jp'>('en');
 
   // Selected Craft/Tribal State
   const [selectedCraftId, setSelectedCraftId] = useState<string | null>(null);
@@ -204,8 +201,6 @@ const App: React.FC = () => {
         return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="reflection" />;
       case ViewState.DEMO_BLENDER:
         return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceSubType="blender" />;
-      case ViewState.DEMO_SHOWCASE:
-        return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="showcase" />;
       case ViewState.DEMO_CHECKLIST:
         return <MultiFormatLessonView onBack={() => setCurrentView(ViewState.DASHBOARD)} forceBlockType="checklist" />;
       case ViewState.DEMO_CHECKLIST_GENERATOR:
@@ -271,66 +266,66 @@ const App: React.FC = () => {
         return <VibePathView
           onBack={() => setCurrentView(ViewState.LEARNING_HUB)}
           onNavigate={setCurrentView}
-          language={vibeLanguage}
-          setLanguage={setVibeLanguage}
+          language={language}
+          setLanguage={setLanguage}
         />;
       case ViewState.VIBE_PROLOGUE:
         return <VibePrologueView
           onBack={() => setCurrentView(ViewState.VIBE_PATH)}
           onNavigate={setCurrentView}
-          language={vibeLanguage}
-          setLanguage={setVibeLanguage}
+          language={language}
+          setLanguage={setLanguage}
         />;
       case ViewState.VIBE_CHAPTER_1:
         return <VibeChapterOneView
           onBack={() => setCurrentView(ViewState.VIBE_PATH)}
           onNavigate={setCurrentView}
-          language={vibeLanguage}
-          setLanguage={setVibeLanguage}
+          language={language}
+          setLanguage={setLanguage}
         />;
       case ViewState.VIBE_CHAPTER_2:
         return <VibeChapterTwoView
           onBack={() => setCurrentView(ViewState.VIBE_PATH)}
           onNavigate={setCurrentView}
-          language={vibeLanguage}
-          setLanguage={setVibeLanguage}
+          language={language}
+          setLanguage={setLanguage}
         />;
       case ViewState.VIBE_CHAPTER_3:
         return <VibeChapterThreeView
           onBack={() => setCurrentView(ViewState.VIBE_PATH)}
           onNavigate={setCurrentView}
-          language={vibeLanguage}
-          setLanguage={setVibeLanguage}
+          language={language}
+          setLanguage={setLanguage}
         />;
       case ViewState.VIBE_CHAPTER_5:
         return <VibeChapterFiveView
           onBack={() => setCurrentView(ViewState.VIBE_PATH)}
           onNavigate={setCurrentView}
-          language={vibeLanguage}
-          setLanguage={setVibeLanguage}
+          language={language}
+          setLanguage={setLanguage}
         />;
 
       // Art Routes
       case ViewState.ART_MUSEUM:
-        return <ArtMuseumView onNavigate={setCurrentView} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtMuseumView onNavigate={setCurrentView} language={language} setLanguage={setLanguage} />;
       case ViewState.ART_HISTORY:
-        return <ArtHistoryView onBack={() => setCurrentView(ViewState.ART_MUSEUM)} onNavigate={setCurrentView} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtHistoryView onBack={() => setCurrentView(ViewState.ART_MUSEUM)} onNavigate={setCurrentView} language={language} setLanguage={setLanguage} />;
       case ViewState.ART_CURRICULUM:
-        return <ArtCurriculumView onBack={() => setCurrentView(ViewState.ART_MUSEUM)} onNavigate={setCurrentView} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtCurriculumView onBack={() => setCurrentView(ViewState.ART_MUSEUM)} onNavigate={setCurrentView} language={language} setLanguage={setLanguage} />;
       case ViewState.ART_INTRO:
-        return <ArtIntroView onBack={() => setCurrentView(ViewState.ART_CURRICULUM)} onNavigate={setCurrentView} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtIntroView onBack={() => setCurrentView(ViewState.ART_CURRICULUM)} onNavigate={setCurrentView} language={language} setLanguage={setLanguage} />;
       case ViewState.ART_PERIOD_DETAIL:
-        return <ArtPeriodDetailView onBack={() => setCurrentView(ViewState.ART_CURRICULUM)} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtPeriodDetailView onBack={() => setCurrentView(ViewState.ART_CURRICULUM)} language={language} setLanguage={setLanguage} />;
       case ViewState.ART_CRAFTS:
-        return <ArtCraftsView onBack={() => setCurrentView(ViewState.ART_MUSEUM)} onSelectCraft={handleCraftSelect} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtCraftsView onBack={() => setCurrentView(ViewState.ART_MUSEUM)} onSelectCraft={handleCraftSelect} language={language} setLanguage={setLanguage} />;
       case ViewState.ART_CRAFT_DETAIL:
-        return <ArtCraftDetailView craftId={selectedCraftId || 'urushi'} onBack={() => setCurrentView(ViewState.ART_CRAFTS)} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtCraftDetailView craftId={selectedCraftId || 'urushi'} onBack={() => setCurrentView(ViewState.ART_CRAFTS)} language={language} setLanguage={setLanguage} />;
       case ViewState.ART_KINTSUGI:
-        return <ArtKintsugiView onBack={() => setCurrentView(ViewState.ART_CRAFTS)} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtKintsugiView onBack={() => setCurrentView(ViewState.ART_CRAFTS)} language={language} setLanguage={setLanguage} />;
       case ViewState.ART_TRIBAL:
-        return <ArtTribalView onBack={() => setCurrentView(ViewState.ART_MUSEUM)} onSelectChapter={handleTribalSelect} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtTribalView onBack={() => setCurrentView(ViewState.ART_MUSEUM)} onSelectChapter={handleTribalSelect} language={language} setLanguage={setLanguage} />;
       case ViewState.ART_TRIBAL_DETAIL:
-        return <ArtTribalDetailView chapterId={selectedTribalId || 'intro'} onBack={() => setCurrentView(ViewState.ART_TRIBAL)} language={artLanguage} setLanguage={setArtLanguage} />;
+        return <ArtTribalDetailView chapterId={selectedTribalId || 'intro'} onBack={() => setCurrentView(ViewState.ART_TRIBAL)} language={language} setLanguage={setLanguage} />;
 
       // Sonic Lab Routes
       case ViewState.SONIC_LAB:
@@ -383,23 +378,31 @@ const App: React.FC = () => {
   };
 
   return (
-    <ErrorBoundary>
-      <ThemeProvider>
-        {!isLoggedIn ? (
-          isLoginPageVisible ?
-            <LoginView onLoginSuccess={() => setIsLoggedIn(true)} /> :
-            <LandingView onLoginClick={() => setIsLoginPageVisible(true)} />
-        ) : (
-          <>
-            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={handleLoginSuccess} />
-            <Layout currentView={currentView} onNavigate={setCurrentView}>
-              {renderContent()}
-            </Layout>
-          </>
-        )}
-      </ThemeProvider>
-    </ErrorBoundary>
+    <>
+      {!isLoggedIn ? (
+        isLoginPageVisible ?
+          <LoginView onLoginSuccess={() => setIsLoggedIn(true)} /> :
+          <LandingView onLoginClick={() => setIsLoginPageVisible(true)} />
+      ) : (
+        <>
+          <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={handleLoginSuccess} />
+          <Layout currentView={currentView} onNavigate={setCurrentView}>
+            {renderContent()}
+          </Layout>
+        </>
+      )}
+    </>
   );
 };
+
+const App: React.FC = () => (
+  <ErrorBoundary>
+    <LanguageProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </LanguageProvider>
+  </ErrorBoundary>
+);
 
 export default App;

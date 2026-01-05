@@ -1,14 +1,31 @@
 import React, { useState } from 'react';
 import { CheckCircle, Circle, ChevronDown, Download, Settings, Image } from 'lucide-react';
 import { ChecklistBlock } from '../../../../types';
+import { useLanguage } from '../../../../../context/LanguageContext';
 
 interface ChecklistPageProps {
   block: ChecklistBlock;
 }
 
 const ChecklistPage: React.FC<ChecklistPageProps> = ({ block }) => {
+  const { language } = useLanguage();
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
   const [expandedTask, setExpandedTask] = useState<string | null>(block.tasks[0]?.id || null);
+  const copy = {
+    en: {
+      intro: 'Complete the first steps to get started with Blender.',
+      progress: 'Progress',
+      completed: 'Completed',
+      screenshot: 'Screenshot'
+    },
+    jp: {
+      intro: 'Blenderを始めるための最初のステップをクリアしましょう。',
+      progress: '進捗',
+      completed: '完了',
+      screenshot: 'スクリーンショット'
+    }
+  } as const;
+  const t = copy[language];
 
   const toggleTask = (taskId: string) => {
     setCompletedTasks(prev => 
@@ -29,7 +46,7 @@ const ChecklistPage: React.FC<ChecklistPageProps> = ({ block }) => {
           {block.title}
         </h1>
         <p className="text-lg text-slate-500 mt-4 max-w-xl mx-auto">
-          Blenderを始めるための最初のステップをクリアしましょう。
+          {t.intro}
         </p>
       </div>
 
@@ -37,10 +54,10 @@ const ChecklistPage: React.FC<ChecklistPageProps> = ({ block }) => {
       <div className="mb-10">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-            Progress
+            {t.progress}
           </span>
           <span className="text-sm font-bold text-green-600">
-            {completedTasks.length} / {block.tasks.length} Completed
+            {completedTasks.length} / {block.tasks.length} {t.completed}
           </span>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-2.5">
@@ -127,7 +144,7 @@ const ChecklistPage: React.FC<ChecklistPageProps> = ({ block }) => {
                     task.imageKeyword && (
                       <div className="mt-4 bg-slate-100 rounded-lg p-4 border border-slate-200 flex flex-col items-center justify-center h-56 text-slate-400">
                         <Image size={32} className="mb-2" />
-                        <span className="text-xs font-medium">Screenshot: "{task.imageKeyword}"</span>
+                        <span className="text-xs font-medium">{t.screenshot}: "{task.imageKeyword}"</span>
                       </div>
                     )
                   )}

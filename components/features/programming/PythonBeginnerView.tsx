@@ -4,15 +4,58 @@ import {
   Terminal, BookOpen, BarChart3, ChevronDown, 
   ChevronRight, Circle, PlayCircle, Lock
 } from 'lucide-react';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface PythonBeginnerViewProps {
   onBack: () => void;
 }
 
 const PythonBeginnerView: React.FC<PythonBeginnerViewProps> = ({ onBack }) => {
+  const { language } = useLanguage();
   const [isRunning, setIsRunning] = useState(false);
   const [consoleOutput, setConsoleOutput] = useState<string | null>(null);
   const [showPlot, setShowPlot] = useState(false);
+
+  const copy = {
+    en: {
+      bootcampTitle: 'Data Science Bootcamp',
+      moduleProgress: 'Module 3/10',
+      kernelReady: 'Kernel Ready',
+      notebooks: 'Notebooks',
+      documentation: 'Documentation',
+      documentationBody: 'Pandas DataFrame is a 2-dimensional labeled data structure.',
+      introTitle: 'Introduction to Data Analysis',
+      introBody: 'Now that we understand lists and dictionaries, let’s look at Pandas. It’s the most popular library for data manipulation. Think of it like “Excel for Python”.',
+      conceptTitle: 'Concept: The DataFrame',
+      conceptBody: 'A DataFrame creates a table from your data. It organizes data into rows and columns, making it easy to summarize.',
+      runCell: 'Run Cell',
+      salesDistribution: 'Sales Distribution',
+      fruitLabels: ['Apples', 'Bananas', 'Cherries'],
+      excellentWork: 'Excellent work!',
+      successMessage: "You've successfully analyzed your first dataset.",
+      nextLesson: 'Next Lesson'
+    },
+    jp: {
+      bootcampTitle: 'データサイエンス・ブートキャンプ',
+      moduleProgress: 'モジュール 3/10',
+      kernelReady: 'カーネル準備完了',
+      notebooks: 'ノートブック',
+      documentation: 'ドキュメント',
+      documentationBody: 'PandasのDataFrameは2次元のラベル付きデータ構造です。',
+      introTitle: 'データ分析入門',
+      introBody: 'リストと辞書を学んだので、次はPandasを見ていきましょう。データ操作で最も人気のあるライブラリです。「PythonのExcel」のようなものだと考えてください。',
+      conceptTitle: '概念：データフレーム',
+      conceptBody: 'DataFrameはデータから表を作ります。行と列に整理できるので、要約や分析が簡単になります。',
+      runCell: 'セルを実行',
+      salesDistribution: '売上分布',
+      fruitLabels: ['りんご', 'バナナ', 'さくらんぼ'],
+      excellentWork: '素晴らしい！',
+      successMessage: '最初のデータセットを分析できました。',
+      nextLesson: '次のレッスン'
+    }
+  } as const;
+
+  const t = copy[language];
   
   const initialCode = `# Let's analyze some sales data
 import pandas as pd
@@ -36,10 +79,10 @@ print(df.loc[df['Sales'].idxmax()])`;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const curriculum = [
-    { id: 1, title: '01. Variables & Types', status: 'completed' },
-    { id: 2, title: '02. Lists & Dictionaries', status: 'completed' },
-    { id: 3, title: '03. Data Analysis Intro', status: 'active' },
-    { id: 4, title: '04. Visualizing Data', status: 'locked' },
+    { id: 1, title: { en: '01. Variables & Types', jp: '01. 変数と型' }, status: 'completed' },
+    { id: 2, title: { en: '02. Lists & Dictionaries', jp: '02. リストと辞書' }, status: 'completed' },
+    { id: 3, title: { en: '03. Data Analysis Intro', jp: '03. データ分析入門' }, status: 'active' },
+    { id: 4, title: { en: '04. Visualizing Data', jp: '04. データの可視化' }, status: 'locked' }
   ];
 
   const runCode = () => {
@@ -110,12 +153,12 @@ Name: 1, dtype: object`);
                 Py
              </div>
              <div>
-               <h1 className="font-bold text-slate-100 text-sm">Data Science Bootcamp</h1>
+               <h1 className="font-bold text-slate-100 text-sm">{t.bootcampTitle}</h1>
                <div className="flex items-center gap-2">
                  <div className="w-20 h-1 bg-slate-800 rounded-full overflow-hidden">
                     <div className="w-[60%] h-full bg-yellow-500"></div>
                  </div>
-                 <span className="text-[10px] text-slate-500 font-mono">Module 3/10</span>
+                 <span className="text-[10px] text-slate-500 font-mono">{t.moduleProgress}</span>
                </div>
              </div>
           </div>
@@ -124,7 +167,7 @@ Name: 1, dtype: object`);
         <div className="flex items-center gap-4">
            <div className="hidden md:flex px-3 py-1 bg-slate-800/50 rounded border border-slate-700 items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-xs font-mono text-slate-400">Kernel Ready</span>
+              <span className="text-xs font-mono text-slate-400">{t.kernelReady}</span>
            </div>
         </div>
       </div>
@@ -134,7 +177,7 @@ Name: 1, dtype: object`);
         {/* Left Sidebar: Curriculum Map */}
         <div className="w-64 border-r border-slate-800 hidden lg:flex flex-col bg-[#0f111a]">
            <div className="p-4">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 px-2">Notebooks</h3>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 px-2">{t.notebooks}</h3>
               <div className="space-y-1">
                  {curriculum.map((item) => {
                     const isActive = item.status === 'active';
@@ -154,7 +197,7 @@ Name: 1, dtype: object`);
                           {isCompleted ? <CheckCircle2 size={16} className="text-green-500" /> : 
                            isLocked ? <Lock size={16} /> : 
                            <PlayCircle size={16} className={isActive ? 'text-yellow-400' : 'text-slate-500'} />}
-                          {item.title}
+                          {item.title[language]}
                        </button>
                     );
                  })}
@@ -164,10 +207,10 @@ Name: 1, dtype: object`);
            <div className="mt-auto p-4 border-t border-slate-800">
               <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg">
                  <h4 className="text-blue-400 text-xs font-bold mb-1 flex items-center gap-1">
-                    <BookOpen size={12}/> Documentation
+                    <BookOpen size={12}/> {t.documentation}
                  </h4>
                  <p className="text-[10px] text-slate-400 leading-relaxed">
-                    Pandas <code>DataFrame</code> is a 2-dimensional labeled data structure.
+                    {t.documentationBody}
                  </p>
               </div>
            </div>
@@ -179,19 +222,18 @@ Name: 1, dtype: object`);
               
               {/* Context / Theory Cell */}
               <div className="prose prose-invert prose-slate max-w-none">
-                 <h1>Introduction to Data Analysis</h1>
+                 <h1>{t.introTitle}</h1>
                  <p className="text-lg text-slate-400">
-                    Now that we understand lists and dictionaries, let's look at <strong>Pandas</strong>. 
-                    It's the most popular library for data manipulation. Think of it like "Excel for Python".
+                    {t.introBody}
                  </p>
                  <div className="not-prose bg-slate-900/50 border border-slate-800 rounded-xl p-4 my-4 flex gap-4 items-start">
                     <div className="bg-yellow-500/10 p-2 rounded-lg text-yellow-500 mt-1">
                        <Terminal size={20} />
                     </div>
                     <div>
-                       <h3 className="font-bold text-slate-200 text-sm mb-1">Concept: The DataFrame</h3>
+                       <h3 className="font-bold text-slate-200 text-sm mb-1">{t.conceptTitle}</h3>
                        <p className="text-sm text-slate-400">
-                          A <code>DataFrame</code> creates a table from your data. It organizes data into rows and columns, making it easy to summarize.
+                          {t.conceptBody}
                        </p>
                     </div>
                  </div>
@@ -217,7 +259,7 @@ Name: 1, dtype: object`);
                          `}
                        >
                           {isRunning ? <RefreshCw size={14} className="animate-spin"/> : <Play size={14} fill="currentColor"/>}
-                          Run Cell
+                          {t.runCell}
                        </button>
                     </div>
                  </div>
@@ -271,7 +313,7 @@ Name: 1, dtype: object`);
                           {/* Graphical Output (Mock) */}
                           {showPlot && (
                              <div className="bg-white p-4 rounded-lg border border-slate-200 w-full max-w-sm">
-                                <h4 className="text-slate-900 font-bold text-xs mb-2 text-center">Sales Distribution</h4>
+                                <h4 className="text-slate-900 font-bold text-xs mb-2 text-center">{t.salesDistribution}</h4>
                                 <div className="flex items-end justify-center gap-4 h-32 border-b border-slate-200 pb-2">
                                    <div className="w-12 bg-blue-500 rounded-t h-[60%] relative group">
                                       <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-slate-500 opacity-0 group-hover:opacity-100">120</span>
@@ -284,9 +326,9 @@ Name: 1, dtype: object`);
                                    </div>
                                 </div>
                                 <div className="flex justify-center gap-4 mt-2 text-[10px] text-slate-500 font-medium">
-                                   <span className="w-12 text-center">Apples</span>
-                                   <span className="w-12 text-center">Bananas</span>
-                                   <span className="w-12 text-center">Cherries</span>
+                                   <span className="w-12 text-center">{t.fruitLabels[0]}</span>
+                                   <span className="w-12 text-center">{t.fruitLabels[1]}</span>
+                                   <span className="w-12 text-center">{t.fruitLabels[2]}</span>
                                 </div>
                              </div>
                           )}
@@ -299,11 +341,11 @@ Name: 1, dtype: object`);
               {showPlot && (
                  <div className="mt-8 p-6 bg-gradient-to-r from-green-900/20 to-green-800/20 border border-green-500/30 rounded-2xl flex items-center justify-between animate-in zoom-in duration-300">
                     <div>
-                       <h3 className="text-green-400 font-bold text-lg mb-1">Excellent work!</h3>
-                       <p className="text-slate-400 text-sm">You've successfully analyzed your first dataset.</p>
+                       <h3 className="text-green-400 font-bold text-lg mb-1">{t.excellentWork}</h3>
+                       <p className="text-slate-400 text-sm">{t.successMessage}</p>
                     </div>
                     <button className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg flex items-center gap-2 transition-colors">
-                       Next Lesson <ChevronRight size={16} />
+                       {t.nextLesson} <ChevronRight size={16} />
                     </button>
                  </div>
               )}

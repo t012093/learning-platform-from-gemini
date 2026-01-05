@@ -2,20 +2,42 @@ import React from 'react';
 import { Course } from '../../../types';
 import { COURSES_DATA } from '../../../services/curriculumData';
 import { Briefcase } from 'lucide-react';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface CourseListProps {
   onSelectCourse: (courseId: string) => void;
 }
 
 const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
+  const { language } = useLanguage();
+  const copy = {
+    en: {
+      title: 'Curriculum',
+      subtitle: 'Choose a path to boost your fluency.',
+      categories: ['All Levels', 'Beginner', 'Intermediate', 'Advanced', 'Business', 'Test Prep'],
+      lessons: 'Lessons',
+      completed: 'Completed',
+      startLearning: 'Start Learning'
+    },
+    jp: {
+      title: 'カリキュラム',
+      subtitle: '学習パスを選択してください。',
+      categories: ['すべて', '初級', '中級', '上級', 'ビジネス', '試験対策'],
+      lessons: 'レッスン',
+      completed: '完了',
+      startLearning: '学習を開始'
+    }
+  } as const;
+  const t = copy[language];
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Curriculum</h1>
-        <p className="text-slate-500 mt-2">Choose a path to boost your fluency.</p>
+        <h1 className="text-3xl font-bold text-slate-900">{t.title}</h1>
+        <p className="text-slate-500 mt-2">{t.subtitle}</p>
         
         <div className="flex gap-2 mt-6 overflow-x-auto pb-2 scrollbar-hide">
-          {['All Levels', 'Beginner', 'Intermediate', 'Advanced', 'Business', 'Test Prep'].map((cat, i) => (
+          {t.categories.map((cat, i) => (
             <button 
               key={cat}
               className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors border
@@ -57,14 +79,14 @@ const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
               <div className="flex items-center gap-4 text-xs text-slate-500 font-medium mb-4">
                  <div className="flex items-center gap-1">
                    <Briefcase size={14} /> 
-                   <span>{course.totalLessons} Lessons</span>
+                   <span>{course.totalLessons} {t.lessons}</span>
                  </div>
               </div>
 
               {course.progress > 0 ? (
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs font-bold text-slate-700">
-                    <span>{course.progress}% Completed</span>
+                    <span>{course.progress}% {t.completed}</span>
                     <span>{course.completedLessons}/{course.totalLessons}</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
@@ -76,7 +98,7 @@ const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
                 </div>
               ) : (
                 <button className="w-full py-3 text-center text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors">
-                  Start Learning
+                  {t.startLearning}
                 </button>
               )}
             </div>

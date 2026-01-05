@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Move, RotateCw, Maximize, Grid3X3, Command, CheckCircle2, MousePointer2, Play, RefreshCw } from 'lucide-react';
 import { WorkshopBlock } from '../../../../types';
+import { useLanguage } from '../../../../../context/LanguageContext';
 
 interface BlenderViewportPageProps {
   block: WorkshopBlock;
 }
 
 const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
+  const { language } = useLanguage();
   const [activeStep, setActiveStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [currentMode, setCurrentMode] = useState<'idle' | 'grab' | 'rotate' | 'scale'>('idle');
@@ -14,6 +16,58 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
   const [lastKeyPressed, setLastKeyPressed] = useState<string | null>(null);
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [demoMessage, setDemoMessage] = useState<string | null>(null);
+  const copy = {
+    en: {
+      liveSimulator: 'Live Simulator',
+      demoPlaying: 'Demo running... watch the screen and learn the moves.',
+      demoReady: 'Follow the demo and try it yourself.',
+      stepLabel: 'Step',
+      replayDemo: 'Replay Demo',
+      transformData: 'Transform Data',
+      demoMode: 'DEMO MODE',
+      objectSelection: 'Object Selection',
+      modeActive: (label: string) => `${label} mode active`,
+      keyLabel: 'KEY',
+      grabLabel: 'Grab',
+      rotateLabel: 'Rotate',
+      scaleLabel: 'Scale',
+      pressEsc: 'Press ESC to Cancel',
+      watchGrab: 'Watch: Press G to Grab',
+      watchAxis: 'Watch: Press Z to lock Axis',
+      watchMove: 'Watch: Move mouse up',
+      watchConfirm: 'Watch: Click to Confirm',
+      watchRotate: 'Watch: Press R to Rotate',
+      watchScale: 'Watch: Press S to Scale'
+    },
+    jp: {
+      liveSimulator: 'ライブシミュレーター',
+      demoPlaying: 'デモ再生中... 画面を見て操作を覚えてください。',
+      demoReady: 'デモの通りに操作してください。',
+      stepLabel: 'ステップ',
+      replayDemo: 'デモを再生',
+      transformData: '変換データ',
+      demoMode: 'デモモード',
+      objectSelection: 'オブジェクト選択',
+      modeActive: (label: string) => `${label}モード中`,
+      keyLabel: 'キー',
+      grabLabel: '移動',
+      rotateLabel: '回転',
+      scaleLabel: '拡大縮小',
+      pressEsc: 'ESCでキャンセル',
+      watchGrab: '見て: Gキーで移動(Grab)',
+      watchAxis: '見て: Zキーで軸固定',
+      watchMove: '見て: マウスを上に動かす',
+      watchConfirm: '見て: クリックで確定',
+      watchRotate: '見て: Rキーで回転',
+      watchScale: '見て: Sキーで拡大縮小'
+    }
+  } as const;
+  const t = copy[language];
+  const modeLabels: Record<string, string> = {
+    grab: t.grabLabel,
+    rotate: t.rotateLabel,
+    scale: t.scaleLabel
+  };
   
   // 3D Transform States
   const [pos, setPos] = useState({ x: 0, y: 0, z: 0 });
@@ -62,18 +116,18 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
 
     try {
         if (activeStep === 1) { // Grab Demo
-            setDemoMessage("Watch: Press G to Grab");
+            setDemoMessage(t.watchGrab);
             await wait(1000);
             showKey('G');
             setCurrentMode('grab');
             await wait(800);
 
-            setDemoMessage("Watch: Press Z to lock Axis");
+            setDemoMessage(t.watchAxis);
             showKey('Z');
             setActiveAxis('Z');
             await wait(800);
 
-            setDemoMessage("Watch: Move mouse up");
+            setDemoMessage(t.watchMove);
             // Animate movement
             const startY = 0;
             const targetY = -100;
@@ -84,13 +138,13 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
             }
             await wait(500);
             
-            setDemoMessage("Watch: Click to Confirm");
+            setDemoMessage(t.watchConfirm);
             setCurrentMode('idle'); // Confirm
             setActiveAxis(null);
             await wait(1000);
         } 
         else if (activeStep === 2) { // Rotate & Scale Demo
-            setDemoMessage("Watch: Press R to Rotate");
+            setDemoMessage(t.watchRotate);
             await wait(1000);
             showKey('R');
             setCurrentMode('rotate');
@@ -104,7 +158,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
             setCurrentMode('idle'); // Click
             await wait(500);
 
-            setDemoMessage("Watch: Press S to Scale");
+            setDemoMessage(t.watchScale);
             showKey('S');
             setCurrentMode('scale');
             await wait(500);
@@ -288,13 +342,13 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-black uppercase tracking-widest mb-4">
             <Box size={14} />
-            Live Simulator
+            {t.liveSimulator}
           </div>
           <h2 className="text-3xl md:text-4xl font-black text-slate-900 leading-tight">
             {block.goal}
           </h2>
           <p className="text-slate-500 mt-2 text-sm font-medium leading-relaxed">
-            {isDemoPlaying ? "デモ再生中... 画面を見て操作を覚えてください。" : "デモの通りに操作してください。"}
+            {isDemoPlaying ? t.demoPlaying : t.demoReady}
           </p>
         </div>
 
@@ -312,7 +366,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
                         {completedSteps.includes(idx) && <CheckCircle2 size={14} />}
                     </div>
                     <div className="flex-1">
-                        <h3 className="font-bold text-slate-900 mb-1">Step {idx + 1}</h3>
+                        <h3 className="font-bold text-slate-900 mb-1">{t.stepLabel} {idx + 1}</h3>
                         <p className="text-sm text-slate-600 font-medium">{step}</p>
                     </div>
                </div>
@@ -327,7 +381,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
                     onClick={runDemo}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full text-xs font-bold uppercase tracking-widest transition-colors"
                 >
-                    <RefreshCw size={12} /> Replay Demo
+                    <RefreshCw size={12} /> {t.replayDemo}
                 </button>
             </div>
         )}
@@ -335,7 +389,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
         {/* Real-time Status */}
         <div className="mt-auto p-6 bg-slate-900 rounded-[2rem] text-white">
             <div className="flex justify-between items-center mb-4">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Transform Data</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t.transformData}</span>
                 <div className="flex gap-2">
                     {['X','Y','Z'].map(a => (
                         <span key={a} className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-bold ${activeAxis === a ? 'bg-orange-500' : 'bg-slate-800'}`}>{a}</span>
@@ -362,12 +416,16 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
             <div className="bg-[#282828]/90 backdrop-blur px-4 py-2 rounded-xl border border-white/5 flex items-center gap-3 shadow-xl">
                 <div className={`w-2 h-2 rounded-full ${currentMode !== 'idle' ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`}></div>
                 <span className="text-[10px] font-black text-white uppercase tracking-widest">
-                    {isDemoPlaying ? 'DEMO MODE' : currentMode === 'idle' ? 'Object Selection' : `${currentMode} mode active`}
+                    {isDemoPlaying
+                        ? t.demoMode
+                        : currentMode === 'idle'
+                        ? t.objectSelection
+                        : t.modeActive(modeLabels[currentMode] || currentMode)}
                 </span>
             </div>
             {lastKeyPressed && (
                 <div className="bg-orange-500 text-white px-3 py-1 rounded-lg text-xs font-black shadow-lg animate-out fade-out zoom-out duration-500">
-                    KEY: {lastKeyPressed}
+                    {t.keyLabel}: {lastKeyPressed}
                 </div>
             )}
         </div>
@@ -429,9 +487,9 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
         <div className="p-8 bg-[#282828] border-t border-white/5 flex justify-between items-center">
             <div className="flex gap-3">
                 {[
-                    { key: 'G', label: 'Grab', active: currentMode === 'grab' },
-                    { key: 'R', label: 'Rotate', active: currentMode === 'rotate' },
-                    { key: 'S', label: 'Scale', active: currentMode === 'scale' },
+                    { key: 'G', label: t.grabLabel, active: currentMode === 'grab' },
+                    { key: 'R', label: t.rotateLabel, active: currentMode === 'rotate' },
+                    { key: 'S', label: t.scaleLabel, active: currentMode === 'scale' },
                 ].map(k => (
                     <div key={k.key} className={`flex flex-col items-center gap-1 transition-all ${k.active ? 'scale-110' : 'opacity-40'}`}>
                         <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center font-black text-lg ${
@@ -447,7 +505,7 @@ const BlenderViewportPage: React.FC<BlenderViewportPageProps> = ({ block }) => {
             <div className="flex flex-col items-end gap-1">
                 <div className="bg-[#1a1a1a] px-3 py-1 rounded-lg border border-white/5 flex items-center gap-2">
                     <Command size={10} className="text-slate-500" />
-                    <span className="text-[9px] font-mono text-slate-400 uppercase">Press ESC to Cancel</span>
+                    <span className="text-[9px] font-mono text-slate-400 uppercase">{t.pressEsc}</span>
                 </div>
             </div>
         </div>

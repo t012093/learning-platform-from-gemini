@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { ViewState } from '../../../types';
 import { useTheme } from '../../../context/ThemeContext';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface DashboardProps {
   onNavigate: (view: ViewState) => void;
@@ -15,6 +16,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const { setTheme } = useTheme();
+  const { language } = useLanguage();
   const [chartReady, setChartReady] = useState(false);
 
   useEffect(() => {
@@ -26,16 +28,56 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     setChartReady(true);
   }, []);
 
+  const copy = {
+    en: {
+      welcomeTitle: 'Welcome back, Alex',
+      welcomeSubtitle: 'Ready to build something amazing today?',
+      streak: '3 Day Streak',
+      inProgress: 'In Progress',
+      chapterProgress: 'Chapter 3 / 5',
+      focusTitle: 'The Engine (GitHub)',
+      focusDescription: 'Master the OSS ecosystem. Input Wait is your Canvas, and the world is your library.',
+      continue: 'Continue',
+      timeRemaining: '~ 25 mins remaining',
+      explorePathways: 'Explore Pathways',
+      webBasics: 'Web Basics',
+      vibeCoding: 'Vibe Coding',
+      genAiCamp: 'Gen AI Camp',
+      blenderLab: '3D Lab',
+      aiGenerator: 'AI Generator',
+      activityTitle: 'Learning Activity',
+      activityTotal: 'Total 2.5 hours this week',
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    },
+    jp: {
+      welcomeTitle: 'おかえりなさい、Alex',
+      welcomeSubtitle: '今日も最高のものを作ろう。',
+      streak: '3日連続',
+      inProgress: '進行中',
+      chapterProgress: '第3章 / 5',
+      focusTitle: 'The Engine (GitHub)',
+      focusDescription: 'OSSのエコシステムをマスター。Input Wait をキャンバスに、世界をあなたのライブラリに。',
+      continue: '続ける',
+      timeRemaining: '残り約25分',
+      explorePathways: '学習パスを探す',
+      webBasics: 'Web基礎',
+      vibeCoding: 'Vibe Coding',
+      genAiCamp: '生成AIキャンプ',
+      blenderLab: '3Dラボ',
+      aiGenerator: 'AI生成',
+      activityTitle: '学習アクティビティ',
+      activityTotal: '今週合計 2.5 時間',
+      days: ['月', '火', '水', '木', '金', '土', '日']
+    }
+  } as const;
+
+  const t = copy[language];
+
   // Simplified Activity Data
-  const activityData = [
-    { day: 'Mon', count: 12 },
-    { day: 'Tue', count: 18 },
-    { day: 'Wed', count: 15 },
-    { day: 'Thu', count: 25 },
-    { day: 'Fri', count: 20 },
-    { day: 'Sat', count: 8 },
-    { day: 'Sun', count: 30 },
-  ];
+  const activityData = t.days.map((day, index) => ({
+    day,
+    count: [12, 18, 15, 25, 20, 8, 30][index]
+  }));
 
   return (
     <div className="p-6 md:p-12 max-w-[1200px] mx-auto min-h-screen space-y-12">
@@ -43,12 +85,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       {/* 1. Header & Greeting */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Welcome back, Alex</h1>
-          <p className="text-slate-500">Ready to build something amazing today?</p>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">{t.welcomeTitle}</h1>
+          <p className="text-slate-500">{t.welcomeSubtitle}</p>
         </div>
         <div className="flex items-center gap-2 bg-orange-50 text-orange-600 px-4 py-2 rounded-full font-bold text-sm shadow-sm border border-orange-100">
           <Flame size={16} className="fill-orange-600" />
-          3 Day Streak
+          {t.streak}
         </div>
       </div>
 
@@ -63,26 +105,26 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <div className="flex-1 space-y-6">
             <div className="flex items-center gap-3">
               <span className="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                In Progress
+                {t.inProgress}
               </span>
-              <span className="text-slate-400 text-sm">Chapter 3 / 5</span>
+              <span className="text-slate-400 text-sm">{t.chapterProgress}</span>
             </div>
 
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors">
-                The Engine (GitHub)
+                {t.focusTitle}
               </h2>
               <p className="text-slate-400 text-lg leading-relaxed max-w-xl">
-                Master the OSS ecosystem. Input Wait is your Canvas, and the world is your library.
+                {t.focusDescription}
               </p>
             </div>
 
             <div className="flex items-center gap-4 pt-2">
               <button className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-purple-50 transition-colors flex items-center gap-2">
-                Continue <ArrowRight size={18} />
+                {t.continue} <ArrowRight size={18} />
               </button>
               <div className="text-slate-500 text-sm font-medium">
-                ~ 25 mins remaining
+                {t.timeRemaining}
               </div>
             </div>
           </div>
@@ -103,11 +145,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
       {/* 3. Pathways (Simple Grid) */}
       <div>
-        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Explore Pathways</h3>
+        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">{t.explorePathways}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
           <DashboardCard
-            title="Web Basics"
+            title={t.webBasics}
             icon={Globe}
             color="text-cyan-500"
             bgColor="bg-cyan-50"
@@ -116,7 +158,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           />
 
           <DashboardCard
-            title="Vibe Coding"
+            title={t.vibeCoding}
             icon={Sparkles}
             color="text-purple-500"
             bgColor="bg-purple-50"
@@ -126,7 +168,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           />
 
           <DashboardCard
-            title="Gen AI Camp"
+            title={t.genAiCamp}
             icon={Cpu}
             color="text-yellow-500"
             bgColor="bg-yellow-50"
@@ -135,7 +177,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           />
 
           <DashboardCard
-            title="3D Lab"
+            title={t.blenderLab}
             icon={Box}
             color="text-orange-500"
             bgColor="bg-orange-50"
@@ -144,7 +186,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           />
 
           <DashboardCard
-            title="AI Generator"
+            title={t.aiGenerator}
             icon={BrainCircuit}
             color="text-indigo-500"
             bgColor="bg-indigo-50"
@@ -158,8 +200,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       {/* 4. Simple Activity Chart */}
       <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-slate-800 font-bold">Learning Activity</h3>
-          <span className="text-sm text-slate-400">Total 2.5 hours this week</span>
+          <h3 className="text-slate-800 font-bold">{t.activityTitle}</h3>
+          <span className="text-sm text-slate-400">{t.activityTotal}</span>
         </div>
         <div className="h-[120px] w-full min-w-[260px]">
           {chartReady && (

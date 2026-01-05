@@ -3,6 +3,7 @@ import { ArrowLeft, Sparkles, Zap, BrainCircuit, Loader2, Brain, CheckCircle, Ar
 import { generateCourse, getMockBlenderCourse, createScopingChat, sendMessageStream } from '../../../services/geminiService';
 import { GeneratedCourse, Big5Profile, AssessmentProfile, ViewState, Message } from '../../../types';
 import { useTheme } from '../../../context/ThemeContext';
+import { useLanguage } from '../../../context/LanguageContext';
 import { STORAGE_KEY } from '../dashboard/assessment/assessmentConstants';
 
 interface CourseGeneratorViewProps {
@@ -59,10 +60,61 @@ const buildIntentMeta = (userMessages: Message[]): string => {
 
 const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCourseGenerated, onNavigate }) => {
   const { profile: globalProfile } = useTheme();
+  const { language } = useLanguage();
   const [modelType, setModelType] = useState<'standard' | 'pro' | 'gemini-2.5-flash' | 'gemini-2.5-pro'>('gemini-2.5-flash');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [assessment, setAssessment] = useState<AssessmentProfile | null>(null);
+  const hasInitialized = useRef(false);
+
+  const copy = {
+    en: {
+      initialMessage: "Hello! What would you like to learn today? Share a specific topic and your current level (e.g., beginner).",
+      backToLibrary: 'Back to Library',
+      headerTitle: 'Concierge Scoping',
+      headerSubtitle: 'AI Curriculum Planning Session',
+      inputPlaceholder: 'Tell me what you want to learn in detail...',
+      analysisActive: 'Analysis Active',
+      personalized: 'Personalized',
+      assessmentPromptTitle: 'Assessment Recommended',
+      assessmentPromptBody: 'A short assessment helps the concierge understand you better.',
+      assessmentCta: 'Start Assessment',
+      currentEngine: 'Current Engine',
+      generateLabel: 'Generate Curriculum',
+      generateHintWaiting: '(Start by chatting with AI)',
+      generateHintReady: 'Ready to Build',
+      generating: 'Generating...',
+      resetChat: 'Reset Chat',
+      resetMessage: 'Plan reset. Where should we begin?',
+      errorChat: 'Failed to communicate with AI.',
+      errorGenerate: 'Failed to generate curriculum.',
+      invalidStream: 'Invalid stream response from AI.'
+    },
+    jp: {
+      initialMessage: 'こんにちは！今日はどんなことを学びたいですか？具体的なトピックや、今のレベル（初心者など）を教えてください。',
+      backToLibrary: 'ライブラリに戻る',
+      headerTitle: '学習プラン相談',
+      headerSubtitle: 'AIカリキュラム設計セッション',
+      inputPlaceholder: '学びたいことについて具体的に教えてください...',
+      analysisActive: '分析中',
+      personalized: 'パーソナライズ済み',
+      assessmentPromptTitle: '性格診断を推奨',
+      assessmentPromptBody: '診断により、AIコンシェルジュがより深くあなたを理解します。',
+      assessmentCta: '分析を開始',
+      currentEngine: '現在のエンジン',
+      generateLabel: 'カリキュラム生成',
+      generateHintWaiting: '(AIと対話して開始)',
+      generateHintReady: '準備OK',
+      generating: '生成中...',
+      resetChat: 'チャットをリセット',
+      resetMessage: 'プランをリセットしました。何から始めましょうか？',
+      errorChat: 'AIとの通信に失敗しました。',
+      errorGenerate: 'カリキュラム生成に失敗しました。',
+      invalidStream: 'AIから無効なストリーム応答を受信しました。'
+    }
+  } as const;
+
+  const t = copy[language];
 
   // Chat States
   const [messages, setMessages] = useState<Message[]>([]);
@@ -73,6 +125,8 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
 
   // Load assessment results and initialize chat
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
     const savedStr = localStorage.getItem(STORAGE_KEY);
     let currentAssessment = null;
     if (savedStr) {
@@ -83,12 +137,11 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
     }
     
     // Initial AI message
-    const initialMsg = "こんにちは！今日はどんなことを学びたいですか？具体的なトピックや、今のレベル（初心者など）を教えてください。";
     setMessages([
         {
             id: 'init',
             role: 'model',
-            text: initialMsg,
+            text: t.initialMessage,
             timestamp: new Date()
         }
     ]);
@@ -126,7 +179,7 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
     try {
         const stream = await sendMessageStream(chatSession.current, inputValue);
         if (!stream || typeof (stream as any)[Symbol.asyncIterator] !== 'function') {
-            throw new Error("Invalid stream response from AI.");
+            throw new Error(t.invalidStream);
         }
         let fullText = '';
         
@@ -145,7 +198,7 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
         setMessages(prev => prev.map(m => m.id === aiMsgId ? { ...m, isStreaming: false } : m));
     } catch (err) {
         console.error("Chat failed:", err);
-        setError("AIとの通信に失敗しました。");
+        setError(t.errorChat);
     } finally {
         setIsAiTyping(false);
     }
@@ -170,7 +223,7 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
             const course = await generateCourse(lastUserMsg, modelType, profileToUse, undefined, assessment || undefined, userHistory, intentMeta);
             onCourseGenerated(course);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'カリキュラム生成に失敗しました。');
+      setError(err instanceof Error ? err.message : t.errorGenerate);
     } finally {
       setIsGenerating(false);
     }
@@ -211,7 +264,7 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
           onClick={onBack} 
           className="flex items-center gap-2 text-slate-500 hover:text-slate-800 mb-6 transition-colors w-fit"
         >
-          <ArrowLeft size={20} /> Back to Library
+          <ArrowLeft size={20} /> {t.backToLibrary}
         </button>
 
         <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 flex flex-col overflow-hidden flex-1">
@@ -223,8 +276,8 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
                     <Sparkles size={24} />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">Concierge Scoping</h1>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">AI Curriculum Planning Session</p>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">{t.headerTitle}</h1>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{t.headerSubtitle}</p>
                 </div>
             </div>
 
@@ -288,7 +341,7 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                            placeholder="学びたいことについて具体的に教えてください..."
+                            placeholder={t.inputPlaceholder}
                             className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-indigo-500 transition-all pr-14"
                         />
                         <button 
@@ -312,12 +365,12 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
                         <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
                             <Brain size={20} />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Analysis Active</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">{t.analysisActive}</span>
                     </div>
                     <h3 className="font-bold text-slate-900 mb-1">{assessment.personalityType}</h3>
                     <p className="text-[11px] text-slate-500 leading-tight mb-4">{assessment.learningStyle}</p>
                     <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
-                        <CheckCircle size={12} /> Personalized
+                        <CheckCircle size={12} /> {t.personalized}
                     </div>
                   </div>
                 ) : (
@@ -325,17 +378,17 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
                     onClick={() => onNavigate?.(ViewState.AI_DIAGNOSIS)}
                     className="w-full bg-amber-50 border border-amber-200 p-6 rounded-3xl text-left hover:bg-amber-100 transition-colors group"
                   >
-                    <h3 className="font-bold text-amber-900 mb-1">性格診断を推奨</h3>
-                    <p className="text-[10px] text-amber-700 mb-3">診断により、AIコンシェルジュがより深くあなたを理解します。</p>
+                    <h3 className="font-bold text-amber-900 mb-1">{t.assessmentPromptTitle}</h3>
+                    <p className="text-[10px] text-amber-700 mb-3">{t.assessmentPromptBody}</p>
                     <span className="text-[10px] font-black text-amber-600 flex items-center gap-2 group-hover:translate-x-1 transition-transform">
-                        分析を開始 <ArrowRight size={12} />
+                        {t.assessmentCta} <ArrowRight size={12} />
                     </span>
                   </button>
                 )}
 
                 {/* Model Stats */}
                 <div className="space-y-3">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Current Engine</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{t.currentEngine}</h4>
                     <div className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <div className="text-indigo-600"><Zap size={14} /></div>
@@ -359,12 +412,12 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
                         {isGenerating ? (
                             <div className="flex items-center gap-2">
                                 <Loader2 size={16} className="animate-spin" />
-                                <span>Generating...</span>
+                                <span>{t.generating}</span>
                             </div>
                         ) : (
                             <>
-                                <span>カリキュラム生成</span>
-                                <span className="text-[8px] opacity-60 font-medium normal-case">{!canGenerate ? '(AIと対話して開始)' : 'Ready to Build'}</span>
+                                <span>{t.generateLabel}</span>
+                                <span className="text-[8px] opacity-60 font-medium normal-case">{!canGenerate ? t.generateHintWaiting : t.generateHintReady}</span>
                             </>
                         )}
                     </button>
@@ -376,11 +429,11 @@ const CourseGeneratorView: React.FC<CourseGeneratorViewProps> = ({ onBack, onCou
                         onClick={() => {
                             setMessages([]);
                             chatSession.current = createScopingChat(assessment?.scores || null, modelType);
-                            setMessages([{ id: 'reset', role: 'model', text: "プランをリセットしました。何から始めましょうか？", timestamp: new Date() }]);
+                            setMessages([{ id: 'reset', role: 'model', text: t.resetMessage, timestamp: new Date() }]);
                         }}
                         className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mx-auto transition-colors"
                     >
-                        <RefreshCw size={12} /> Reset Chat
+                        <RefreshCw size={12} /> {t.resetChat}
                     </button>
                 </div>
             </div>

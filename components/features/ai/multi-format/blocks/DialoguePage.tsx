@@ -1,12 +1,26 @@
 import React from 'react';
 import { MessageCircle, User, Bot } from 'lucide-react';
 import { DialogueBlock } from '../../../../types';
+import { useLanguage } from '../../../../../context/LanguageContext';
 
 interface DialoguePageProps {
   block: DialogueBlock;
 }
 
 const DialoguePage: React.FC<DialoguePageProps> = ({ block }) => {
+  const { language } = useLanguage();
+  const copy = {
+    en: {
+      title: 'Interactive Scoping',
+      subtitle: 'Q&A Session with Lumina'
+    },
+    jp: {
+      title: 'インタラクティブ・スコーピング',
+      subtitle: 'LuminaとのQ&Aセッション'
+    }
+  } as const;
+  const t = copy[language];
+
   return (
     <div className="space-y-12">
       <div className="flex items-center gap-4 border-b border-slate-200 pb-8 mb-12">
@@ -14,8 +28,8 @@ const DialoguePage: React.FC<DialoguePageProps> = ({ block }) => {
           <MessageCircle size={28} />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Interactive Scoping</h2>
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Q&A Session with Lumina</p>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t.title}</h2>
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{t.subtitle}</p>
         </div>
       </div>
       

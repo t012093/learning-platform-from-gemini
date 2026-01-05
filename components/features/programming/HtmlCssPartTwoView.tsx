@@ -4,6 +4,7 @@ import {
   CheckCircle2, ChevronRight, BookOpen, PlayCircle, Grid
 } from 'lucide-react';
 import { ViewState } from '../../../types';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface HtmlCssPartTwoViewProps {
   onBack: () => void;
@@ -11,6 +12,7 @@ interface HtmlCssPartTwoViewProps {
 }
 
 const HtmlCssPartTwoView: React.FC<HtmlCssPartTwoViewProps> = ({ onBack, onNavigate }) => {
+  const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'html' | 'css'>('css');
   const [htmlCode, setHtmlCode] = useState<string>(`<div class="gallery">
   <div class="item">1</div>
@@ -48,6 +50,47 @@ const HtmlCssPartTwoView: React.FC<HtmlCssPartTwoViewProps> = ({ onBack, onNavig
 
   const [srcDoc, setSrcDoc] = useState('');
   const [isCompleted, setIsCompleted] = useState(false);
+
+  const copy = {
+    en: {
+      headerTitle: 'Responsive Web Design',
+      headerSubtitle: 'Part 2: CSS Grid',
+      liveSession: 'Live Session',
+      articleTitle: 'Introduction to CSS Grid',
+      articleBodyLead: 'While Flexbox is great for one-dimensional layouts,',
+      articleHighlight: 'CSS Grid',
+      articleBodyEnd: 'is the ultimate tool for two-dimensional layouts (rows and columns simultaneously). It allows you to create complex grid structures with very little code.',
+      syntaxTitle: 'Syntax: grid-template-columns',
+      syntaxBody: 'Use display: grid on the container. Then define columns with grid-template-columns: 1fr 1fr 1fr; to create 3 equal columns. The unit fr stands for “fraction”.',
+      challengeTitle: 'Your Challenge',
+      challengeBody: 'Convert the vertical list below into a 3-column grid. Use the repeat() function if you want to be fancy!',
+      editorLabel: 'Style Editor',
+      gridMaster: 'Grid Master!',
+      gridLocked: 'Grid Locked',
+      hint: 'Try grid-template-columns: repeat(3, 1fr);',
+      nextLabel: 'Next: Inspector'
+    },
+    jp: {
+      headerTitle: 'レスポンシブWebデザイン',
+      headerSubtitle: 'パート2：CSS Grid',
+      liveSession: 'ライブセッション',
+      articleTitle: 'CSS Grid入門',
+      articleBodyLead: 'Flexboxは1次元レイアウトに最適ですが、',
+      articleHighlight: 'CSS Grid',
+      articleBodyEnd: 'は2次元（行と列）に対応する最強ツールです。少ないコードで複雑なグリッドを作れます。',
+      syntaxTitle: '構文：grid-template-columns',
+      syntaxBody: 'コンテナにdisplay: gridを指定し、grid-template-columns: 1fr 1fr 1fr; で3等分にします。frはfractionの略です。',
+      challengeTitle: 'チャレンジ',
+      challengeBody: '下の縦並びのリストを3列グリッドに変換してください。repeat()を使ってもOKです！',
+      editorLabel: 'スタイルエディタ',
+      gridMaster: 'グリッドマスター！',
+      gridLocked: 'グリッド未達成',
+      hint: 'grid-template-columns: repeat(3, 1fr); を試してみましょう。',
+      nextLabel: '次へ：インスペクタ'
+    }
+  } as const;
+
+  const t = copy[language];
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -119,15 +162,15 @@ const HtmlCssPartTwoView: React.FC<HtmlCssPartTwoViewProps> = ({ onBack, onNavig
                <Grid size={18} />
              </div>
              <div>
-               <h1 className="font-bold text-slate-100 text-sm">Responsive Web Design</h1>
-               <p className="text-[10px] text-slate-500 font-mono">Part 2: CSS Grid</p>
+               <h1 className="font-bold text-slate-100 text-sm">{t.headerTitle}</h1>
+               <p className="text-[10px] text-slate-500 font-mono">{t.headerSubtitle}</p>
              </div>
           </div>
         </div>
         <div className="flex items-center gap-4">
            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-slate-800 rounded-full text-xs font-bold text-slate-400 border border-slate-700">
               <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              Live Session
+              {t.liveSession}
            </div>
         </div>
       </div>
@@ -136,23 +179,23 @@ const HtmlCssPartTwoView: React.FC<HtmlCssPartTwoViewProps> = ({ onBack, onNavig
         
         {/* Article Content */}
         <article className="prose prose-invert prose-lg max-w-none mb-12">
-          <h1 className="text-4xl font-bold text-white mb-6">Introduction to CSS Grid</h1>
+          <h1 className="text-4xl font-bold text-white mb-6">{t.articleTitle}</h1>
           <p className="text-lg text-slate-400 leading-relaxed">
-            While Flexbox is great for one-dimensional layouts, <strong className="text-purple-400">CSS Grid</strong> is the ultimate tool for two-dimensional layouts (rows and columns simultaneously). It allows you to create complex grid structures with very little code.
+            {t.articleBodyLead} <strong className="text-purple-400">{t.articleHighlight}</strong> {t.articleBodyEnd}
           </p>
           
           <div className="bg-slate-900 border-l-4 border-purple-500 p-6 my-8 rounded-r-xl">
              <h3 className="text-purple-400 font-bold text-lg mt-0 mb-2 flex items-center gap-2">
-               <BookOpen size={20}/> Syntax: grid-template-columns
+               <BookOpen size={20}/> {t.syntaxTitle}
              </h3>
              <p className="text-slate-300 text-sm mb-0">
-               Use <code>display: grid</code> on the container. Then define columns with <code>grid-template-columns: 1fr 1fr 1fr;</code> to create 3 equal columns. The unit <code>fr</code> stands for "fraction".
+               {t.syntaxBody}
              </p>
           </div>
 
-          <h3 className="text-2xl font-bold text-white mt-12 mb-4">Your Challenge</h3>
+          <h3 className="text-2xl font-bold text-white mt-12 mb-4">{t.challengeTitle}</h3>
           <p className="text-slate-400 mb-6">
-            Convert the vertical list below into a <strong>3-column grid</strong>. Use the <code>repeat()</code> function if you want to be fancy!
+            {t.challengeBody}
           </p>
         </article>
 
@@ -160,7 +203,7 @@ const HtmlCssPartTwoView: React.FC<HtmlCssPartTwoViewProps> = ({ onBack, onNavig
         <div className="border border-slate-700 rounded-2xl overflow-hidden bg-[#1e1e1e] shadow-2xl ring-4 ring-slate-900/50 mb-12">
            <div className="bg-[#252526] px-4 py-2 border-b border-[#333] flex justify-between items-center">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1e1e1e] rounded text-xs font-bold text-slate-300 border border-[#333]">
-                 <Code2 size={14} className="text-purple-400" /> Style Editor
+                 <Code2 size={14} className="text-purple-400" /> {t.editorLabel}
               </div>
            </div>
 
@@ -201,8 +244,8 @@ const HtmlCssPartTwoView: React.FC<HtmlCssPartTwoViewProps> = ({ onBack, onNavig
                 {isCompleted ? <CheckCircle2 size={24} /> : <PlayCircle size={24} />}
              </div>
              <div>
-                <h4 className="font-bold text-white text-lg">{isCompleted ? 'Grid Master!' : 'Grid Locked'}</h4>
-                <p className="text-slate-400 text-sm">Try <code>grid-template-columns: repeat(3, 1fr);</code></p>
+                <h4 className="font-bold text-white text-lg">{isCompleted ? t.gridMaster : t.gridLocked}</h4>
+                <p className="text-slate-400 text-sm">{t.hint}</p>
              </div>
            </div>
            
@@ -214,7 +257,7 @@ const HtmlCssPartTwoView: React.FC<HtmlCssPartTwoViewProps> = ({ onBack, onNavig
              `}
              disabled={!isCompleted}
            >
-             Next: Inspector <ChevronRight size={18} />
+             {t.nextLabel} <ChevronRight size={18} />
            </button>
         </div>
 

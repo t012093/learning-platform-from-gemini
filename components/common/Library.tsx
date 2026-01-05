@@ -1,10 +1,47 @@
 import React, { useState } from 'react';
 import { CORE_TEMPLATES, BRIDGING_TEMPLATES, SOFTENING_TEMPLATES } from '../../services/curriculumData';
 import { Copy, Check } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Library: React.FC = () => {
+  const { language } = useLanguage();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'core' | 'softening' | 'bridging'>('all');
+
+  const copy = {
+    en: {
+      title: 'Template Library',
+      subtitle: 'Your toolkit for clearer, safer, and more logical English.',
+      filters: {
+        all: 'All',
+        core: 'Core Patterns',
+        bridging: 'Bridging & Logic',
+        softening: 'Softening & Safety'
+      },
+      categories: {
+        core: 'Core',
+        bridging: 'Bridging',
+        softening: 'Softening'
+      }
+    },
+    jp: {
+      title: 'テンプレートライブラリ',
+      subtitle: 'より明確で安全、論理的な英語表現のツールキット。',
+      filters: {
+        all: 'すべて',
+        core: 'コアパターン',
+        bridging: 'ブリッジ & 論理',
+        softening: 'ソフト化 & 安全'
+      },
+      categories: {
+        core: 'コア',
+        bridging: 'ブリッジ',
+        softening: 'ソフト化'
+      }
+    }
+  } as const;
+
+  const t = copy[language];
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -20,15 +57,15 @@ const Library: React.FC = () => {
   return (
     <div className="p-6 md:p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Template Library</h1>
-        <p className="text-slate-500 mt-2">Your toolkit for clearer, safer, and more logical English.</p>
+        <h1 className="text-3xl font-bold text-slate-900">{t.title}</h1>
+        <p className="text-slate-500 mt-2">{t.subtitle}</p>
         
         <div className="flex gap-2 mt-6 overflow-x-auto pb-2 scrollbar-hide">
           {[
-            { id: 'all', label: 'All' },
-            { id: 'core', label: 'Core Patterns' },
-            { id: 'bridging', label: 'Bridging & Logic' },
-            { id: 'softening', label: 'Softening & Safety' }
+            { id: 'all', label: t.filters.all },
+            { id: 'core', label: t.filters.core },
+            { id: 'bridging', label: t.filters.bridging },
+            { id: 'softening', label: t.filters.softening }
           ].map((cat) => (
             <button 
               key={cat.id}
@@ -55,7 +92,7 @@ const Library: React.FC = () => {
                   template.category === 'bridging' ? 'bg-purple-50 text-purple-700' : 
                   'bg-orange-50 text-orange-700'}
               `}>
-                {template.category}
+                {t.categories[template.category]}
               </span>
               <button 
                 onClick={() => handleCopy(template.text, template.id)}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Play, Pause, Volume2, Send, Bot, MessageSquare, X, Lightbulb, Target, Sparkles, Key, Palette } from 'lucide-react';
 import { GeneratedCourse } from '../../../types';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface GeneratedLessonViewProps {
     course: GeneratedCourse | null;
@@ -9,6 +10,7 @@ interface GeneratedLessonViewProps {
 }
 
 const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBack, onComplete }) => {
+    const { language } = useLanguage();
     const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -17,13 +19,84 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
     const [isMuted, setIsMuted] = useState(false);
     const [isAudioLoading, setIsAudioLoading] = useState(false);
     const audioRef = React.useRef<HTMLAudioElement | null>(null);
+    const copy = {
+        en: {
+            noCourseTitle: 'No Course Data Found',
+            noCourseBack: 'Go Back',
+            back: 'Back',
+            preparing: 'Preparing',
+            browserVoice: 'Browser Voice',
+            aiVoice: 'AI Voice',
+            lessonBackgroundAlt: 'Lesson background',
+            chapter: 'Chapter',
+            slide: 'Slide',
+            lessonSlide: 'Lesson Slide',
+            visualDefault: 'Concept',
+            accentDefault: 'Focus Point',
+            animationCue: 'Animation Cue',
+            slideTitleFallback: 'Slide Title',
+            keyCommand: 'Key Command',
+            shortcut: 'Shortcut',
+            previous: 'Previous',
+            finishChapter: 'Finish Chapter',
+            nextSlide: 'Next Slide',
+            whyTitle: 'Why it matters',
+            whyFallback: 'This knowledge becomes the foundation of your skill set.',
+            analogyTitle: 'In other words...',
+            analogyFallback: "It's like learning a new language.",
+            keyConcepts: 'Key Concepts',
+            keyConceptFallback: 'Core concept',
+            actionStep: 'Action Step',
+            actionFallback: 'Open the editor and try what you learned.',
+            tutorTitle: 'Lumina AI Tutor',
+            contextLabel: 'Context',
+            notesLabel: "Lumina's Notes:",
+            pointsLabel: 'Key points:',
+            askPlaceholder: 'Ask a question...'
+        },
+        jp: {
+            noCourseTitle: 'コースデータが見つかりません',
+            noCourseBack: '戻る',
+            back: '戻る',
+            preparing: '準備中',
+            browserVoice: 'ブラウザ音声',
+            aiVoice: 'AI音声',
+            lessonBackgroundAlt: 'レッスン背景',
+            chapter: '第',
+            slide: 'スライド',
+            lessonSlide: 'レッスンスライド',
+            visualDefault: 'コンセプト',
+            accentDefault: '注目ポイント',
+            animationCue: 'アニメーション指示',
+            slideTitleFallback: 'スライドタイトル',
+            keyCommand: 'キー操作',
+            shortcut: 'ショートカット',
+            previous: '前へ',
+            finishChapter: '章を完了',
+            nextSlide: '次のスライド',
+            whyTitle: 'なぜ重要なのか？',
+            whyFallback: 'この知識はあなたのスキルセットの基盤となります。',
+            analogyTitle: 'たとえて言うなら...',
+            analogyFallback: 'それはまるで、新しい言語を学ぶようなものです。',
+            keyConcepts: 'キーコンセプト',
+            keyConceptFallback: '基本概念',
+            actionStep: 'アクション・ステップ',
+            actionFallback: 'エディタを開いて、学んだことを試してみましょう。',
+            tutorTitle: 'Lumina AI チューター',
+            contextLabel: 'コンテキスト',
+            notesLabel: 'Luminaのメモ:',
+            pointsLabel: 'ここでのポイント:',
+            askPlaceholder: '質問する...'
+        }
+    } as const;
+    const t = copy[language];
 
     if (!course) {
         return (
             <div className="h-screen bg-slate-900 text-white flex items-center justify-center">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold mb-4">No Course Data Found</h2>
-                    <button onClick={onBack} className="bg-indigo-600 px-6 py-2 rounded-lg">Go Back</button>
+                    <h2 className="text-2xl font-bold mb-4">{t.noCourseTitle}</h2>
+                    <button onClick={onBack} className="bg-indigo-600 px-6 py-2 rounded-lg">{t.noCourseBack}</button>
                 </div>
             </div>
         );
@@ -35,6 +108,12 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
     const hasSlides = slides.length > 0;
     const currentSlide = hasSlides ? slides[currentSlideIndex] : null;
     const isLastSlide = hasSlides ? currentSlideIndex === slides.length - 1 : true;
+    const chapterLabel = language === 'jp'
+        ? `第${currentChapterIndex + 1}章 / ${course.chapters.length}`
+        : `Chapter ${currentChapterIndex + 1} / ${course.chapters.length}`;
+    const slideLabel = hasSlides
+        ? `${t.slide} ${currentSlideIndex + 1} / ${slides.length}`
+        : '';
 
     // --- Audio Logic ---
     React.useEffect(() => {
@@ -53,7 +132,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
             setIsAudioLoading(false);
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = 'ja-JP';
+            utterance.lang = language === 'jp' ? 'ja-JP' : 'en-US';
             utterance.rate = 1.0;
             utterance.pitch = 1.0;
             window.speechSynthesis.speak(utterance);
@@ -132,7 +211,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                 className="fixed top-6 left-6 z-50 flex items-center gap-2 text-slate-200 hover:text-white bg-slate-950/80 backdrop-blur-md border border-white/10 px-3 py-2 rounded-full shadow-lg transition-colors"
             >
                 <ArrowLeft size={18} />
-                <span className="text-xs font-bold tracking-wide uppercase">Back</span>
+                <span className="text-xs font-bold tracking-wide uppercase">{t.back}</span>
             </button>
             <div className={`fixed top-6 z-50 flex items-center gap-3 transition-all ${isSidebarOpen ? 'right-[25rem]' : 'right-6'}`}>
                 <div className="flex items-center gap-2 bg-slate-950/80 backdrop-blur-md border border-white/10 rounded-full px-2 py-1 shadow-lg">
@@ -159,10 +238,10 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                         {isAudioLoading && audioMode === 'generated' ? (
                             <span className="flex items-center gap-2">
                                 <span className="w-2 h-2 bg-indigo-400 rounded-full animate-ping"></span>
-                                Preparing
+                                {t.preparing}
                             </span>
                         ) : (
-                            audioMode === 'browser' ? 'Browser Voice' : 'AI Voice'
+                            audioMode === 'browser' ? t.browserVoice : t.aiVoice
                         )}
                     </button>
                 </div>
@@ -187,7 +266,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                 ? `https://image.pollinations.ai/prompt/${encodeURIComponent(currentSlide.imagePrompt)}?nologo=true`
                                 : `https://picsum.photos/seed/${course.id + currentChapterIndex}/1920/1080`
                             }
-                            alt="Lesson Background"
+                            alt={t.lessonBackgroundAlt}
                             className="w-full h-full object-cover blur-sm scale-105 transition-opacity duration-1000"
                         />
                         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-slate-950/60 to-slate-950"></div>
@@ -195,8 +274,8 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
 
                     <div className="relative z-10 max-w-4xl mx-auto space-y-6">
                         <span className="inline-block text-indigo-300 font-mono text-xs tracking-widest uppercase bg-indigo-900/30 px-3 py-1 rounded-full border border-indigo-500/20 backdrop-blur-sm">
-                            Chapter {currentChapterIndex + 1} / {course.chapters.length} • {currentChapter.duration}
-                            {hasSlides && ` • Slide ${currentSlideIndex + 1} / ${slides.length}`}
+                            {chapterLabel} • {currentChapter.duration}
+                            {hasSlides && ` • ${slideLabel}`}
                         </span>
                         
                         <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white drop-shadow-lg">
@@ -347,7 +426,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                                     <div className="p-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
                                                         <Sparkles size={18} />
                                                     </div>
-                                                    <h3 className="font-bold text-lg tracking-wide text-slate-100 uppercase text-xs">Lesson Slide</h3>
+                                                    <h3 className="font-bold text-lg tracking-wide text-slate-100 uppercase text-xs">{t.lessonSlide}</h3>
                                                 </div>
                                                 <div className="flex items-center gap-4">
                                                      <div className="h-1 w-24 bg-white/10 rounded-full overflow-hidden">
@@ -372,16 +451,16 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                                             </div>
                                                             <div>
                                                                 <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${theme.accent}`}>
-                                                                    {currentSlide?.visualStyle || "Concept"}
+                                                                    {currentSlide?.visualStyle || t.visualDefault}
                                                                 </div>
-                                                                <div className="text-slate-400 text-sm">{currentSlide?.accentIcon || "Focus Point"}</div>
+                                                                <div className="text-slate-400 text-sm">{currentSlide?.accentIcon || t.accentDefault}</div>
                                                             </div>
                                                         </div>
                                                         
                                                         {/* Context/Hint Card */}
                                                         {currentSlide?.motionCue && (
                                                             <div className="bg-slate-950/40 border border-white/5 rounded-xl p-4 text-xs text-slate-400 font-mono">
-                                                                <span className="block text-slate-500 mb-1 uppercase text-[10px]">Animation Cue</span>
+                                                                <span className="block text-slate-500 mb-1 uppercase text-[10px]">{t.animationCue}</span>
                                                                 {currentSlide.motionCue}
                                                             </div>
                                                         )}
@@ -391,7 +470,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                                 {/* Main Text Content */}
                                                 <div className={`${textColSpan} flex flex-col justify-center`}>
                                                     <h4 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight drop-shadow-sm">
-                                                        {currentSlide?.title || 'Slide Title'}
+                                                        {currentSlide?.title || t.slideTitleFallback}
                                                     </h4>
                                                     
                                                     <div className="space-y-4">
@@ -418,12 +497,12 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                                                              <Key size={20} />
                                                                          </div>
                                                                          <div>
-                                                                             <span className="text-xs uppercase tracking-wider text-slate-500 font-bold">Key Command</span>
+                                                                             <span className="text-xs uppercase tracking-wider text-slate-500 font-bold">{t.keyCommand}</span>
                                                                              <p className="font-mono text-lg text-white font-bold tracking-tight">{currentSlide.highlightBox}</p>
                                                                          </div>
                                                                     </div>
                                                                     <div className="px-3 py-1 rounded bg-white/10 text-xs font-mono text-slate-400 border border-white/5">
-                                                                        SHORTCUT
+                                                                        {t.shortcut}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -438,7 +517,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                                     onClick={handlePrevSlide} 
                                                     className="text-slate-400 hover:text-white text-sm font-medium flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/5 transition-colors"
                                                 >
-                                                    <ArrowLeft size={16} /> Previous
+                                                    <ArrowLeft size={16} /> {t.previous}
                                                 </button>
                                                 <button 
                                                     onClick={handleNextSlide} 
@@ -447,7 +526,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                                             ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/20' 
                                                             : 'bg-slate-800 hover:bg-slate-700 border border-white/10'}`}
                                                 >
-                                                    {isLastSlide ? 'Finish Chapter' : 'Next Slide'}
+                                                    {isLastSlide ? t.finishChapter : t.nextSlide}
                                                     {!isLastSlide && <ArrowLeft size={16} className="rotate-180" />}
                                                 </button>
                                             </div>
@@ -461,10 +540,10 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                 <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-colors">
                                     <div className="flex items-center gap-3 mb-4 text-amber-400">
                                         <Target size={24} />
-                                        <h3 className="font-bold text-lg text-slate-200">なぜ重要なのか？</h3>
+                                        <h3 className="font-bold text-lg text-slate-200">{t.whyTitle}</h3>
                                     </div>
                                     <p className="text-slate-400 leading-relaxed">
-                                        {currentChapter.whyItMatters || "この知識はあなたのスキルセットの基盤となります。"}
+                                        {currentChapter.whyItMatters || t.whyFallback}
                                     </p>
                                 </div>
 
@@ -472,10 +551,10 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                 <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-purple-500/30 transition-colors">
                                     <div className="flex items-center gap-3 mb-4 text-purple-400">
                                         <Lightbulb size={24} />
-                                        <h3 className="font-bold text-lg text-slate-200">たとえて言うなら...</h3>
+                                        <h3 className="font-bold text-lg text-slate-200">{t.analogyTitle}</h3>
                                     </div>
                                     <p className="text-slate-400 leading-relaxed italic">
-                                        "{currentChapter.analogy || "それはまるで、新しい言語を学ぶようなものです。"}"
+                                        "{currentChapter.analogy || t.analogyFallback}"
                                     </p>
                                 </div>
 
@@ -483,7 +562,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                 <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 hover:border-cyan-500/30 transition-colors">
                                     <div className="flex items-center gap-3 mb-4 text-cyan-400">
                                         <Key size={24} />
-                                        <h3 className="font-bold text-lg text-slate-200">キーコンセプト</h3>
+                                        <h3 className="font-bold text-lg text-slate-200">{t.keyConcepts}</h3>
                                     </div>
                                     <ul className="space-y-2">
                                         {currentChapter.keyConcepts && currentChapter.keyConcepts.length > 0 ? (
@@ -494,7 +573,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                                 </li>
                                             ))
                                         ) : (
-                                            <li className="text-slate-500">基本概念</li>
+                                            <li className="text-slate-500">{t.keyConceptFallback}</li>
                                         )}
                                     </ul>
                                 </div>
@@ -503,10 +582,10 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                                 <div className="bg-gradient-to-br from-indigo-900/20 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-lg shadow-indigo-900/10">
                                     <div className="flex items-center gap-3 mb-4 text-indigo-400">
                                         <Sparkles size={24} />
-                                        <h3 className="font-bold text-lg text-white">アクション・ステップ</h3>
+                                        <h3 className="font-bold text-lg text-white">{t.actionStep}</h3>
                                     </div>
                                     <p className="text-slate-300 leading-relaxed font-medium">
-                                        {currentChapter.actionStep || "エディタを開いて、学んだことを試してみましょう。"}
+                                        {currentChapter.actionStep || t.actionFallback}
                                     </p>
                                 </div>
                             </>
@@ -521,8 +600,8 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                 <div className="w-96 flex flex-col h-full">
                     <div className="p-4 border-b border-white/10 flex justify-between items-center bg-slate-950/30">
                         <div>
-                            <h3 className="font-bold text-sm text-slate-200">Lumina AI Tutor</h3>
-                            <p className="text-xs text-slate-500">Context: {currentChapter.title}</p>
+                            <h3 className="font-bold text-sm text-slate-200">{t.tutorTitle}</h3>
+                            <p className="text-xs text-slate-500">{t.contextLabel}: {currentChapter.title}</p>
                         </div>
                         <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-white"><X size={16} /></button>
                     </div>
@@ -533,7 +612,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                             </div>
                             <div className="text-sm text-slate-300 bg-white/5 p-4 rounded-2xl rounded-tl-none border border-white/5">
                                 <p className="mb-2 font-bold text-indigo-300">
-                                    {hasSlides && currentSlide?.speechScript ? "Lumina's Notes:" : "ここでのポイント:"}
+                                    {hasSlides && currentSlide?.speechScript ? t.notesLabel : t.pointsLabel}
                                 </p>
                                 <p>
                                     {hasSlides && currentSlide?.speechScript 
@@ -545,7 +624,7 @@ const GeneratedLessonView: React.FC<GeneratedLessonViewProps> = ({ course, onBac
                     </div>
                     <div className="p-4 border-t border-white/10 bg-slate-950/30">
                         <div className="relative">
-                            <input type="text" placeholder="質問する..." className="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm focus:outline-none focus:border-indigo-500/50 text-slate-200" />
+                            <input type="text" placeholder={t.askPlaceholder} className="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm focus:outline-none focus:border-indigo-500/50 text-slate-200" />
                             <button className="absolute right-3 top-3 text-slate-500 hover:text-white"><Send size={16} /></button>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Play, Clock, Award, BookOpen, Share2 } from 'lucide-react';
 import { GeneratedCourse } from '../../../types';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface GeneratedCourseViewProps {
     course: GeneratedCourse;
@@ -9,6 +10,30 @@ interface GeneratedCourseViewProps {
 }
 
 const GeneratedCourseView: React.FC<GeneratedCourseViewProps> = ({ course, onBack, onStartLesson }) => {
+    const { language } = useLanguage();
+    const copy = {
+        en: {
+            back: 'Back to Library',
+            generatedWith: 'Generated with',
+            modelPro: 'Gemini 3.0 Pro',
+            modelFlash: 'Gemini 2.0 Flash',
+            start: 'Start Learning',
+            share: 'Share',
+            pathTitle: 'Curriculum Path',
+            completion: 'Completion Certificate'
+        },
+        jp: {
+            back: 'ライブラリに戻る',
+            generatedWith: '生成モデル',
+            modelPro: 'Gemini 3.0 Pro',
+            modelFlash: 'Gemini 2.0 Flash',
+            start: '学習を開始',
+            share: '共有',
+            pathTitle: 'カリキュラムパス',
+            completion: '修了証'
+        }
+    } as const;
+    const t = copy[language];
 
     const handleStartClick = () => {
         console.log("Start Learning clicked");
@@ -24,7 +49,7 @@ const GeneratedCourseView: React.FC<GeneratedCourseViewProps> = ({ course, onBac
 
                 <div className="max-w-4xl mx-auto px-6 pt-12 pb-24 relative z-10">
                     <button onClick={onBack} className="flex items-center gap-2 text-slate-300 hover:text-white mb-8 transition-colors">
-                        <ArrowLeft size={20} /> Back to Library
+                        <ArrowLeft size={20} /> {t.back}
                     </button>
 
                     <div className="flex gap-4 mb-4">
@@ -33,7 +58,7 @@ const GeneratedCourseView: React.FC<GeneratedCourseViewProps> = ({ course, onBac
                             ? 'bg-purple-500/80 border-purple-400/50' 
                             : 'bg-indigo-500/80 border-indigo-400/50'
                         }`}>
-                            Generated with {course.modelUsed === 'pro' ? 'Gemini 3.0 Pro' : 'Gemini 2.0 Flash'}
+                            {t.generatedWith} {course.modelUsed === 'pro' ? t.modelPro : t.modelFlash}
                         </span>
                         <span className="bg-white/10 backdrop-blur px-3 py-1 rounded-full text-xs font-bold border border-white/10 flex items-center gap-1"><Clock size={12} /> {course.duration}</span>
                     </div>
@@ -43,10 +68,10 @@ const GeneratedCourseView: React.FC<GeneratedCourseViewProps> = ({ course, onBac
 
                     <div className="mt-8 flex gap-4">
                         <button onClick={handleStartClick} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/30 flex items-center gap-2">
-                            <Play size={20} fill="currentColor" /> Start Learning
+                            <Play size={20} fill="currentColor" /> {t.start}
                         </button>
                         <button className="bg-white/10 text-white px-6 py-3 rounded-xl font-bold hover:bg-white/20 transition-all flex items-center gap-2">
-                            <Share2 size={20} /> Share
+                            <Share2 size={20} /> {t.share}
                         </button>
                     </div>
                 </div>
@@ -56,7 +81,7 @@ const GeneratedCourseView: React.FC<GeneratedCourseViewProps> = ({ course, onBac
             <div className="max-w-3xl mx-auto px-6 -mt-16 relative z-20">
                 <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
                     <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-2">
-                        <BookOpen size={24} className="text-indigo-600" /> Curriculum Path
+                        <BookOpen size={24} className="text-indigo-600" /> {t.pathTitle}
                     </h2>
 
                     <div className="relative">
@@ -96,7 +121,7 @@ const GeneratedCourseView: React.FC<GeneratedCourseViewProps> = ({ course, onBac
                                     <Award size={24} />
                                 </div>
                                 <div className="pt-2">
-                                    <h3 className="font-bold text-slate-400">Completion Certificate</h3>
+                                    <h3 className="font-bold text-slate-400">{t.completion}</h3>
                                 </div>
                             </div>
                         </div>

@@ -1,16 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import { Code, CheckCircle2, Play, Terminal, Info, Palette, GitGraph, ArrowRightCircle, Database, Cpu, Settings, Zap, Copy, MousePointer2, BoxSelect, Layers } from 'lucide-react';
 import { WorkshopBlock } from '../../../../types';
+import { useLanguage } from '../../../../../context/LanguageContext';
 
 interface WorkshopPageProps {
   block: WorkshopBlock;
 }
 
 const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
+  const { language } = useLanguage();
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [activeStep, setActiveStep] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [showHint, setShowHint] = useState<number | null>(null);
+  const copy = {
+    en: {
+      designStudio: 'Design Studio',
+      logicBuilder: 'Logic Builder',
+      handsOnLab: 'Hands-on Lab',
+      guideIntro: 'Follow the guide on the left to build your project in the interactive workspace.',
+      stepLabel: 'Step',
+      showHint: 'Show Hint',
+      hideHint: 'Hide Hint',
+      tipLabel: 'Tip',
+      tipText: 'Double check your connections before running the simulation.',
+      logicFlow: 'Logic Flow',
+      processing: 'Processing...',
+      runFlow: 'Run Flow',
+      nodeTypeInput: 'Input',
+      nodeTypeCondition: 'Condition',
+      nodeTypeAction: 'Action',
+      nodeTypeOutput: 'Output',
+      nodeLabelInput: 'User Input',
+      nodeLabelValidate: 'Validate',
+      nodeLabelProcess: 'Process',
+      nodeLabelDashboard: 'Dashboard',
+      debugger: 'Debugger Console',
+      logInput: 'Input received from user_form',
+      logValidation: 'Validation check: PASS',
+      logSuccess: 'Data processed and sent to Dashboard.',
+      logIdle: 'System Idle. Waiting for execution...',
+      terminal: 'Terminal',
+      terminalInit: 'Circuit initialized.',
+      terminalGates: 'Gates applied successfully.',
+      previewCanvas: 'Preview Canvas',
+      uiElement: 'UI Element',
+      box: 'Box',
+      fill: 'Fill',
+      radius: 'Radius'
+    },
+    jp: {
+      designStudio: 'デザインスタジオ',
+      logicBuilder: 'ロジックビルダー',
+      handsOnLab: 'ハンズオン・ラボ',
+      guideIntro: '左のガイドに沿って、インタラクティブな作業スペースでプロジェクトを作成しましょう。',
+      stepLabel: 'ステップ',
+      showHint: 'ヒントを表示',
+      hideHint: 'ヒントを隠す',
+      tipLabel: 'ヒント',
+      tipText: '実行前に接続をもう一度確認しましょう。',
+      logicFlow: 'ロジックフロー',
+      processing: '処理中...',
+      runFlow: 'フロー実行',
+      nodeTypeInput: '入力',
+      nodeTypeCondition: '条件',
+      nodeTypeAction: '処理',
+      nodeTypeOutput: '出力',
+      nodeLabelInput: 'ユーザー入力',
+      nodeLabelValidate: '検証',
+      nodeLabelProcess: '処理',
+      nodeLabelDashboard: 'ダッシュボード',
+      debugger: 'デバッガーコンソール',
+      logInput: 'ユーザー入力を受信: user_form',
+      logValidation: '検証チェック: OK',
+      logSuccess: 'データを処理してダッシュボードへ送信しました。',
+      logIdle: 'システム待機中。実行を待っています...',
+      terminal: 'ターミナル',
+      terminalInit: '回路を初期化しました。',
+      terminalGates: 'ゲートを適用しました。',
+      previewCanvas: 'プレビューキャンバス',
+      uiElement: 'UI要素',
+      box: 'ボックス',
+      fill: '塗り',
+      radius: '角丸'
+    }
+  } as const;
+  const t = copy[language];
 
   const subType = block.subType || 'code';
 
@@ -48,6 +123,12 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
       action: <Zap size={14} />,
       output: <ArrowRightCircle size={14} />
     };
+    const typeLabels: Record<string, string> = {
+      input: t.nodeTypeInput,
+      condition: t.nodeTypeCondition,
+      action: t.nodeTypeAction,
+      output: t.nodeTypeOutput
+    };
     
     return (
       <div className={`
@@ -60,7 +141,7 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
           {icons[type]}
         </div>
         <div className="min-w-0">
-          <div className="text-[9px] font-black uppercase text-slate-400 tracking-widest truncate">{type}</div>
+          <div className="text-[9px] font-black uppercase text-slate-400 tracking-widest truncate">{typeLabels[type] || type}</div>
           <div className="text-xs font-bold text-slate-700 truncate">{label}</div>
         </div>
         {connected && (
@@ -78,14 +159,14 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4`}>
             {subType === 'design' ? <Palette size={14} /> : 
              subType === 'logic' ? <GitGraph size={14} /> : <Code size={14} />}
-            {subType === 'design' ? 'Design Studio' : 
-             subType === 'logic' ? 'Logic Builder' : 'Hands-on Lab'}
+            {subType === 'design' ? t.designStudio : 
+             subType === 'logic' ? t.logicBuilder : t.handsOnLab}
           </div>
           <h2 className="text-3xl md:text-4xl font-black text-slate-900 leading-tight">
             {block.goal}
           </h2>
           <p className="text-slate-500 mt-3 text-sm font-medium leading-relaxed">
-            Follow the guide on the left to build your project in the interactive workspace.
+            {t.guideIntro}
           </p>
         </div>
 
@@ -128,7 +209,7 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
                   
                   <div className="flex-1 min-w-0">
                     <h3 className={`font-bold text-base mb-1 ${isActive ? 'text-slate-900' : 'text-slate-600'}`}>
-                      Step {idx + 1}
+                      {t.stepLabel} {idx + 1}
                     </h3>
                     <p className={`text-sm leading-relaxed ${isActive ? 'text-slate-700' : 'text-slate-500'}`}>
                       {step}
@@ -142,7 +223,7 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
                                     subType === 'logic' ? 'text-amber-600 hover:text-amber-800' : 'text-emerald-600 hover:text-emerald-800'
                                 }`}
                             >
-                                <Info size={12} /> {showHint === idx ? 'Hide Hint' : 'Show Hint'}
+                                <Info size={12} /> {showHint === idx ? t.hideHint : t.showHint}
                             </button>
                         </div>
                     )}
@@ -155,7 +236,7 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
                         subType === 'design' ? 'bg-purple-50 border-purple-100 text-purple-800' :
                         subType === 'logic' ? 'bg-amber-50 border-amber-100 text-amber-800' : 'bg-emerald-50 border-emerald-100 text-emerald-800'
                     }`}> 
-                        <strong>Tip:</strong> Double check your connections before running the simulation.
+                        <strong>{t.tipLabel}:</strong> {t.tipText}
                     </div>
                 )}
               </div>
@@ -176,7 +257,7 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
                 <div className="bg-white border-b border-slate-200 px-6 py-3 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-2 font-bold text-slate-700 text-sm">
                         <Settings size={16} className="text-amber-500" />
-                        Logic Flow
+                        {t.logicFlow}
                     </div>
                     <button 
                         onClick={handleRun}
@@ -185,7 +266,7 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
                             isRunning ? 'bg-slate-100 text-slate-400' : 'bg-amber-500 text-white shadow-lg hover:bg-amber-600 active:scale-95'
                         }`}
                     >
-                        {isRunning ? 'Processing...' : 'Run Flow'} <Play size={12} fill="currentColor" />
+                        {isRunning ? t.processing : t.runFlow} <Play size={12} fill="currentColor" />
                     </button>
                 </div>
                 
@@ -201,24 +282,24 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
                     )}
 
                     <LogicNode 
-                        type="input" label="User Input" 
+                        type="input" label={t.nodeLabelInput} 
                         active={activeStep === 0} connected={activeStep >= 1} 
                         pulse={isRunning && activeStep >= 0}
                     />
                     <div className="flex gap-4 md:gap-8 justify-center w-full">
                         <LogicNode 
-                            type="condition" label="Validate" 
+                            type="condition" label={t.nodeLabelValidate} 
                             active={activeStep === 1} connected={activeStep >= 2}
                             pulse={isRunning && activeStep >= 1}
                         />
                         <LogicNode 
-                            type="action" label="Process" 
+                            type="action" label={t.nodeLabelProcess} 
                             active={activeStep === 2} connected={false}
                             pulse={isRunning && activeStep >= 2}
                         />
                     </div>
                     <LogicNode 
-                        type="output" label="Dashboard" 
+                        type="output" label={t.nodeLabelDashboard} 
                         active={activeStep === 2} connected={false}
                         pulse={isRunning && activeStep >= 2}
                     />
@@ -232,17 +313,17 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
 
                 <div className="p-4 bg-amber-50 border-t border-amber-100 shrink-0">
                     <p className="text-[9px] text-amber-700 font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
-                        <Terminal size={10} /> Debugger Console
+                        <Terminal size={10} /> {t.debugger}
                     </p>
                     <div className="font-mono text-[10px] text-amber-900/70 leading-relaxed h-16 overflow-y-auto">
                         {isRunning ? (
                             <>
-                                <span className="text-amber-600">[INFO]</span> Input received from user_form<br/>
-                                <span className="text-amber-600">[INFO]</span> Validation check: PASS<br/>
-                                <span className="text-emerald-600">[SUCCESS]</span> Data processed and sent to Dashboard.
+                                <span className="text-amber-600">[INFO]</span> {t.logInput}<br/>
+                                <span className="text-amber-600">[INFO]</span> {t.logValidation}<br/>
+                                <span className="text-emerald-600">[SUCCESS]</span> {t.logSuccess}
                             </>
                         ) : (
-                            <span className="opacity-50">System Idle. Waiting for execution...</span>
+                            <span className="opacity-50">{t.logIdle}</span>
                         )}
                     </div>
                 </div>
@@ -274,12 +355,12 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
                 </div>
                 <div className="h-32 border-t border-[#333] p-4 font-mono text-xs text-slate-400 shrink-0">
                     <div className="flex items-center gap-2 mb-1 opacity-50 uppercase text-[9px] font-bold tracking-widest">
-                        <Terminal size={10} /> Terminal
+                        <Terminal size={10} /> {t.terminal}
                     </div>
                     <div className="text-slate-300">
                         <span className="text-green-500">➜</span> python main.py<br/>
-                        {activeStep >= 1 && <span className="text-slate-400">Circuit initialized.<br/></span>}
-                        {activeStep >= 2 && <span className="text-slate-400">Gates applied successfully.<br/></span>}
+                        {activeStep >= 1 && <span className="text-slate-400">{t.terminalInit}<br/></span>}
+                        {activeStep >= 2 && <span className="text-slate-400">{t.terminalGates}<br/></span>}
                         <span className="animate-pulse">_</span>
                     </div>
                 </div>
@@ -298,7 +379,7 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
                         <BoxSelect size={16} />
                         <Layers size={16} />
                     </div>
-                    <div className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Preview Canvas</div>
+                    <div className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">{t.previewCanvas}</div>
                     <div className="text-slate-400 font-mono text-xs">100%</div>
                 </div>
 
@@ -312,20 +393,20 @@ const WorkshopPage: React.FC<WorkshopPageProps> = ({ block }) => {
                             boxShadow: activeStep >= 2 ? '0 25px 50px -12px rgba(99, 102, 241, 0.5)' : 'none'
                         }}
                     >
-                        {activeStep >= 0 ? 'UI Element' : 'Box'}
+                        {activeStep >= 0 ? t.uiElement : t.box}
                     </div>
                 </div>
 
                 <div className="h-16 bg-white border-t border-slate-200 flex items-center px-6 gap-8 overflow-hidden shrink-0">
                     <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">Fill</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase">{t.fill}</span>
                         <div className="flex items-center gap-2">
                             <div className={`w-3 h-3 rounded-full border border-slate-200 ${activeStep >= 0 ? 'bg-indigo-500' : 'bg-slate-200'}`}></div>
                             <span className="text-[10px] font-mono text-slate-500">{activeStep >= 0 ? '#6366F1' : '#E2E8F0'}</span>
                         </div>
                     </div>
                     <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">Radius</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase">{t.radius}</span>
                         <span className="text-[10px] font-mono text-slate-500">{activeStep >= 1 ? '48px' : '0px'}</span>
                     </div>
                 </div>

@@ -138,7 +138,6 @@ export enum ViewState {
   DEMO_WORKSHOP = 'DEMO_WORKSHOP',
   DEMO_REFLECTION = 'DEMO_REFLECTION',
   DEMO_BLENDER = 'DEMO_BLENDER',
-  DEMO_SHOWCASE = 'DEMO_SHOWCASE',
   DEMO_CHECKLIST = 'DEMO_CHECKLIST',
   DEMO_CHECKLIST_GENERATOR = 'DEMO_CHECKLIST_GENERATOR'
 }
@@ -189,20 +188,7 @@ export interface AssessmentProfile {
 }
 
 // Multi-Format Content Types
-export type BlockType = 'concept' | 'dialogue' | 'workshop' | 'reflection' | 'showcase';
-
-export interface ShowcaseBlock {
-  id: string;
-  type: 'showcase';
-  title: string;
-  subtitle: string;
-  features: {
-    title: string;
-    description: string;
-    icon: 'film' | 'game' | 'arch' | 'char';
-  }[];
-  mentorMessage: string;
-}
+export type BlockType = 'concept' | 'dialogue' | 'workshop' | 'reflection';
 
 export interface ChecklistBlock {
     id: string;
@@ -248,7 +234,7 @@ export interface ReflectionBlock {
   options?: string[];
 }
 
-export type LearningBlock = ConceptBlock | DialogueBlock | WorkshopBlock | ReflectionBlock | ShowcaseBlock | ChecklistBlock;
+export type LearningBlock = ConceptBlock | DialogueBlock | WorkshopBlock | ReflectionBlock | ChecklistBlock;
 
 export interface GeneratedChapter {
   id: string | number;
@@ -297,4 +283,3 @@ export interface GeneratedCourse {
 }
 
 export type CourseTemplate = 'focus_slide' | 'workshop_split' | 'dialogue_chat' | 'explore_map';
-

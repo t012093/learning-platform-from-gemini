@@ -1,16 +1,48 @@
 import React, { useState } from 'react';
 import { Mail, Lock, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { adachiService } from '../../services/adachiService';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface LoginViewProps {
     onLoginSuccess: (user: any) => void;
 }
 
 const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
+    const { language, setLanguage } = useLanguage();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const copy = {
+        en: {
+            subtitle: 'Sign in to your learning journey',
+            emailPlaceholder: 'Email address',
+            passwordPlaceholder: 'Password',
+            errorInvalid: "Invalid email or password. (Hint: Don't use 'error' in email)",
+            signingIn: 'Signing in...',
+            signIn: 'Sign In',
+            quickLogin: 'Quick Login (Guest / Mock)',
+            quickLoginFailed: 'Quick Login failed. Please try again.',
+            forgotPassword: 'Forgot Password?',
+            createAccount: 'Create Account',
+            footer: '© 2024 Lumina Platform. Powered by Adachi AI.'
+        },
+        jp: {
+            subtitle: '学習の旅にサインイン',
+            emailPlaceholder: 'メールアドレス',
+            passwordPlaceholder: 'パスワード',
+            errorInvalid: "メールアドレスまたはパスワードが正しくありません。（ヒント: emailに 'error' を含めないでください）",
+            signingIn: 'サインイン中...',
+            signIn: 'サインイン',
+            quickLogin: 'クイックログイン (ゲスト / モック)',
+            quickLoginFailed: 'クイックログインに失敗しました。もう一度お試しください。',
+            forgotPassword: 'パスワードを忘れた？',
+            createAccount: 'アカウント作成',
+            footer: '© 2024 Lumina Platform. Powered by Adachi AI.'
+        }
+    } as const;
+    const t = copy[language];
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,7 +57,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 onLoginSuccess(result.user);
             }, 500);
         } catch (err) {
-            setError("Invalid email or password. (Hint: Don't use 'error' in email)");
+            setError(t.errorInvalid);
             setIsLoading(false);
         }
     };
@@ -42,6 +74,24 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
             {/* Glassmorphic Card */}
             <div className="relative z-10 w-full max-w-md p-8 m-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-700">
+                <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-white/10 border border-white/20 p-1">
+                    <button
+                        type="button"
+                        onClick={() => setLanguage('en')}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${language === 'en' ? 'bg-white text-slate-900' : 'text-white/70 hover:text-white'}`}
+                        aria-pressed={language === 'en'}
+                    >
+                        EN
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setLanguage('jp')}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${language === 'jp' ? 'bg-white text-slate-900' : 'text-white/70 hover:text-white'}`}
+                        aria-pressed={language === 'jp'}
+                    >
+                        JP
+                    </button>
+                </div>
 
                 {/* Header */}
                 <div className="text-center mb-10">
@@ -49,7 +99,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                         <Sparkles className="text-white w-8 h-8" />
                     </div>
                     <h1 className="text-4xl font-bold text-white tracking-tight mb-2">Lumina</h1>
-                    <p className="text-slate-400 text-sm">Sign in to your learning journey</p>
+                    <p className="text-slate-400 text-sm">{t.subtitle}</p>
                 </div>
 
                 {/* Form */}
@@ -66,7 +116,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="block w-full pl-12 pr-4 py-4 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
-                            placeholder="Email address"
+                            placeholder={t.emailPlaceholder}
                         />
                     </div>
 
@@ -81,7 +131,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="block w-full pl-12 pr-4 py-4 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
-                            placeholder="Password"
+                            placeholder={t.passwordPlaceholder}
                         />
                     </div>
 
@@ -102,11 +152,11 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span>Signing in...</span>
+                                    <span>{t.signingIn}</span>
                                 </>
                             ) : (
                                 <>
-                                    <span>Sign In</span>
+                                    <span>{t.signIn}</span>
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -130,19 +180,19 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                                 setTimeout(() => onLoginSuccess(result.user), 500);
                             } catch (err) {
                                 console.error("Quick Login Failed:", err);
-                                setError("Quick Login failed. Please try again.");
+                                setError(t.quickLoginFailed);
                                 setIsLoading(false);
                             }
                         }}
                         className="w-full py-3 px-6 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 hover:border-slate-600 text-slate-300 font-medium transition-all text-sm"
                     >
-                        Quick Login (Guest / Mock)
+                        {t.quickLogin}
                     </button>
 
                     {/* Footer Links */}
                     <div className="flex items-center justify-between text-sm text-slate-400 mt-8">
-                        <button type="button" className="hover:text-white transition-colors">Forgot Password?</button>
-                        <button type="button" className="hover:text-white transition-colors">Create Account</button>
+                        <button type="button" className="hover:text-white transition-colors">{t.forgotPassword}</button>
+                        <button type="button" className="hover:text-white transition-colors">{t.createAccount}</button>
                     </div>
 
                 </form>
@@ -150,7 +200,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
             {/* Footer Credit */}
             <div className="absolute bottom-6 text-slate-600 text-xs text-center w-full">
-                &copy; 2024 Lumina Platform. Powered by Adachi AI.
+                {t.footer}
             </div>
         </div>
     );

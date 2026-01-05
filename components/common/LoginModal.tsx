@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, ArrowRight, Github } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -8,8 +9,29 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => {
+  const { language } = useLanguage();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const copy = {
+    en: {
+      title: 'Create your account',
+      subtitle: 'Save your progress and get personalized AI feedback.',
+      emailLabel: 'Email Address',
+      creating: 'Creating Account...',
+      startLearning: 'Start Learning',
+      continueWith: 'Or continue with'
+    },
+    jp: {
+      title: 'アカウントを作成',
+      subtitle: '進捗を保存し、パーソナライズされたAIフィードバックを受け取れます。',
+      emailLabel: 'メールアドレス',
+      creating: 'アカウント作成中...',
+      startLearning: '学習を開始',
+      continueWith: 'または以下で続行'
+    }
+  } as const;
+  const t = copy[language];
 
   if (!isOpen) return null;
 
@@ -40,13 +62,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
 
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto mb-4 text-2xl font-bold">L</div>
-          <h2 className="text-2xl font-bold text-slate-900">Create your account</h2>
-          <p className="text-slate-500 mt-2">Save your progress and get personalized AI feedback.</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t.title}</h2>
+          <p className="text-slate-500 mt-2">{t.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1 ml-1">Email Address</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1 ml-1">{t.emailLabel}</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
               <input 
@@ -65,8 +87,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
             disabled={isLoading}
             className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Creating Account...' : (
-              <>Start Learning <ArrowRight size={20} /></>
+            {isLoading ? t.creating : (
+              <>{t.startLearning} <ArrowRight size={20} /></>
             )}
           </button>
         </form>
@@ -77,7 +99,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
               <div className="w-full border-t border-slate-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">Or continue with</span>
+              <span className="px-2 bg-white text-slate-500">{t.continueWith}</span>
             </div>
           </div>
 

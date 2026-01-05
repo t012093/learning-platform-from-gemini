@@ -4,15 +4,16 @@ import {
   Music, Radio, Headphones, Settings, Disc
 } from 'lucide-react';
 import { ViewState } from '../../../types';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface SonicLabViewProps {
   onNavigate: (view: ViewState) => void;
 }
 
 const ModuleCard = ({ 
-  title, subtitle, icon: Icon, color, onClick 
+  title, subtitle, icon: Icon, color, onClick, ctaLabel
 }: { 
-  title: string; subtitle: string; icon: any; color: string; onClick?: () => void 
+  title: string; subtitle: string; icon: any; color: string; onClick?: () => void; ctaLabel: string;
 }) => (
   <div 
     onClick={onClick}
@@ -30,12 +31,53 @@ const ModuleCard = ({
     <p className="text-slate-400 text-sm">{subtitle}</p>
     
     <div className="mt-6 flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:text-white transition-colors">
-       <span>Enter Lab</span> <Play size={10} fill="currentColor" />
+       <span>{ctaLabel}</span> <Play size={10} fill="currentColor" />
     </div>
   </div>
 );
 
 const SonicLabView: React.FC<SonicLabViewProps> = ({ onNavigate }) => {
+  const { language } = useLanguage();
+
+  const copy = {
+    en: {
+      headerLabel: 'Audio Engineering 101',
+      headerTitle: 'Sonic Lab',
+      masterOutput: 'Master Output',
+      interactiveLesson: 'Interactive Lesson',
+      featuredTitle: 'The Architecture of Sound',
+      featuredDescription: 'Understanding oscillators, filters, and envelopes. Build your first synthesizer patch from scratch.',
+      openSynth: 'Open Synthesizer',
+      enterLab: 'Enter Lab',
+      footer: 'Lumina Audio Engine v2.0 • 48kHz / 24bit',
+      modules: [
+        { title: 'Rhythm Construction', subtitle: 'BPM, Time Signatures, and Drum Patterns.' },
+        { title: 'Physics of Audio', subtitle: 'Frequency, Amplitude, and Phase relationships.' },
+        { title: 'The Mixing Console', subtitle: 'EQ, Compression, and spatial balance.' },
+        { title: 'Microphone Tech', subtitle: 'Dynamic vs Condenser. Pickup patterns.' }
+      ]
+    },
+    jp: {
+      headerLabel: 'オーディオ工学 101',
+      headerTitle: 'ソニックラボ',
+      masterOutput: 'マスター出力',
+      interactiveLesson: 'インタラクティブレッスン',
+      featuredTitle: 'サウンドの設計図',
+      featuredDescription: 'オシレーター、フィルター、エンベロープを理解し、初めてのシンセパッチを作ります。',
+      openSynth: 'シンセを開く',
+      enterLab: 'ラボへ',
+      footer: 'Lumina Audio Engine v2.0 • 48kHz / 24bit',
+      modules: [
+        { title: 'リズム構築', subtitle: 'BPM、拍子、ドラムパターン。' },
+        { title: '音の物理', subtitle: '周波数、振幅、位相の関係。' },
+        { title: 'ミキシングコンソール', subtitle: 'EQ、コンプレッション、空間バランス。' },
+        { title: 'マイク技術', subtitle: 'ダイナミック vs コンデンサー。指向性。' }
+      ]
+    }
+  } as const;
+
+  const t = copy[language];
+
   return (
     <div className="min-h-screen bg-[#050505] text-slate-300 font-sans p-6 md:p-8">
       
@@ -44,13 +86,13 @@ const SonicLabView: React.FC<SonicLabViewProps> = ({ onNavigate }) => {
          <div>
             <div className="flex items-center gap-3 mb-2">
                <Activity size={24} className="text-cyan-400" />
-               <span className="text-cyan-400 font-mono text-xs uppercase tracking-[0.2em]">Audio Engineering 101</span>
+               <span className="text-cyan-400 font-mono text-xs uppercase tracking-[0.2em]">{t.headerLabel}</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">Sonic Lab</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">{t.headerTitle}</h1>
          </div>
          <div className="flex gap-4">
             <div className="text-right hidden md:block">
-               <div className="text-xs text-slate-500 font-mono">Master Output</div>
+               <div className="text-xs text-slate-500 font-mono">{t.masterOutput}</div>
                <div className="flex gap-1 items-end h-8 mt-1">
                   {[40, 60, 30, 80, 50, 90, 20, 60].map((h, i) => (
                      <div key={i} className="w-1 bg-cyan-500 rounded-full animate-pulse" style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }}></div>
@@ -74,15 +116,15 @@ const SonicLabView: React.FC<SonicLabViewProps> = ({ onNavigate }) => {
                <div className="flex-1 flex flex-col justify-between">
                   <div>
                      <span className="bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded text-xs font-bold uppercase tracking-wider border border-cyan-500/30">
-                        Interactive Lesson
+                        {t.interactiveLesson}
                      </span>
-                     <h2 className="text-3xl font-bold text-white mt-4 mb-2">The Architecture of Sound</h2>
+                     <h2 className="text-3xl font-bold text-white mt-4 mb-2">{t.featuredTitle}</h2>
                      <p className="text-slate-400 text-lg leading-relaxed">
-                        Understanding oscillators, filters, and envelopes. Build your first synthesizer patch from scratch.
+                        {t.featuredDescription}
                      </p>
                   </div>
                   <button className="mt-8 bg-cyan-600 text-black px-6 py-3 rounded-full font-bold hover:bg-cyan-500 hover:scale-105 transition-all flex items-center gap-2 w-max">
-                     Open Synthesizer <Waves size={18} />
+                     {t.openSynth} <Waves size={18} />
                   </button>
                </div>
                
@@ -106,41 +148,45 @@ const SonicLabView: React.FC<SonicLabViewProps> = ({ onNavigate }) => {
 
          {/* 2. Rhythm & Beat */}
          <ModuleCard 
-            title="Rhythm Construction" 
-            subtitle="BPM, Time Signatures, and Drum Patterns." 
+            title={t.modules[0].title} 
+            subtitle={t.modules[0].subtitle} 
             icon={Disc} 
             color="pink" 
+            ctaLabel={t.enterLab}
          />
 
          {/* 3. Physics of Audio */}
          <ModuleCard 
-            title="Physics of Audio" 
-            subtitle="Frequency, Amplitude, and Phase relationships." 
+            title={t.modules[1].title} 
+            subtitle={t.modules[1].subtitle} 
             icon={Activity} 
             color="purple" 
+            ctaLabel={t.enterLab}
          />
 
          {/* 4. Mixing Console */}
          <ModuleCard 
-            title="The Mixing Console" 
-            subtitle="EQ, Compression, and spatial balance." 
+            title={t.modules[2].title} 
+            subtitle={t.modules[2].subtitle} 
             icon={Sliders} 
             color="yellow" 
+            ctaLabel={t.enterLab}
          />
 
          {/* 5. Microphone Tech */}
          <ModuleCard 
-            title="Microphone Tech" 
-            subtitle="Dynamic vs Condenser. Pickup patterns." 
+            title={t.modules[3].title} 
+            subtitle={t.modules[3].subtitle} 
             icon={Mic2} 
             color="red" 
+            ctaLabel={t.enterLab}
          />
 
       </div>
 
       {/* Footer Info */}
       <div className="mt-12 text-center text-slate-600 text-xs font-mono uppercase tracking-widest">
-         Lumina Audio Engine v2.0 • 48kHz / 24bit
+         {t.footer}
       </div>
     </div>
   );

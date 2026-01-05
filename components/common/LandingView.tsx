@@ -1,11 +1,55 @@
 import React from 'react';
 import { ArrowRight, Sparkles, Brain, Palette, Code2, Rocket } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface LandingViewProps {
     onLoginClick: () => void;
 }
 
 const LandingView: React.FC<LandingViewProps> = ({ onLoginClick }) => {
+    const { language, setLanguage } = useLanguage();
+    const copy = {
+        en: {
+            signIn: 'Sign In',
+            badge: 'AI-Powered Learning Platform',
+            heroLine1: 'Master the Future',
+            heroLine2Prefix: 'of',
+            heroHighlight: 'Code & Art',
+            heroDescription: 'A personalized learning journey powered by advanced AI tutors. From Web Development to Generative Art, unlock your creative potential today.',
+            startLearning: 'Start Learning Now',
+            viewCurriculum: 'View Curriculum',
+            features: {
+                aiTitle: 'AI Diagnosis & Tutors',
+                aiDescription: 'Get matched with an AI partner (Spark, Focus, Vibe, etc.) based on your personality and learning style.',
+                codingTitle: 'Interactive Coding',
+                codingDescription: 'Hands-on projects from "Web Studio" to "Vibe Coding". Learn by building real applications.',
+                artTitle: 'Art & History',
+                artDescription: 'Explore the intersection of traditional art history and modern generative AI tools.'
+            },
+            footer: '© 2024 Lumina Platform. All rights reserved.'
+        },
+        jp: {
+            signIn: 'サインイン',
+            badge: 'AI搭載の学習プラットフォーム',
+            heroLine1: '未来を切り拓く',
+            heroLine2Prefix: '',
+            heroHighlight: 'コードとアート',
+            heroDescription: '先進AIチューターによるパーソナライズ学習。Web開発から生成アートまで、あなたの創造力を解き放ちます。',
+            startLearning: '今すぐ学ぶ',
+            viewCurriculum: 'カリキュラムを見る',
+            features: {
+                aiTitle: 'AI診断とチューター',
+                aiDescription: '性格や学習スタイルに合わせて、AIパートナー（Spark, Focus, Vibe など）がマッチングされます。',
+                codingTitle: 'インタラクティブ・コーディング',
+                codingDescription: 'Web Studio から Vibe Coding まで。実践的なプロジェクトで学びます。',
+                artTitle: 'アートと歴史',
+                artDescription: '伝統的な美術史と最新の生成AIツールの交差点を探ります。'
+            },
+            footer: '© 2024 Lumina Platform. All rights reserved.'
+        }
+    } as const;
+    const t = copy[language];
+
     return (
         <div className="min-h-screen bg-slate-900 text-white font-sans overflow-x-hidden selection:bg-purple-500/30">
 
@@ -18,12 +62,32 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginClick }) => {
                         </div>
                         <span className="text-xl font-bold tracking-tight">Lumina</span>
                     </div>
-                    <button
-                        onClick={onLoginClick}
-                        className="px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-all text-sm font-medium backdrop-blur-sm"
-                    >
-                        Sign In
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 rounded-full bg-white/10 border border-white/10 p-1">
+                            <button
+                                type="button"
+                                onClick={() => setLanguage('en')}
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${language === 'en' ? 'bg-white text-slate-900' : 'text-white/70 hover:text-white'}`}
+                                aria-pressed={language === 'en'}
+                            >
+                                EN
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setLanguage('jp')}
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${language === 'jp' ? 'bg-white text-slate-900' : 'text-white/70 hover:text-white'}`}
+                                aria-pressed={language === 'jp'}
+                            >
+                                JP
+                            </button>
+                        </div>
+                        <button
+                            onClick={onLoginClick}
+                            className="px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-all text-sm font-medium backdrop-blur-sm"
+                        >
+                            {t.signIn}
+                        </button>
+                    </div>
                 </div>
             </nav>
 
@@ -38,16 +102,17 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginClick }) => {
                 <div className="max-w-7xl mx-auto text-center relative z-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-medium mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <span className="flex h-2 w-2 rounded-full bg-purple-400 animate-ping"></span>
-                        AI-Powered Learning Platform
+                        {t.badge}
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 animate-in fade-in slide-in-from-bottom-6 duration-1000 fill-mode-both">
-                        Master the Future <br /> of <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Code & Art</span>
+                        {t.heroLine1} <br />
+                        {t.heroLine2Prefix && <span>{t.heroLine2Prefix} </span>}
+                        <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">{t.heroHighlight}</span>
                     </h1>
 
                     <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 fill-mode-both">
-                        A personalized learning journey powered by advanced AI tutors.
-                        From Web Development to Generative Art, unlock your creative potential today.
+                        {t.heroDescription}
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300 fill-mode-both">
@@ -56,12 +121,12 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginClick }) => {
                             className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-slate-900 font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2 shadow-xl shadow-white/10"
                         >
                             <Rocket className="w-5 h-5" />
-                            Start Learning Now
+                            {t.startLearning}
                         </button>
                         <button
                             className="w-full sm:w-auto px-8 py-4 rounded-full bg-slate-800 text-white font-medium hover:bg-slate-700 border border-slate-700 transition-colors"
                         >
-                            View Curriculum
+                            {t.viewCurriculum}
                         </button>
                     </div>
                 </div>
@@ -76,9 +141,9 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginClick }) => {
                             <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-6 text-purple-400 group-hover:scale-110 transition-transform">
                                 <Brain className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3">AI Diagnosis & Tutors</h3>
+                            <h3 className="text-xl font-bold mb-3">{t.features.aiTitle}</h3>
                             <p className="text-slate-400">
-                                Get matched with an AI partner (Spark, Focus, Vibe, etc.) based on your personality and learning style.
+                                {t.features.aiDescription}
                             </p>
                         </div>
 
@@ -87,9 +152,9 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginClick }) => {
                             <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 transition-transform">
                                 <Code2 className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3">Interactive Coding</h3>
+                            <h3 className="text-xl font-bold mb-3">{t.features.codingTitle}</h3>
                             <p className="text-slate-400">
-                                Hands-on projects from "Web Studio" to "Vibe Coding". Learn by building real applications.
+                                {t.features.codingDescription}
                             </p>
                         </div>
 
@@ -98,9 +163,9 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginClick }) => {
                             <div className="w-12 h-12 bg-pink-500/20 rounded-2xl flex items-center justify-center mb-6 text-pink-400 group-hover:scale-110 transition-transform">
                                 <Palette className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3">Art & History</h3>
+                            <h3 className="text-xl font-bold mb-3">{t.features.artTitle}</h3>
                             <p className="text-slate-400">
-                                Explore the intersection of traditional art history and modern generative AI tools.
+                                {t.features.artDescription}
                             </p>
                         </div>
                     </div>
@@ -109,7 +174,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginClick }) => {
 
             {/* Footer */}
             <footer className="py-12 border-t border-white/5 text-center text-slate-500 text-sm">
-                <p>&copy; 2024 Lumina Platform. All rights reserved.</p>
+                <p>{t.footer}</p>
             </footer>
 
         </div>

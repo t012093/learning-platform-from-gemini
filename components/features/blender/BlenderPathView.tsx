@@ -3,6 +3,7 @@ import {
    ChevronLeft, Play, Box, Layers, Zap, Image as ImageIcon,
    MousePointer2, Camera, CheckCircle2, Lock, Star, Monitor
 } from 'lucide-react';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface BlenderPathViewProps {
    onBack: () => void;
@@ -10,43 +11,90 @@ interface BlenderPathViewProps {
 }
 
 const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson }) => {
+   const { language } = useLanguage();
+
+   const copy = {
+      en: {
+         backToLab: 'Back to Lab',
+         currentMission: 'Current Mission',
+         resume: 'Resume',
+         inProgress: 'In Progress',
+         completed: 'Completed',
+         project: {
+            title: 'Ultimate Blender Course',
+            description: 'From the very first cube to photoreal renders, learn every essential skill in this path.',
+            level: 'Beginner to Pro',
+            duration: '12 hours'
+         },
+         stageCompleteFallback: 'Complete'
+      },
+      jp: {
+         backToLab: 'ラボに戻る',
+         currentMission: '現在のミッション',
+         resume: '再開',
+         inProgress: '進行中',
+         completed: '完了',
+         project: {
+            title: '究極のBlenderコース',
+            description: '最初のキューブからフォトリアルなレンダーまで、必要なスキルをすべてこのパスで丁寧に学びます。',
+            level: '初心者からプロまで',
+            duration: '12時間'
+         },
+         stageCompleteFallback: '完了'
+      }
+   } as const;
+
+   const t = copy[language];
+
    const project = {
-      title: "究極のBlenderコース",
-      description: "最初のキューブからフォトリアルなレンダーまで、必要なスキルをすべてこのパスで丁寧に学びます。",
-      level: "初心者からプロまで",
-      duration: "12時間",
+      title: t.project.title,
+      description: t.project.description,
+      level: t.project.level,
+      duration: t.project.duration,
       software: "Blender 4.0",
       thumbnail: "https://images.unsplash.com/photo-1617791160536-598cf32026fb?auto=format&fit=crop&q=80&w=1200",
       stages: [
          {
             id: 1,
-            title: "3Dの第一歩",
-            desc: "ビューポート操作、オブジェクト移動（G/R/S）、インターフェイスをしっかりマスターします。",
-            tools: ["ビューポート", "変形"],
+            title: { en: 'First Steps in 3D', jp: '3Dの第一歩' },
+            desc: {
+               en: 'Master viewport navigation, object transforms (G/R/S), and the Blender interface.',
+               jp: 'ビューポート操作、オブジェクト移動（G/R/S）、インターフェイスをしっかりマスターします。'
+            },
+            tools: { en: ['Viewport', 'Transforms'], jp: ['ビューポート', '変形'] },
             status: "current",
             icon: Monitor
          },
          {
             id: 2,
-            title: "モデリングの基礎",
-            desc: "編集モードに入り、押し出し・インセット・ベベルで家具のような複雑な形状を作りましょう。",
-            tools: ["編集モード", "モディファイア"],
+            title: { en: 'Modeling Basics', jp: 'モデリングの基礎' },
+            desc: {
+               en: 'Enter Edit Mode and shape forms with extrude, inset, and bevel.',
+               jp: '編集モードに入り、押し出し・インセット・ベベルで家具のような複雑な形状を作りましょう。'
+            },
+            tools: { en: ['Edit Mode', 'Modifiers'], jp: ['編集モード', 'モディファイア'] },
             status: "locked",
             icon: Box
          },
          {
             id: 3,
-            title: "上級モデリング",
-            desc: "配列モディファイアやブーリアン操作、スカルプトの基本を効率的なワークフローで学びます。",
-            tools: ["スカルプト", "ブーリアン"],
+            title: { en: 'Advanced Modeling', jp: '上級モデリング' },
+            desc: {
+               en: 'Learn arrays, booleans, and sculpting fundamentals with an efficient workflow.',
+               jp: '配列モディファイアやブーリアン操作、スカルプトの基本を効率的なワークフローで学びます。'
+            },
+            tools: { en: ['Sculpting', 'Boolean'], jp: ['スカルプト', 'ブーリアン'] },
             status: "locked",
             icon: MousePointer2
          },
          {
             id: 4,
-            title: "仕上げとレンダー",
-            desc: "質感設定とライティングで雰囲気を整え、レンダリングでシーンを完成させます。",
-            tools: ["シェーディング", "Cycles"],
+            title: { en: 'Finishing & Render', jp: '仕上げとレンダー' },
+            desc: {
+               en: 'Polish materials and lighting, then render the final scene.',
+               jp: '質感設定とライティングで雰囲気を整え、レンダリングでシーンを完成させます。'
+            },
+            tools: { en: ['Shading', 'Cycles'], jp: ['シェーディング', 'Cycles'] },
             status: "locked",
             icon: Camera
          }
@@ -72,7 +120,7 @@ const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson
                   onClick={onBack}
                   className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-xs font-black uppercase tracking-widest bg-black/30 backdrop-blur-md px-4 py-2 rounded-full hover:bg-black/50"
                >
-                  <ChevronLeft size={14} /> ラボに戻る
+                  <ChevronLeft size={14} /> {t.backToLab}
                </button>
             </div>
 
@@ -101,8 +149,8 @@ const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson
                      {currentStage ? <currentStage.icon size={32} /> : <Star size={32} />}
                   </div>
                   <div>
-                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Current Mission</div>
-                     <div className="text-2xl font-black text-slate-900 tracking-tight">{currentStage?.title || "完了"}</div>
+                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t.currentMission}</div>
+                     <div className="text-2xl font-black text-slate-900 tracking-tight">{currentStage?.title[language] || t.stageCompleteFallback}</div>
                   </div>
                </div>
 
@@ -110,7 +158,7 @@ const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson
                   onClick={() => onStartLesson(currentStage?.id || 1)}
                   className="w-full md:w-auto bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-xl shadow-slate-900/20 hover:-translate-y-1 hover:shadow-2xl active:translate-y-0 uppercase tracking-widest"
                >
-                  再開 <Play size={16} fill="currentColor" />
+                  {t.resume} <Play size={16} fill="currentColor" />
                </button>
             </div>
 
@@ -148,19 +196,19 @@ const BlenderPathView: React.FC<BlenderPathViewProps> = ({ onBack, onStartLesson
                         <div className="flex-1">
                            <div className="flex justify-between items-center mb-1">
                               <h3 className={`font-black text-lg tracking-tight ${isCurrent ? 'text-slate-900' : 'text-slate-700'}`}>
-                                 {stage.title}
+                                 {stage.title[language]}
                               </h3>
                               {isCurrent && (
                                  <span className="hidden sm:inline-block text-[9px] font-black text-orange-500 uppercase tracking-[0.2em] bg-orange-50 px-3 py-1 rounded-full border border-orange-100">
-                                    進行中
+                                    {t.inProgress}
                                  </span>
                               )}
                            </div>
-                           <p className="text-sm text-slate-500 font-medium leading-relaxed">{stage.desc}</p>
+                           <p className="text-sm text-slate-500 font-medium leading-relaxed">{stage.desc[language]}</p>
                            
                            {/* Tools Tags */}
                            <div className="flex gap-2 mt-3">
-                              {stage.tools.map(tool => (
+                              {stage.tools[language].map(tool => (
                                  <span key={tool} className="text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 px-2 py-1 rounded border border-slate-100">
                                     {tool}
                                  </span>

@@ -4,6 +4,7 @@ import {
   Settings, Activity, RefreshCw, Zap
 } from 'lucide-react';
 import { ViewState } from '../../../types';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface SonicSynthViewProps {
   onBack: () => void;
@@ -72,11 +73,73 @@ const Knob = ({
 };
 
 const SonicSynthView: React.FC<SonicSynthViewProps> = ({ onBack }) => {
+  const { language } = useLanguage();
   const [waveform, setWaveform] = useState<'sine' | 'square' | 'sawtooth' | 'triangle'>('sine');
   const [frequency, setFrequency] = useState(440);
   const [cutoff, setCutoff] = useState(2000);
   const [resonance, setResonance] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const copy = {
+    en: {
+      oscillatorBank: 'Oscillator Bank A',
+      oscilloscope: 'OSCILLOSCOPE',
+      oscillator: 'Oscillator',
+      filter: 'Filter (LPF)',
+      master: 'Master',
+      pitch: 'Pitch (Hz)',
+      cutoff: 'Cutoff',
+      resonance: 'Resonance',
+      gateOpen: 'Gate Open',
+      gateClosed: 'Gate Closed',
+      timbreTitle: 'Timbre Theory',
+      waveforms: 'Waveforms',
+      waveformsDesc: 'The shape of the wave determines the fundamental character (timbre) of the sound.',
+      waveDetails: [
+        { name: 'Sine', description: 'Pure, fundamental tone. No harmonics. Whistle-like.' },
+        { name: 'Square', description: 'Hollow, woody. Used in retro games (Nintendo). Odd harmonics only.' },
+        { name: 'Saw', description: 'Bright, buzzy, sharp. Rich in all harmonics. Good for leads.' }
+      ],
+      subtractiveTitle: 'Subtractive Synthesis',
+      subtractiveDesc: 'We start with a rich waveform (like a Saw) and subtract frequencies using a Filter.',
+      tryThis: 'Try this:',
+      trySteps: [
+        'Select the Sawtooth wave.',
+        'Lower the Cutoff knob slowly.',
+        'Hear the sound get “dull” or “muffled”. That’s the filter removing high frequencies.'
+      ]
+    },
+    jp: {
+      oscillatorBank: 'オシレーターバンクA',
+      oscilloscope: 'オシロスコープ',
+      oscillator: 'オシレーター',
+      filter: 'フィルター（LPF）',
+      master: 'マスター',
+      pitch: 'ピッチ（Hz）',
+      cutoff: 'カットオフ',
+      resonance: 'レゾナンス',
+      gateOpen: 'ゲート開',
+      gateClosed: 'ゲート閉',
+      timbreTitle: '音色理論',
+      waveforms: '波形',
+      waveformsDesc: '波の形が音の基本的なキャラクター（音色）を決めます。',
+      waveDetails: [
+        { name: 'Sine', description: '純粋で基音のみ。倍音がなく、口笛のような音。' },
+        { name: 'Square', description: '中空で木質的。レトロゲームで使用。奇数次倍音のみ。' },
+        { name: 'Saw', description: '明るく鋭い。全倍音を含み、リードに最適。' }
+      ],
+      subtractiveTitle: 'サブトラクティブ・シンセシス',
+      subtractiveDesc: 'Sawのような豊かな波形から、フィルターで周波数を“引き算”します。',
+      tryThis: '試してみよう:',
+      trySteps: [
+        'Sawtooth波形を選択。',
+        'カットオフをゆっくり下げる。',
+        '音が「こもる」「丸くなる」ように変化します。高域がフィルターで削られるためです。'
+      ]
+    }
+  } as const;
+
+  const t = copy[language];
   
   // Canvas for Oscilloscope
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -166,7 +229,7 @@ const SonicSynthView: React.FC<SonicSynthViewProps> = ({ onBack }) => {
          <div className="flex items-center gap-4">
             <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:text-white transition-colors"><ArrowLeft size={20}/></button>
             <div className="flex items-center gap-2 text-cyan-400 font-mono text-sm font-bold uppercase tracking-widest">
-               <Waves size={18} /> Oscillator Bank A
+               <Waves size={18} /> {t.oscillatorBank}
             </div>
          </div>
          <div className="flex items-center gap-4">
@@ -183,7 +246,7 @@ const SonicSynthView: React.FC<SonicSynthViewProps> = ({ onBack }) => {
             {/* Visualizer Frame */}
             <div className="flex-1 bg-slate-900 border-4 border-slate-800 rounded-3xl overflow-hidden relative shadow-2xl mb-8 min-h-[300px]">
                <div className="absolute top-4 left-4 z-10 text-cyan-500 font-mono text-xs flex gap-2">
-                  <Activity size={14} /> OSCILLOSCOPE
+                  <Activity size={14} /> {t.oscilloscope}
                </div>
                <canvas ref={canvasRef} width={800} height={400} className="w-full h-full object-cover" />
             </div>
@@ -193,7 +256,7 @@ const SonicSynthView: React.FC<SonicSynthViewProps> = ({ onBack }) => {
                
                {/* Section: Oscillator */}
                <div className="flex flex-col items-center gap-6">
-                  <span className="text-xs font-bold text-slate-500 uppercase border-b border-slate-700 pb-1 w-full text-center">Oscillator</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase border-b border-slate-700 pb-1 w-full text-center">{t.oscillator}</span>
                   
                   {/* Waveform Selectors */}
                   <div className="flex gap-2">
@@ -211,7 +274,7 @@ const SonicSynthView: React.FC<SonicSynthViewProps> = ({ onBack }) => {
 
                   {/* Frequency Knob */}
                   <Knob 
-                     label="Pitch (Hz)" 
+                     label={t.pitch} 
                      value={frequency} 
                      min={50} 
                      max={1000} 
@@ -224,10 +287,10 @@ const SonicSynthView: React.FC<SonicSynthViewProps> = ({ onBack }) => {
 
                {/* Section: Filter */}
                <div className="flex flex-col items-center gap-6">
-                  <span className="text-xs font-bold text-slate-500 uppercase border-b border-slate-700 pb-1 w-full text-center">Filter (LPF)</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase border-b border-slate-700 pb-1 w-full text-center">{t.filter}</span>
                   <div className="flex gap-6">
                      <Knob 
-                        label="Cutoff" 
+                        label={t.cutoff} 
                         value={cutoff} 
                         min={100} 
                         max={5000} 
@@ -235,7 +298,7 @@ const SonicSynthView: React.FC<SonicSynthViewProps> = ({ onBack }) => {
                         color="orange"
                      />
                      <Knob 
-                        label="Resonance" 
+                        label={t.resonance} 
                         value={resonance} 
                         min={0} 
                         max={10} 
@@ -255,7 +318,7 @@ const SonicSynthView: React.FC<SonicSynthViewProps> = ({ onBack }) => {
                   >
                      {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
                   </button>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isPlaying ? "Gate Open" : "Gate Closed"}</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isPlaying ? t.gateOpen : t.gateClosed}</span>
                </div>
 
             </div>
@@ -263,40 +326,34 @@ const SonicSynthView: React.FC<SonicSynthViewProps> = ({ onBack }) => {
 
          {/* Sidebar: Lesson Content */}
          <div className="w-full lg:w-96 bg-[#0f0f0f] border-l border-slate-800 p-8 overflow-y-auto">
-            <h2 className="text-2xl font-bold text-white mb-6">Timbre Theory</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">{t.timbreTitle}</h2>
             
             <div className="space-y-8">
                <div>
-                  <h3 className="text-cyan-400 font-bold mb-2 flex items-center gap-2"><Zap size={16}/> Waveforms</h3>
+                  <h3 className="text-cyan-400 font-bold mb-2 flex items-center gap-2"><Zap size={16}/> {t.waveforms}</h3>
                   <p className="text-sm text-slate-400 leading-relaxed mb-4">
-                     The shape of the wave determines the fundamental character (timbre) of the sound.
+                     {t.waveformsDesc}
                   </p>
                   <ul className="text-sm space-y-3">
-                     <li className="flex gap-3">
-                        <span className="text-white font-bold w-16">Sine</span>
-                        <span className="text-slate-500">Pure, fundamental tone. No harmonics. Whistle-like.</span>
-                     </li>
-                     <li className="flex gap-3">
-                        <span className="text-white font-bold w-16">Square</span>
-                        <span className="text-slate-500">Hollow, woody. Used in retro games (Nintendo). Odd harmonics only.</span>
-                     </li>
-                     <li className="flex gap-3">
-                        <span className="text-white font-bold w-16">Saw</span>
-                        <span className="text-slate-500">Bright, buzzy, sharp. Rich in all harmonics. Good for leads.</span>
-                     </li>
+                     {t.waveDetails.map((wave) => (
+                        <li key={wave.name} className="flex gap-3">
+                           <span className="text-white font-bold w-16">{wave.name}</span>
+                           <span className="text-slate-500">{wave.description}</span>
+                        </li>
+                     ))}
                   </ul>
                </div>
 
                <div className="border-t border-slate-800 pt-6">
-                  <h3 className="text-orange-400 font-bold mb-2 flex items-center gap-2"><Settings size={16}/> Subtractive Synthesis</h3>
+                  <h3 className="text-orange-400 font-bold mb-2 flex items-center gap-2"><Settings size={16}/> {t.subtractiveTitle}</h3>
                   <p className="text-sm text-slate-400 leading-relaxed">
-                     We start with a rich waveform (like a Saw) and "subtract" frequencies using a Filter.
+                     {t.subtractiveDesc}
                   </p>
                   <div className="bg-slate-900 p-4 rounded-lg mt-4 border border-slate-800 text-xs text-slate-300">
-                     <strong>Try this:</strong><br/>
-                     1. Select <span className="text-white">Sawtooth</span> wave.<br/>
-                     2. Lower the <span className="text-orange-400">Cutoff</span> knob slowly.<br/>
-                     3. Hear the sound get "dull" or "muffled". That's the filter removing high frequencies.
+                     <strong>{t.tryThis}</strong><br/>
+                     1. <span className="text-white">{t.trySteps[0]}</span><br/>
+                     2. <span className="text-orange-400">{t.trySteps[1]}</span><br/>
+                     3. {t.trySteps[2]}
                   </div>
                </div>
             </div>

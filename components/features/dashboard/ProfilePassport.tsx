@@ -3,13 +3,26 @@ import {
     User, LogOut, RotateCcw
 } from 'lucide-react';
 import { ViewState } from '../../../types';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface ProfilePassportProps {
     onNavigate: (view: ViewState) => void;
 }
 
 const ProfilePassport: React.FC<ProfilePassportProps> = ({ onNavigate }) => {
+    const { language } = useLanguage();
     const [isFlipped, setIsFlipped] = useState(false);
+    const copy = {
+        en: {
+            studentId: 'Student ID',
+            identitySubtitle: 'Manage your identity and credentials.'
+        },
+        jp: {
+            studentId: '学生証',
+            identitySubtitle: '身分情報と資格を管理します。'
+        }
+    } as const;
+    const t = copy[language];
 
     // Mock User Data
     const user = {
@@ -29,8 +42,8 @@ const ProfilePassport: React.FC<ProfilePassportProps> = ({ onNavigate }) => {
 
             {/* Page Header */}
             <div className="text-center mb-12">
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight mb-2">Student ID</h1>
-                <p className="text-slate-500">Manage your identity and credentials.</p>
+                <h1 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight mb-2">{t.studentId}</h1>
+                <p className="text-slate-500">{t.identitySubtitle}</p>
             </div>
 
             {/* 3D Flip Container - Using inline styles for reliable 3D transforms */}

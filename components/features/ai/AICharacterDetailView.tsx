@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ViewState } from '../../../types';
 import { Sparkles, Brain, Zap, Heart, Anchor, ArrowLeft, CheckCircle2, XCircle, Briefcase, Users, Lightbulb, Code2, HeartHandshake, Coffee, MessageCircle, GraduationCap, AlertTriangle, Sun } from 'lucide-react';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface AICharacterDetailViewProps {
     characterId: string;
@@ -482,7 +483,8 @@ const UI_TEXT = {
 const AICharacterDetailView: React.FC<AICharacterDetailViewProps> = ({ characterId, onBack, onNavigate }) => {
     const character = CHARACTERS.find(c => c.id === characterId) || CHARACTERS[0];
     const [scrolled, setScrolled] = useState(false);
-    const [lang] = useState<Language>('ja'); // Fixed to Japanese
+    const { language } = useLanguage();
+    const lang: Language = language === 'jp' ? 'ja' : 'en';
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
