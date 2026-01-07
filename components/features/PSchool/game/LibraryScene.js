@@ -18,11 +18,11 @@ export class LibraryScene extends Phaser.Scene {
     // タイトル
     this.createTitle();
     
-    // カテゴリーメニュー
-    this.createCategoryMenu();
-    
     // ブロック一覧
     this.createBlockList();
+    
+    // カテゴリーメニュー
+    this.createCategoryMenu();
     
     // 詳細表示パネル
     this.createDetailPanel();

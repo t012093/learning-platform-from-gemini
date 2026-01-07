@@ -29,9 +29,9 @@ export class StoryScene extends Phaser.Scene {
 
   preload() {
     // 背景画像やキャラクター画像の読み込み
-    this.load.image('story_bg', 'assets/bg1.png');
-    this.load.image('character1', 'assets/main-chara.png');
-    this.load.image('character2', 'assets/srime.png');
+    this.load.image('story_bg', '/p_school/assets/bg1.png');
+    this.load.image('character1', '/p_school/assets/main-chara.png');
+    this.load.image('character2', '/p_school/assets/srime.png');
   }
 
   create() {

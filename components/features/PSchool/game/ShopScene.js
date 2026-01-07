@@ -259,6 +259,53 @@ export class ShopScene extends Phaser.Scene {
     }).setOrigin(0.5);
   }
 
+  selectItem(item) {
+    this.selectedItem = item;
+
+    if (this.detailTitle) {
+      this.detailTitle.setText(item.name);
+    }
+    if (this.detailDescription) {
+      this.detailDescription.setText(item.description);
+    }
+  }
+
+  buyItem(item) {
+    if (!item) return;
+
+    this.selectedItem = item;
+    if (this.detailTitle) {
+      this.detailTitle.setText(item.name);
+    }
+
+    if (this.playerGold < item.price) {
+      this.showPurchaseResult('ゴールドが足りません');
+      return;
+    }
+
+    this.playerGold -= item.price;
+    if (this.goldText) {
+      this.goldText.setText(`💰 ${this.playerGold} G`);
+    }
+
+    this.savePlayerGold();
+    this.showPurchaseResult(`${item.name} を購入しました`);
+  }
+
+  showPurchaseResult(message) {
+    if (!this.detailDescription) return;
+
+    const base = this.selectedItem ? this.selectedItem.description : '';
+    const text = base ? `${base}\n${message}` : message;
+    this.detailDescription.setText(text);
+  }
+
+  savePlayerGold() {
+    const savedData = JSON.parse(localStorage.getItem('codeOfRuinsPlayerData') || '{}');
+    savedData.gold = this.playerGold;
+    localStorage.setItem('codeOfRuinsPlayerData', JSON.stringify(savedData));
+  }
+
   // 実行ボタンを非表示にするヘルパーメソッド
   hideRunButton() {
     const runButton = document.getElementById('runButton');

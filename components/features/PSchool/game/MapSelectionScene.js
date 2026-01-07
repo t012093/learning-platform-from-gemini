@@ -17,7 +17,7 @@ export class MapSelectionScene extends Phaser.Scene {
 
   preload() {
     // マップ背景画像の読み込み
-    this.load.image('map_bg', 'assets/map3.jpg');
+    this.load.image('map_bg', '/p_school/assets/map3.jpg');
   }
 
   async create() {
