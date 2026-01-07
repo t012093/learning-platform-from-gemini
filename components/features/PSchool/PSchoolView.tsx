@@ -128,6 +128,27 @@ const PSchoolView: React.FC = () => {
       toolbox = `<xml xmlns="https://developers.google.com/blockly/xml" id="toolbox"></xml>`;
     }
 
+    const flyoutWidth = 520;
+    const categoryWidth = 60;
+    const flyoutMargin = 40;
+    const flyoutGap = 24;
+    const flyoutOffset = 24;
+    const toolboxWidth = flyoutWidth + categoryWidth + flyoutOffset;
+    if (Blockly?.VerticalFlyout?.prototype) {
+      Blockly.VerticalFlyout.prototype.DEFAULT_WIDTH = flyoutWidth;
+      Blockly.VerticalFlyout.prototype.CHECKBOX_MARGIN = flyoutMargin;
+      Blockly.VerticalFlyout.prototype.CHECKBOX_SPACE_X =
+        Blockly.VerticalFlyout.prototype.CHECKBOX_SIZE + 2 * flyoutMargin;
+    }
+    if (Blockly?.Flyout?.prototype) {
+      Blockly.Flyout.prototype.MARGIN = flyoutMargin;
+      Blockly.Flyout.prototype.GAP_X = flyoutGap * 3;
+      Blockly.Flyout.prototype.GAP_Y = flyoutGap;
+    }
+    if (Blockly?.Toolbox?.prototype) {
+      Blockly.Toolbox.prototype.width = toolboxWidth;
+    }
+
     // Important: In a real app, you need to point media to a valid path.
     // For now, we assume 'media/' exists in public or handle it later.
     const workspace = Blockly.inject("blocklyDiv", {
@@ -152,6 +173,35 @@ const PSchoolView: React.FC = () => {
         snap: true
       }
     });
+
+    const refreshBlocklyLayout = (ws: any) => {
+      if (!ws) return;
+      const toolbox = ws.getToolbox?.();
+      if (toolbox) {
+        toolbox.position();
+      }
+      const flyout = ws.getFlyout?.();
+      if (flyout) {
+        const flyoutWorkspace = flyout.getWorkspace?.();
+        if (flyoutWorkspace?.setScale && flyoutWorkspace.scale !== ws.scale) {
+          flyoutWorkspace.setScale(ws.scale);
+        }
+        flyout.position();
+        if (typeof flyout.reflow === 'function') {
+          flyout.reflow();
+        }
+      }
+      Blockly.svgResize(ws);
+    };
+
+    if (workspace?.getToolbox) {
+      const toolbox = workspace.getToolbox();
+      if (toolbox) {
+        toolbox.width = toolboxWidth;
+      }
+    }
+
+    refreshBlocklyLayout(workspace);
 
     workspaceRef.current = workspace;
     (window as any).blocklyWorkspace = workspace;
@@ -335,6 +385,28 @@ const PSchoolView: React.FC = () => {
         }
     }, 100);
   };
+
+  useEffect(() => {
+    if (!workspaceRef.current || !isBlocklyVisible) return;
+
+    const timer = setTimeout(() => {
+      const ws = workspaceRef.current;
+      const toolbox = ws.getToolbox?.();
+      if (toolbox) {
+        toolbox.position();
+      }
+      const flyout = ws.getFlyout?.();
+      if (flyout) {
+        flyout.position();
+        if (typeof flyout.reflow === 'function') {
+          flyout.reflow();
+        }
+      }
+      Blockly.svgResize(ws);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [isBlocklyVisible, isFullscreen]);
 
   const toggleFullscreen = () => {
       setIsFullscreen(!isFullscreen);

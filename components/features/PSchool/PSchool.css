@@ -23,13 +23,15 @@
   border-radius: 8px 0 0 8px !important;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   transition: background-color 0.2s, transform 0.1s;
+  width: 60px !important;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .blocklyFlyout {
   background: rgba(255, 255, 255, 0.7) !important;
   backdrop-filter: blur(8px) !important;
   scroll-behavior: smooth;
-  transform: translate(80px, 0px) !important; /* フライアウト領域を右にずらす */
 }
 
 .blocklyWorkspace {
@@ -99,7 +101,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 50%; /* Default width */
+  width: min(100%, calc(50% + 370px)); /* Keep workspace width after flyout expansion */
   height: 100%;
   background-color: transparent;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease !important;
@@ -131,6 +133,14 @@
 
 #blocklyDiv svg {
   background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.scratchCategoryMenuItemLabel {
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 /* Blocklyワークスペースの背景を透明に */

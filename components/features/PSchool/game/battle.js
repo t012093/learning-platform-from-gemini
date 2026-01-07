@@ -150,8 +150,8 @@ export class BattleScene extends Phaser.Scene {
       const blocklyDiv = document.getElementById('blocklyDiv');
       if (blocklyDiv) {
         console.log("Found blocklyDiv, applying styles");
-        blocklyDiv.style.width = Math.min(this.scale.width * 0.6875, 550) + 'px'; // レスポンシブだが最大550px
-        blocklyDiv.style.height = Math.min(this.scale.height, 600) + 'px'; // レスポンシブだが最大600px
+        blocklyDiv.style.width = '100%';
+        blocklyDiv.style.height = '100%';
         blocklyDiv.style.position = 'relative';
         blocklyDiv.style.display = 'block';
         blocklyDiv.style.visibility = 'visible';
