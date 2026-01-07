@@ -1,0 +1,1202 @@
+﻿import Blockly from 'scratch-blocks';
+
+export class VariableEditor {
+  constructor() {
+    this.variables = new Map();
+    this.lists = new Map();
+    this.functions = new Map();
+    this.functionPreviews = new Map();
+    
+    this.registerFunctionBlocks();
+    
+    this.editorElement = document.getElementById('variable-editor');
+    this.setupEventListeners();
+    this.loadFromLocalStorage();
+  }
+  
+  registerFunctionBlocks() {
+    // ブロック定義はblocks.jsで行うため、ここでは何もしない
+    // custom_function_placeholderブロックはblocks.jsで定義されています
+    console.log('✓ Function blocks registration skipped (defined in blocks.js)');
+  }
+  
+  setupEventListeners() {
+    // エディターの開閉
+    const toggleBtn = document.getElementById('variable-editor-toggle');
+    const closeBtn = document.getElementById('close-variable-editor');
+    
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => this.toggle());
+    }
+    
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.close());
+    }
+    
+    // タブ切り替え
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tabName = e.target.dataset.tab;
+        this.switchTab(tabName);
+      });
+    });
+    
+    // 変数作成
+    const createVarBtn = document.getElementById('create-variable-btn');
+    if (createVarBtn) {
+      createVarBtn.addEventListener('click', () => this.createVariable());
+    }
+    
+    // リスト作成
+    const createListBtn = document.getElementById('create-list-btn');
+    if (createListBtn) {
+      createListBtn.addEventListener('click', () => this.createList());
+    }
+    
+    // 関数作成
+    const createFunctionBtn = document.getElementById('create-function-btn');
+    if (createFunctionBtn) {
+      createFunctionBtn.addEventListener('click', () => this.createFunction());
+    }
+  }
+  
+  toggle() {
+    this.editorElement.classList.toggle('hidden');
+  }
+  
+  open() {
+    this.editorElement.classList.remove('hidden');
+  }
+  
+  close() {
+    this.editorElement.classList.add('hidden');
+  }
+  
+  switchTab(tabName) {
+    // タブボタンのアクティブ状態を更新
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.tab === tabName) {
+        btn.classList.add('active');
+      }
+    });
+    
+    // タブコンテンツの表示を更新
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+  }
+  
+  createVariable() {
+    const nameInput = document.getElementById('new-variable-name');
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+      alert('変数名を入力してください');
+      return;
+    }
+    
+    if (this.variables.has(name)) {
+      alert('この変数名は既に存在します');
+      return;
+    }
+    
+    this.variables.set(name, {
+      name: name,
+      type: 'variable',
+      value: null,
+      createdAt: new Date().toISOString()
+    });
+    
+    nameInput.value = '';
+    this.updateVariablesList();
+    this.saveToLocalStorage();
+    this.updateBlocklyToolbox();
+    
+    console.log(`Variable created: ${name}`);
+  }
+  
+  createList() {
+    const nameInput = document.getElementById('new-list-name');
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+      alert('リスト名を入力してください');
+      return;
+    }
+    
+    if (this.lists.has(name)) {
+      alert('このリスト名は既に存在します');
+      return;
+    }
+    
+    this.lists.set(name, {
+      name: name,
+      type: 'list',
+      items: [],
+      createdAt: new Date().toISOString()
+    });
+    
+    nameInput.value = '';
+    this.updateListsList();
+    this.saveToLocalStorage();
+    this.updateBlocklyToolbox();
+    
+    console.log(`List created: ${name}`);
+  }
+  
+  createFunction() {
+    const nameInput = document.getElementById('new-function-name');
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+      alert('関数名を入力してください');
+      return;
+    }
+    
+    if (this.functions.has(name)) {
+      alert('この関数名は既に存在します');
+      return;
+    }
+    
+    this.functions.set(name, {
+      name: name,
+      type: 'function',
+      parameters: [],
+      blocksXml: null,
+      blocksAst: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+    
+    nameInput.value = '';
+    this.updateFunctionsList();
+    this.saveToLocalStorage();
+    this.updateBlocklyToolbox();
+    
+    console.log(`Function created: ${name}`);
+  }
+  
+  deleteVariable(name) {
+    if (confirm(`変数「${name}」を削除しますか?`)) {
+      this.variables.delete(name);
+      this.updateVariablesList();
+      this.saveToLocalStorage();
+      this.updateBlocklyToolbox();
+    }
+  }
+  
+  deleteList(name) {
+    if (confirm(`リスト「${name}」を削除しますか?`)) {
+      this.lists.delete(name);
+      this.updateListsList();
+      this.saveToLocalStorage();
+      this.updateBlocklyToolbox();
+    }
+  }
+  
+  deleteFunction(name) {
+    if (confirm(`関数「${name}」を削除しますか?`)) {
+      this.functions.delete(name);
+      this.updateFunctionsList();
+      this.saveToLocalStorage();
+      this.updateBlocklyToolbox();
+    }
+  }
+  
+  disposeFunctionPreviews() {
+    this.functionPreviews.forEach(preview => {
+      try {
+        if (preview && preview.workspace && typeof preview.workspace.dispose === 'function') {
+          preview.workspace.dispose();
+        }
+      } catch (error) {
+        console.warn('Failed to dispose preview workspace:', error);
+      }
+      if (preview && preview.container) {
+        preview.container.innerHTML = '';
+      }
+    });
+    this.functionPreviews.clear();
+  }
+  
+  disposeFunctionPreview(name) {
+    const preview = this.functionPreviews.get(name);
+    if (preview) {
+      try {
+        if (preview.workspace && typeof preview.workspace.dispose === 'function') {
+          preview.workspace.dispose();
+        }
+      } catch (error) {
+        console.warn('Failed to dispose preview workspace:', error);
+      }
+      if (preview.container) {
+        preview.container.innerHTML = '';
+      }
+      this.functionPreviews.delete(name);
+    }
+  }
+  
+  normalizeAst(ast) {
+    if (!ast) {
+      return [];
+    }
+    
+    // 配列の場合、各要素を正規化
+    if (Array.isArray(ast)) {
+      return ast.map(item => this.normalizeAst(item)).filter(item => item !== null && item !== undefined);
+    }
+    
+    // オブジェクトの場合
+    if (typeof ast === 'object') {
+      const normalized = {};
+      
+      // 特殊なASTノードタイプの処理
+      if (ast.type) {
+        normalized.type = ast.type;
+      }
+      
+      // すべてのプロパティを再帰的に正規化
+      Object.keys(ast).forEach(key => {
+        const value = ast[key];
+        
+        // undefinedやnullはスキップ
+        if (value === undefined || value === null) {
+          return;
+        }
+        
+        // 関数はスキップ
+        if (typeof value === 'function') {
+          return;
+        }
+        
+        // ネストしたオブジェクト・配列を再帰的に処理
+        if (typeof value === 'object' || Array.isArray(value)) {
+          const normalizedValue = this.normalizeAst(value);
+          if (normalizedValue !== null && normalizedValue !== undefined) {
+            normalized[key] = normalizedValue;
+          }
+        } else {
+          normalized[key] = value;
+        }
+      });
+      
+      return normalized;
+    }
+    
+    // プリミティブ値はそのまま返す
+    return ast;
+  }
+  
+  editFunction(name) {
+    const func = this.functions.get(name);
+    if (!func) {
+      alert('選択された関数が見つかりません');
+      return;
+    }
+    
+    const newNameInput = prompt('関数名を編集', func.name || name);
+    if (newNameInput === null) {
+      return;
+    }
+    
+    const newName = newNameInput.trim();
+    if (!newName) {
+      alert('関数名を空にはできません');
+      return;
+    }
+    
+    if (newName !== name && this.functions.has(newName)) {
+      alert('同じ名前の関数が既に存在します');
+      return;
+    }
+    
+    const currentParams = Array.isArray(func.parameters) ? func.parameters : [];
+    const paramsInput = prompt('引数名をカンマ区切りで入力（例: x, y）', currentParams.join(', '));
+    let parameters = currentParams;
+    if (paramsInput !== null) {
+      parameters = paramsInput
+        .split(',')
+        .map(param => param.trim())
+        .filter(param => param.length > 0);
+    }
+    
+    const updatedFunction = {
+      ...func,
+      name: newName,
+      parameters,
+      updatedAt: new Date().toISOString()
+    };
+    
+    if (newName !== name) {
+      this.functions.delete(name);
+    }
+    this.functions.set(newName, updatedFunction);
+    
+    this.updateFunctionsList();
+    this.saveToLocalStorage();
+    this.updateBlocklyToolbox();
+    
+    console.log(`Function updated: ${newName}`, updatedFunction);
+  }
+  
+  saveFunctionLogic(name) {
+    const func = this.functions.get(name);
+    if (!func) {
+      alert('Selected function not found');
+      return;
+    }
+
+    if (!window.workspace || !Blockly) {
+      alert('Blocklyワークスペースが見つかりませんでした');
+      return;
+    }
+
+    let selectedBlock = null;
+    if (window.workspace && typeof window.workspace.getSelected === 'function') {
+      selectedBlock = window.workspace.getSelected();
+    }
+    if (!selectedBlock && typeof Blockly !== 'undefined' && Blockly.selected) {
+      selectedBlock = Blockly.selected;
+    }
+    if (!selectedBlock) {
+      alert('Select a block to save');
+      return;
+    }
+
+    const rootBlock = selectedBlock.getRootBlock ? selectedBlock.getRootBlock() : selectedBlock;
+    const blockDom = Blockly.Xml.blockToDom(rootBlock, true);
+    const wrapper = document.createElement('xml');
+    wrapper.appendChild(blockDom);
+    const serializer = new XMLSerializer();
+    const xmlString = serializer.serializeToString(wrapper);
+
+    let astClone = [];
+    console.log(`📝 Saving function logic for: ${name}`);
+    console.log('  ├─ XML length:', xmlString.length);
+    console.log('  ├─ Root block type:', rootBlock.type);
+    
+    if (typeof window.blockToAST === 'function') {
+      try {
+        console.log('  ├─ Converting to AST...');
+        const astRaw = window.blockToAST(rootBlock);
+        console.log('  ├─ Raw AST:', JSON.stringify(astRaw).substring(0, 200));
+        console.log('  ├─ Raw AST is array:', Array.isArray(astRaw));
+        
+        const normalized = this.normalizeAst(astRaw);
+        console.log('  ├─ Normalized AST:', JSON.stringify(normalized).substring(0, 200));
+        console.log('  ├─ Normalized AST is array:', Array.isArray(normalized));
+        
+        // ASTが配列でない場合は配列化（blockToASTは単一オブジェクトを返すことがある）
+        const normalizedArray = Array.isArray(normalized) ? normalized : [normalized];
+        astClone = JSON.parse(JSON.stringify(normalizedArray));
+        console.log('  ├─ AST saved successfully, length:', astClone.length);
+      } catch (error) {
+        console.error('  ├─ ❌ Failed to convert function logic to AST:', error);
+        console.error('  └─ Error stack:', error.stack);
+      }
+    } else {
+      console.warn('  └─ ⚠️ window.blockToAST function not available');
+    }
+
+    const updatedFunction = {
+      ...func,
+      blocksXml: xmlString,
+      blocksAst: astClone,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.functions.set(name, updatedFunction);
+    console.log('  ├─ Function data structure:', {
+      hasXml: !!updatedFunction.blocksXml,
+      hasAst: !!updatedFunction.blocksAst,
+      astLength: updatedFunction.blocksAst?.length || 0,
+      parameters: updatedFunction.parameters
+    });
+    
+    this.updateFunctionsList();
+    this.saveToLocalStorage();
+    this.updateBlocklyToolbox();
+
+    console.log(`✅ Function logic saved successfully for: ${name}`);
+  }
+
+  insertFunctionLogic(name) {
+    if (!window.workspace || !Blockly) {
+      alert('Blocklyワークスペースが見つかりませんでした');
+      return;
+    }
+
+    const metrics = typeof window.workspace.getMetrics === 'function'
+      ? window.workspace.getMetrics()
+      : null;
+    const position = metrics
+      ? {
+          x: metrics.viewLeft + metrics.viewWidth / 2,
+          y: metrics.viewTop + metrics.viewHeight / 2
+        }
+      : null;
+
+    const inserted = this.appendFunctionLogic(name, window.workspace, position);
+    if (!inserted || inserted.length === 0) {
+      alert('この関数には保存されたロジックがありません');
+    } else {
+      console.log(`Function logic inserted for: ${name}`);
+    }
+  }
+
+  updateVariablesList() {
+    const listElement = document.getElementById('variables-list');
+    listElement.innerHTML = '';
+    
+    if (this.variables.size === 0) {
+      listElement.innerHTML = '<p style="color: #999;">変数はまだありません</p>';
+      return;
+    }
+    
+    this.variables.forEach((variable, name) => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'item';
+      itemDiv.innerHTML = `
+        <span class="item-name">📊 ${name}</span>
+        <div class="item-actions">
+          <button class="delete-btn" data-name="${name}">削除</button>
+        </div>
+      `;
+      
+      itemDiv.querySelector('.delete-btn').addEventListener('click', (e) => {
+        this.deleteVariable(e.target.dataset.name);
+      });
+      
+      listElement.appendChild(itemDiv);
+    });
+  }
+  
+  updateListsList() {
+    const listElement = document.getElementById('lists-list');
+    listElement.innerHTML = '';
+    
+    if (this.lists.size === 0) {
+      listElement.innerHTML = '<p style="color: #999;">リストの中身がありません</p>';
+      return;
+    }
+    
+    this.lists.forEach((list, name) => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'item';
+      itemDiv.innerHTML = `
+        <span class="item-name">📋 ${name}</span>
+        <div class="item-actions">
+          <button class="delete-btn" data-name="${name}">削除</button>
+        </div>
+      `;
+      
+      itemDiv.querySelector('.delete-btn').addEventListener('click', (e) => {
+        this.deleteList(e.target.dataset.name);
+      });
+      
+      listElement.appendChild(itemDiv);
+    });
+  }
+  
+  updateFunctionsList() {
+    const listElement = document.getElementById('functions-list');
+    this.disposeFunctionPreviews();
+    listElement.innerHTML = '';
+    
+    if (this.functions.size === 0) {
+      listElement.innerHTML = '<p style="color: #999;">関数はまだありません</p>';
+      return;
+    }
+    
+    this.functions.forEach((func, name) => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'item';
+      const parameterLabel = Array.isArray(func.parameters) && func.parameters.length > 0
+        ? `（引数: ${func.parameters.join(', ')}）`
+        : '';
+      const logicStatus = func.blocksXml ? '✓' : '';
+      itemDiv.innerHTML = `
+        <span class="item-name">⚙ ${name}${parameterLabel} ${logicStatus}</span>
+        <div class="item-actions">
+          <button class="save-logic-btn" data-name="${name}">ロジック保存</button>
+          <button class="view-logic-btn" data-name="${name}" title="保存したロジックのプレビューを表示します">プレビューを表示</button>
+          <button class="insert-logic-btn" data-name="${name}" title="保存したロジックをBlocklyワークスペースに挿入します">ワークスペースに挿入</button>
+          <button class="edit-btn" data-name="${name}">編集</button>
+          <button class="delete-btn" data-name="${name}">削除</button>
+        </div>
+      `;
+      
+      const previewContainer = document.createElement('div');
+      previewContainer.className = 'function-preview-container';
+      previewContainer.style.display = 'none';
+      previewContainer.style.marginTop = '8px';
+      itemDiv.appendChild(previewContainer);
+      
+      itemDiv.querySelector('.delete-btn').addEventListener('click', (e) => {
+        this.deleteFunction(e.target.dataset.name);
+      });
+      
+      itemDiv.querySelector('.edit-btn').addEventListener('click', (e) => {
+        this.editFunction(e.target.dataset.name);
+      });
+      
+      itemDiv.querySelector('.save-logic-btn').addEventListener('click', (e) => {
+        this.saveFunctionLogic(e.target.dataset.name);
+      });
+      
+      itemDiv.querySelector('.view-logic-btn').addEventListener('click', (e) => {
+        this.toggleFunctionPreview(e.target.dataset.name, previewContainer);
+      });
+      
+      itemDiv.querySelector('.insert-logic-btn').addEventListener('click', (e) => {
+        this.insertFunctionLogic(e.target.dataset.name);
+      });
+      
+      listElement.appendChild(itemDiv);
+    });
+  }
+  
+  toggleFunctionPreview(name, container) {
+    const logicXml = this.getFunctionLogic(name);
+    const isVisible = container.style.display === 'block';
+    if (isVisible) {
+      container.style.display = 'none';
+      this.disposeFunctionPreview(name);
+      return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = '';
+    
+    if (!logicXml) {
+      container.innerHTML = '<p style="color: #999;">ロジックが保存されていません</p>';
+      return;
+    }
+    
+    const previewWrapper = document.createElement('div');
+    previewWrapper.className = 'function-preview-workspace';
+    previewWrapper.style.width = '100%';
+    previewWrapper.style.height = '240px';
+    previewWrapper.style.border = '1px solid rgba(255,255,255,0.2)';
+    previewWrapper.style.background = 'rgba(0,0,0,0.15)';
+    container.appendChild(previewWrapper);
+    
+    try {
+      // Create a minimal toolbox for the preview workspace
+      const minimalToolbox = '<xml></xml>';
+      
+      const previewWorkspace = Blockly.inject(previewWrapper, {
+        readOnly: true,
+        scrollbars: true,
+        collapse: false,
+        disable: false,
+        comments: false,
+        sounds: false,
+        toolbox: minimalToolbox,
+        media: 'https://unpkg.com/scratch-blocks@0.1.0-prerelease.20220222132133/media/',
+        zoom: {
+          controls: true,
+          wheel: true,
+          startScale: 0.8,
+          maxScale: 3,
+          minScale: 0.3,
+          scaleSpeed: 1.2
+        }
+      });
+      
+      // XMLをパース
+      const xmlDom = Blockly.Xml.textToDom(logicXml);
+      let containerDom = xmlDom.documentElement ? xmlDom.documentElement : xmlDom;
+      let xmlRoot;
+      
+      // xmlタグで囲まれていない場合は囲む
+      if (containerDom.nodeName.toLowerCase() === 'xml') {
+        xmlRoot = containerDom.cloneNode(true);
+      } else {
+        xmlRoot = document.createElement('xml');
+        xmlRoot.appendChild(containerDom.cloneNode(true));
+      }
+      
+      // ワークスペースをクリアしてからブロックを追加
+      previewWorkspace.clear();
+      
+      if (Blockly.Xml.appendDomToWorkspace) {
+        Blockly.Xml.appendDomToWorkspace(xmlRoot, previewWorkspace);
+      } else {
+        Blockly.Xml.domToWorkspace(xmlRoot, previewWorkspace);
+      }
+      
+      // ズームを調整（setTimeoutを使用）
+      setTimeout(() => {
+        try {
+          if (previewWorkspace && typeof previewWorkspace.zoomToFit === 'function') {
+            previewWorkspace.zoomToFit();
+          }
+        } catch (e) {
+          console.warn('Could not zoom to fit:', e);
+        }
+      }, 100);
+      
+      this.functionPreviews.set(name, { workspace: previewWorkspace, container });
+    } catch (error) {
+      console.error('❌ Failed to render function preview:', error);
+      console.error('   Error message:', error.message);
+      console.error('   Error stack:', error.stack);
+      console.error('   XML content length:', logicXml?.length || 0);
+      console.error('   XML content preview:', logicXml?.substring(0, 200) || 'N/A');
+      
+      const errorDetails = `
+        <p style="color: #f88; margin: 10px 0;">⚠️ ロジックの読み込みに失敗しました</p>
+        <div style="color: #999; font-size: 11px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px;">
+          <div><strong>エラー:</strong> ${error.message}</div>
+          <div style="margin-top: 5px;"><strong>XML長:</strong> ${logicXml?.length || 0} 文字</div>
+          <div style="margin-top: 5px; font-size: 10px; opacity: 0.7;">詳細はコンソールを確認してください</div>
+        </div>
+      `;
+      container.innerHTML = errorDetails;
+    }
+  }
+
+  updateBlocklyToolbox() {
+
+    if (window.workspace) {
+      console.log('Updating Blockly toolbox with custom variables/lists/functions');
+
+      // カスタム変数のリストを更新
+      window.customVariables = Array.from(this.variables.keys());
+      window.customLists = Array.from(this.lists.keys());
+      window.customFunctions = Array.from(this.functions.keys());
+
+      // Blocklyのツールボックスを更新
+      try {
+        this.regenerateToolbox();
+      } catch (e) {
+        console.error('Failed to regenerate toolbox:', e);
+      }
+    }
+  }
+  
+  regenerateToolbox() {
+    console.log('🔄 regenerateToolbox() called');
+    const workspace = window.workspace;
+    if (!workspace) {
+      console.error('⚠️ Blockly workspace not found');
+      return;
+    }
+    console.log('✓ Workspace found:', workspace);
+    
+    // 元のツールボックスXMLを取得
+    let originalToolboxXml = window.originalToolboxXml;
+    if (!originalToolboxXml) {
+      console.error('⚠️ Original toolbox XML not found in window.originalToolboxXml');
+      return;
+    }
+    console.log('✓ Original toolbox XML string found, length:', originalToolboxXml.length);
+    
+    // XMLをパース
+    const parser = new DOMParser();
+    const toolboxDoc = parser.parseFromString(originalToolboxXml, 'text/xml');
+    const toolboxElement = toolboxDoc.documentElement;
+    
+    console.log('✓ Parsed toolbox:', toolboxElement);
+    console.log('   Number of categories:', toolboxElement.children.length);
+
+    // カスタム変数/リスト/関数の既存カテゴリを取得
+    const existingCustomVar = toolboxElement.querySelector('category[name="カスタム変数"]');
+    const existingCustomList = toolboxElement.querySelector('category[name="カスタムリスト"]');
+    const existingCustomFunction = toolboxElement.querySelector('category[name="カスタム関数"]');
+    if (existingCustomVar) {
+      existingCustomVar.remove();
+      console.log('🔄 Removed existing custom variables category');
+    }
+    if (existingCustomList) {
+      existingCustomList.remove();
+      console.log('🔄 Removed existing custom lists category');
+    }
+    if (existingCustomFunction) {
+      existingCustomFunction.remove();
+      console.log('🔄 Removed existing custom functions category');
+    }
+
+    // カスタム変数を追加
+    console.log('🔄 Adding custom variables. Count:', this.variables.size);
+    const customVarCategory = toolboxDoc.createElement('category');
+    customVarCategory.setAttribute('name', 'カスタム変数');
+    customVarCategory.setAttribute('id', 'custom_variables');
+    customVarCategory.setAttribute('colour', '#AA55FF');
+    customVarCategory.setAttribute('secondaryColour', '#CC77FF');
+    customVarCategory.setAttribute('tertiaryColour', '#8833EE');
+    
+    // Add system variables from the current game scene to the custom variables category
+    const systemVariables = [];
+    if (window.game && window.game.scene && window.game.scene.scenes[0]) {
+      const currentScene = window.game.scene.scenes[0];
+      if (currentScene.customVariables) {
+        Object.keys(currentScene.customVariables).forEach(varName => {
+          systemVariables.push(varName);
+          console.log('  🔄 System variable found:', varName);
+        });
+      }
+    }
+
+    // カスタムリストを追加
+    systemVariables.forEach(varName => {
+      console.log('  Adding system variable blocks for:', varName);
+      // 変数取得ブロック（システム変数は取得のみ）
+      const getBlock = toolboxDoc.createElement('block');
+      getBlock.setAttribute('type', 'custom_variable_get');
+      
+      // mutationタグを使って変数名を保持
+      const mutation = toolboxDoc.createElement('mutation');
+      mutation.setAttribute('var_name', varName);
+      getBlock.appendChild(mutation);
+      
+      const getField = toolboxDoc.createElement('field');
+      getField.setAttribute('name', 'VAR_NAME');
+      getField.textContent = varName;
+      getBlock.appendChild(getField);
+      customVarCategory.appendChild(getBlock);
+    });
+    
+    // デフォルトのテンプレートブロックを追加（変数が0個の場合）
+    if (this.variables.size === 0 && systemVariables.length === 0) {
+      // 変数取得ブロック（テンプレート）
+      const getBlock = toolboxDoc.createElement('block');
+      getBlock.setAttribute('type', 'custom_variable_get');
+      const getField = toolboxDoc.createElement('field');
+      getField.setAttribute('name', 'VAR_NAME');
+      getField.textContent = '変数名';
+      getBlock.appendChild(getField);
+      customVarCategory.appendChild(getBlock);
+      
+      // 変数設定ブロック（テンプレート）
+      const setBlock = toolboxDoc.createElement('block');
+      setBlock.setAttribute('type', 'custom_variable_set');
+      const setField = toolboxDoc.createElement('field');
+      setField.setAttribute('name', 'VAR_NAME');
+      setField.textContent = '変数名';
+      setBlock.appendChild(setField);
+      
+      // Add a shadow block for the VALUE input field in the variable set block
+      const valueInput = toolboxDoc.createElement('value');
+      valueInput.setAttribute('name', 'VALUE');
+      const textShadow = toolboxDoc.createElement('shadow');
+      textShadow.setAttribute('type', 'text');
+      const textField = toolboxDoc.createElement('field');
+      textField.setAttribute('name', 'TEXT');
+      textField.textContent = '';
+      textShadow.appendChild(textField);
+      valueInput.appendChild(textShadow);
+      setBlock.appendChild(valueInput);
+      
+      customVarCategory.appendChild(setBlock);
+    }
+    
+    // 作成済みの変数ブロックを追加
+    this.variables.forEach((variable, name) => {
+      console.log('  Adding variable blocks for:', name);
+      // 変数取得ブロック
+      const getBlock = toolboxDoc.createElement('block');
+      getBlock.setAttribute('type', 'custom_variable_get');
+      
+      // mutationタグを使って変数名を保持
+      const getMutation = toolboxDoc.createElement('mutation');
+      getMutation.setAttribute('var_name', name);
+      getBlock.appendChild(getMutation);
+      
+      const getField = toolboxDoc.createElement('field');
+      getField.setAttribute('name', 'VAR_NAME');
+      getField.textContent = name;
+      getBlock.appendChild(getField);
+      customVarCategory.appendChild(getBlock);
+      
+      // 変数設定ブロック
+      const setBlock = toolboxDoc.createElement('block');
+      setBlock.setAttribute('type', 'custom_variable_set');
+      
+      // mutationタグを使って変数名を保持
+      const setMutation = toolboxDoc.createElement('mutation');
+      setMutation.setAttribute('var_name', name);
+      setBlock.appendChild(setMutation);
+      
+      const setField = toolboxDoc.createElement('field');
+      setField.setAttribute('name', 'VAR_NAME');
+      setField.textContent = name;
+      setBlock.appendChild(setField);
+      
+      // Add a shadow block for the VALUE input field in the variable set block
+      const valueInput = toolboxDoc.createElement('value');
+      valueInput.setAttribute('name', 'VALUE');
+      const textShadow = toolboxDoc.createElement('shadow');
+      textShadow.setAttribute('type', 'text');
+      const textField = toolboxDoc.createElement('field');
+      textField.setAttribute('name', 'TEXT');
+      textField.textContent = '';
+      textShadow.appendChild(textField);
+      valueInput.appendChild(textShadow);
+      setBlock.appendChild(valueInput);
+      
+      customVarCategory.appendChild(setBlock);
+    });
+    
+    toolboxElement.appendChild(customVarCategory);
+    
+    // カスタムリストをツールボックスに追加
+    console.log('���Adding custom lists. Count:', this.lists.size);
+    const customListCategory = toolboxDoc.createElement('category');
+    customListCategory.setAttribute('name', 'リスト');
+    customListCategory.setAttribute('id', 'custom_lists');
+    customListCategory.setAttribute('colour', '#FF6680');
+    customListCategory.setAttribute('secondaryColour', '#FF8899');
+    customListCategory.setAttribute('tertiaryColour', '#EE5570');
+    
+    // リストが0個の場合のテンプレートブロックを追加
+    if (this.lists.size === 0) {
+      // Add a block to get an item from the list (template block if no lists exist)
+      const getBlock = toolboxDoc.createElement('block');
+      getBlock.setAttribute('type', 'custom_list_get');
+      const getField = toolboxDoc.createElement('field');
+      getField.setAttribute('name', 'LIST_NAME');
+      getField.textContent = 'リスト名';
+      getBlock.appendChild(getField);
+      
+      // Add a shadow block for the INDEX input field in the list get block
+      const indexValue = toolboxDoc.createElement('value');
+      indexValue.setAttribute('name', 'INDEX');
+      const shadowBlock = toolboxDoc.createElement('shadow');
+      shadowBlock.setAttribute('type', 'math_number');
+      const numField = toolboxDoc.createElement('field');
+      numField.setAttribute('name', 'NUM');
+      numField.textContent = '0';
+      shadowBlock.appendChild(numField);
+      indexValue.appendChild(shadowBlock);
+      getBlock.appendChild(indexValue);
+      
+      customListCategory.appendChild(getBlock);
+      
+      // リストにアイテムを追加するブロック
+      const addBlock = toolboxDoc.createElement('block');
+      addBlock.setAttribute('type', 'custom_list_add');
+      const addField = toolboxDoc.createElement('field');
+      addField.setAttribute('name', 'LIST_NAME');
+      addField.textContent = 'リスト名';
+      addBlock.appendChild(addField);
+      
+      // Add a shadow block for the ITEM input field in the list add block (template block if no lists exist)
+      const itemValue = toolboxDoc.createElement('value');
+      itemValue.setAttribute('name', 'ITEM');
+      const itemShadow = toolboxDoc.createElement('shadow');
+      itemShadow.setAttribute('type', 'text');
+      const itemField = toolboxDoc.createElement('field');
+      itemField.setAttribute('name', 'TEXT');
+      itemField.textContent = '';
+      itemShadow.appendChild(itemField);
+      itemValue.appendChild(itemShadow);
+      addBlock.appendChild(itemValue);
+      
+      customListCategory.appendChild(addBlock);
+      
+      // リストの長さを取得するブロック（テンプレート）
+      const lengthBlock = toolboxDoc.createElement('block');
+      lengthBlock.setAttribute('type', 'custom_list_length');
+      const lengthField = toolboxDoc.createElement('field');
+      lengthField.setAttribute('name', 'LIST_NAME');
+      lengthField.textContent = 'リスト名';
+      lengthBlock.appendChild(lengthField);
+      customListCategory.appendChild(lengthBlock);
+    }
+    
+    // リストのブロックを追加
+    this.lists.forEach((list, name) => {
+      console.log('  Adding list blocks for:', name);
+      // リストからアイテムを取得するブロックを追加
+      const getBlock = toolboxDoc.createElement('block');
+      getBlock.setAttribute('type', 'custom_list_get');
+      
+      // Use mutation tag to store the list name
+      const getMutation = toolboxDoc.createElement('mutation');
+      getMutation.setAttribute('list_name', name);
+      getBlock.appendChild(getMutation);
+      
+      const getField = toolboxDoc.createElement('field');
+      getField.setAttribute('name', 'LIST_NAME');
+      getField.textContent = name;
+      getBlock.appendChild(getField);
+      
+      // INDEX縺�E�shadow block・域�E蛟､蜈･蜉幢�E�峨�E�霑�E�蜉
+      const indexValue = toolboxDoc.createElement('value');
+      indexValue.setAttribute('name', 'INDEX');
+      const shadowBlock = toolboxDoc.createElement('shadow');
+      shadowBlock.setAttribute('type', 'math_number');
+      const numField = toolboxDoc.createElement('field');
+      numField.setAttribute('name', 'NUM');
+      numField.textContent = '0';
+      shadowBlock.appendChild(numField);
+      indexValue.appendChild(shadowBlock);
+      getBlock.appendChild(indexValue);
+      
+      customListCategory.appendChild(getBlock);
+      
+      // 繝ｪ繧�E�繝郁�E��E�蜉繝悶Ο繝�EぁE
+      const addBlock = toolboxDoc.createElement('block');
+      addBlock.setAttribute('type', 'custom_list_add');
+      
+      // mutation繧�E�繧�E�繧剁E���E�縺�E�縺�E�繝ｪ繧�E�繝亥錐繧剁E��晏ｭ・
+      const addMutation = toolboxDoc.createElement('mutation');
+      addMutation.setAttribute('list_name', name);
+      addBlock.appendChild(addMutation);
+      
+      const addField = toolboxDoc.createElement('field');
+      addField.setAttribute('name', 'LIST_NAME');
+      addField.textContent = name;
+      addBlock.appendChild(addField);
+      
+      // ITEM縺�E�shadow block・医ユ繧�E�繧�E�繝亥・蜉幢�E�峨�E�霑�E�蜉
+      const itemValue = toolboxDoc.createElement('value');
+      itemValue.setAttribute('name', 'ITEM');
+      const itemShadow = toolboxDoc.createElement('shadow');
+      itemShadow.setAttribute('type', 'text');
+      const itemField = toolboxDoc.createElement('field');
+      itemField.setAttribute('name', 'TEXT');
+      itemField.textContent = '';
+      itemShadow.appendChild(itemField);
+      itemValue.appendChild(itemShadow);
+      addBlock.appendChild(itemValue);
+      
+      customListCategory.appendChild(addBlock);
+      
+      // リスト長さブロック
+      const lengthBlock = toolboxDoc.createElement('block');
+      lengthBlock.setAttribute('type', 'custom_list_length');
+      
+      // mutationタグを使ってリスト名を保持
+      const lengthMutation = toolboxDoc.createElement('mutation');
+      lengthMutation.setAttribute('list_name', name);
+      lengthBlock.appendChild(lengthMutation);
+      
+      const lengthField = toolboxDoc.createElement('field');
+      lengthField.setAttribute('name', 'LIST_NAME');
+      lengthField.textContent = name;
+      lengthBlock.appendChild(lengthField);
+      customListCategory.appendChild(lengthBlock);
+    });
+    
+    toolboxElement.appendChild(customListCategory);
+    
+    console.log('🔄 Adding custom functions. Count:', this.functions.size);
+    const customFunctionCategory = toolboxDoc.createElement('category');
+    customFunctionCategory.setAttribute('name', '関数');
+    customFunctionCategory.setAttribute('id', 'custom_functions');
+    customFunctionCategory.setAttribute('colour', '#4B86FF');
+    customFunctionCategory.setAttribute('secondaryColour', '#6C9CFF');
+    customFunctionCategory.setAttribute('tertiaryColour', '#2E61C9');
+    
+    if (this.functions.size === 0) {
+      const infoLabel = toolboxDoc.createElement('label');
+      infoLabel.setAttribute('text', '保存済みの関数はまだありません');
+      infoLabel.setAttribute('web-class', 'boldtext');
+      customFunctionCategory.appendChild(infoLabel);
+    }
+    
+    this.functions.forEach((func, name) => {
+      const block = toolboxDoc.createElement('block');
+      block.setAttribute('type', 'custom_function_placeholder');
+      
+      const mutation = toolboxDoc.createElement('mutation');
+      mutation.setAttribute('function_name', name);
+      const params = Array.isArray(func.parameters) ? func.parameters : [];
+      if (params.length > 0) {
+        mutation.setAttribute('parameters', params.join(','));
+      }
+      block.appendChild(mutation);
+      
+      const field = toolboxDoc.createElement('field');
+      field.setAttribute('name', 'FUNCTION_NAME');
+      field.textContent = name;
+      block.appendChild(field);
+      
+      params.forEach((param, index) => {
+        const valueNode = toolboxDoc.createElement('value');
+        valueNode.setAttribute('name', `ARG_${index}`);
+        const shadow = toolboxDoc.createElement('shadow');
+        shadow.setAttribute('type', 'text');
+        const textField = toolboxDoc.createElement('field');
+        textField.setAttribute('name', 'TEXT');
+        textField.textContent = '';
+        shadow.appendChild(textField);
+        valueNode.appendChild(shadow);
+        block.appendChild(valueNode);
+      });
+      
+      customFunctionCategory.appendChild(block);
+    });
+    
+    toolboxElement.appendChild(customFunctionCategory);
+    
+    console.log('✅ Serializing toolbox to XML string...');
+    // DOM要素をXML文字列に変換
+    const serializer = new XMLSerializer();
+    const xmlString = serializer.serializeToString(toolboxElement);
+    console.log('✅ XML String (first 500 chars):', xmlString.substring(0, 500));
+    console.log('✅ XML String length:', xmlString.length);
+    console.log('✅ Total categories:', toolboxElement.children.length);
+    
+    // ツールボックスを更新（XML文字列として渡す）
+    console.log('🔄 Calling workspace.updateToolbox()...');
+    try {
+      workspace.updateToolbox(xmlString);
+      console.log('✓ Toolbox updated successfully!');
+    } catch (error) {
+      console.error('❌ Error updating toolbox:', error);
+    }
+  }
+  
+  getFunctionLogic(name) {
+    const func = this.functions.get(name);
+    return func && func.blocksXml ? func.blocksXml : null;
+  }
+
+  getFunctionAst(name) {
+    console.log(`📖 Getting AST for function: ${name}`);
+    const func = this.functions.get(name);
+    
+    if (!func) {
+      console.warn(`  └─ ⚠️ Function "${name}" not found`);
+      return null;
+    }
+    
+    if (!func.blocksAst) {
+      console.warn(`  └─ ⚠️ Function "${name}" has no AST data`);
+      console.warn(`     Available keys:`, Object.keys(func));
+      return null;
+    }
+    
+    try {
+      const astClone = JSON.parse(JSON.stringify(func.blocksAst));
+      const isArray = Array.isArray(astClone);
+      console.log(`  ├─ AST is array: ${isArray}`);
+      
+      // ASTが配列でない場合は配列化
+      const astArray = isArray ? astClone : [astClone];
+      
+      console.log(`  ├─ AST cloned successfully, length: ${astArray.length}`);
+      console.log(`  └─ AST preview:`, JSON.stringify(astArray).substring(0, 200));
+      return astArray;
+    } catch (error) {
+      console.error(`  └─ ❌ Failed to clone function AST:`, error);
+      return null;
+    }
+  }
+
+  getFunctionParameters(name) {
+    const func = this.functions.get(name);
+    if (!func || !Array.isArray(func.parameters)) {
+      return [];
+    }
+    return [...func.parameters];
+  }
+
+  appendFunctionLogic(name, workspace, position = null) {
+    const logicXml = this.getFunctionLogic(name);
+    if (!logicXml || !workspace || !Blockly) {
+      return null;
+    }
+    
+    let xmlDom;
+    try {
+      xmlDom = Blockly.Xml.textToDom(logicXml);
+    } catch (error) {
+      console.error('Failed to parse saved function XML:', error);
+      return null;
+    }
+    
+    let containerDom = xmlDom.documentElement ? xmlDom.documentElement : xmlDom;
+    let xmlRoot;
+    if (containerDom.nodeName.toLowerCase() === 'xml') {
+      xmlRoot = containerDom.cloneNode(true);
+    } else {
+      xmlRoot = document.createElement('xml');
+      xmlRoot.appendChild(containerDom.cloneNode(true));
+    }
+    
+    const beforeIds = new Set(workspace.getAllBlocks(false).map(block => block.id));
+    if (Blockly.Xml.appendDomToWorkspace) {
+      Blockly.Xml.appendDomToWorkspace(xmlRoot, workspace);
+    } else {
+      Blockly.Xml.domToWorkspace(xmlRoot, workspace);
+    }
+    
+    const newBlocks = workspace.getAllBlocks(false).filter(block => !beforeIds.has(block.id));
+    if (position && newBlocks.length > 0) {
+      const rootBlocks = newBlocks.filter(block => !block.getParent());
+      if (rootBlocks.length > 0) {
+        const currentXY = rootBlocks[0].getRelativeToSurfaceXY();
+        const dx = position.x - currentXY.x;
+        const dy = position.y - currentXY.y;
+        rootBlocks.forEach(root => root.moveBy(dx, dy));
+      }
+    }
+    
+    return newBlocks;
+  }
+  
+  saveToLocalStorage() {
+    const data = {
+      variables: Array.from(this.variables.entries()),
+      lists: Array.from(this.lists.entries()),
+      functions: Array.from(this.functions.entries())
+    };
+    localStorage.setItem('customBlocks', JSON.stringify(data));
+  }
+  
+  loadFromLocalStorage() {
+    const saved = localStorage.getItem('customBlocks');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        this.variables = new Map(data.variables || []);
+        this.lists = new Map(data.lists || []);
+        const functionEntries = (data.functions || []).map(([key, value]) => {
+          if (value && value.blocks && !value.blocksXml) {
+            value.blocksXml = value.blocks;
+          }
+          if (value) {
+            value.blocksAst = this.normalizeAst(value.blocksAst || null);
+          }
+          return [key, value];
+        });
+        this.functions = new Map(functionEntries);
+        
+        this.updateVariablesList();
+        this.updateListsList();
+        this.updateFunctionsList();
+        this.updateBlocklyToolbox();
+      } catch (e) {
+        console.error('Failed to load custom blocks from localStorage:', e);
+      }
+    }
+  }
+  
+  // 作成済みの変数/リスト/関数を取得するメソッド
+  getVariables() {
+    return Array.from(this.variables.keys());
+  }
+  
+  getLists() {
+    return Array.from(this.lists.keys());
+  }
+  
+  getFunctions() {
+    return Array.from(this.functions.keys());
+  }
+}
+
+
+
+
+
+
+
+

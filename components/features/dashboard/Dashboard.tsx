@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import {
   ArrowRight, Terminal, Globe, Cpu, Box,
-  Sparkles, CheckCircle, Flame, BrainCircuit
+  Sparkles, CheckCircle, Flame, BrainCircuit, Gamepad2
 } from 'lucide-react';
 import { ViewState } from '../../../types';
 import { useTheme } from '../../../context/ThemeContext';
@@ -192,6 +192,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             bgColor="bg-indigo-50"
             borderColor="border-indigo-100"
             onClick={() => onNavigate(ViewState.COURSE_GENERATOR)}
+          />
+
+          <DashboardCard
+            title="P-School"
+            icon={Gamepad2}
+            color="text-green-500"
+            bgColor="bg-green-50"
+            borderColor="border-green-100"
+            onClick={() => onNavigate(ViewState.P_SCHOOL)}
           />
 
         </div>

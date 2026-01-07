@@ -68,6 +68,9 @@ import ArtTribalDetailView from './components/features/art/ArtTribalDetailView';
 import SonicLabView from './components/features/sonic/SonicLabView';
 import SonicSynthView from './components/features/sonic/SonicSynthView';
 
+// P-School Feature
+import PSchoolView from './components/features/PSchool/PSchoolView';
+
 import { User, Settings, Bell, Shield } from 'lucide-react';
 
 const ProfilePlaceholder: React.FC = () => (
@@ -332,6 +335,9 @@ const AppContent: React.FC = () => {
         return <SonicLabView onNavigate={setCurrentView} />;
       case ViewState.SONIC_SYNTH:
         return <SonicSynthView onBack={() => setCurrentView(ViewState.SONIC_LAB)} />;
+      
+      case ViewState.P_SCHOOL:
+        return <PSchoolView />;
 
       case ViewState.LIBRARY:
         return <Library />;
