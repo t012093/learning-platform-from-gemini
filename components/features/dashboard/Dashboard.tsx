@@ -195,7 +195,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           />
 
           <DashboardCard
-            title="P-School"
+            title="Scratch game"
             icon={Gamepad2}
             color="text-green-500"
             bgColor="bg-green-50"

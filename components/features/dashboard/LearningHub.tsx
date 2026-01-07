@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import {
     Terminal, Box, Palette, Activity, BookOpen,
-    Sparkles, Cpu, ArrowRight
+    Sparkles, Cpu, ArrowRight, Gamepad2
 } from 'lucide-react';
 import { ViewState } from '../../../types';
 import { useTheme } from '../../../context/ThemeContext';
@@ -58,6 +58,11 @@ const LearningHub: React.FC<LearningHubProps> = ({ onNavigate }) => {
                     title: 'Global Communication',
                     subtitle: 'Practical English & Cross-cultural',
                     description: 'Practical English for engineers, from docs to technical discussions.'
+                },
+                scratch: {
+                    title: 'Scratch game',
+                    subtitle: 'Block Coding RPG',
+                    description: 'Learn programming by building battle scripts with Scratch-style blocks.'
                 }
             },
             bannerTitle: 'Learning Path Diagnosis',
@@ -102,6 +107,11 @@ const LearningHub: React.FC<LearningHubProps> = ({ onNavigate }) => {
                     title: 'Global Communication',
                     subtitle: '実践英語 & 異文化理解',
                     description: 'エンジニアのための実践的英語力。ドキュメント読解から技術的な議論まで。'
+                },
+                scratch: {
+                    title: 'Scratch game',
+                    subtitle: 'ブロックプログラミングRPG',
+                    description: 'Scratchブロックでバトルの作戦を組み、遊びながらプログラミングを学ぶ。'
                 }
             },
             bannerTitle: '学習パス診断',
@@ -148,6 +158,18 @@ const LearningHub: React.FC<LearningHubProps> = ({ onNavigate }) => {
             borderColor: 'border-purple-100',
             description: t.portals.vibe.description,
             image: "https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+            id: 'scratch-game',
+            title: t.portals.scratch.title,
+            subtitle: t.portals.scratch.subtitle,
+            icon: Gamepad2,
+            view: ViewState.P_SCHOOL,
+            color: 'text-green-600',
+            bg: 'bg-green-50',
+            borderColor: 'border-green-100',
+            description: t.portals.scratch.description,
+            image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=800"
         },
         {
             id: '3d',
