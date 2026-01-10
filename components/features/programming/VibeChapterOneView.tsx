@@ -19,6 +19,7 @@ const VibeChapterOneView: React.FC<VibeChapterOneViewProps> = ({ onBack, onNavig
       chapter={VIBE_CHAPTER_1_DATA}
       onBack={onBack}
       onNavigate={onNavigate}
+      pdfUrl="/slides/chapter1.pdf"
     />
   );
 };

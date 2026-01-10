@@ -2,21 +2,29 @@ import React, { useState, useEffect, useRef, useId } from 'react';
 import { 
   ArrowLeft, BookOpen, List, Share2, Clock, 
   ChevronRight, AlertTriangle, Info, Lightbulb, CheckCircle2,
-  Copy, Check
+  Copy, Check, FileText, Presentation, ChevronLeft, Maximize2, Minimize2
 } from 'lucide-react';
 import mermaid from 'mermaid';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import { ViewState, DocChapter, DocBlock } from '../../../types';
 import { useTheme } from '../../../context/ThemeContext';
+
+// Configure PDF worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface VibeDocViewProps {
   onBack: () => void;
   onNavigate: (view: ViewState) => void;
   chapter: DocChapter;
+  pdfUrl?: string;
 }
 
-const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter }) => {
+const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, pdfUrl }) => {
   const { setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'doc' | 'slide'>('doc');
   const observer = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -32,6 +40,8 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter }
 
   // Scroll Spy Logic
   useEffect(() => {
+    if (viewMode !== 'doc') return;
+    
     observer.current = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -46,7 +56,7 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter }
     });
 
     return () => observer.current?.disconnect();
-  }, [chapter]);
+  }, [chapter, viewMode]);
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -57,14 +67,16 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter }
   };
 
   useEffect(() => {
-    // Re-run mermaid when content changes
-    mermaid.contentLoaded();
-  }, [chapter]);
+    // Re-run mermaid when content changes or mode switches to doc
+    if (viewMode === 'doc') {
+       mermaid.contentLoaded();
+    }
+  }, [chapter, viewMode]);
 
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-50 flex items-center justify-between px-6">
+      {/* Header (Hidden in Slide Mode for immersion, or minimal) */}
+      <header className={`fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-50 flex items-center justify-between px-6 transition-transform duration-300 ${viewMode === 'slide' ? '-translate-y-full hover:translate-y-0' : ''}`}>
         <div className="flex items-center gap-4">
           <button 
             onClick={onBack}
@@ -77,6 +89,35 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter }
             <span className="text-sm font-bold text-slate-800 line-clamp-1">{chapter.title}</span>
           </div>
         </div>
+
+        {/* View Mode Toggle */}
+        {pdfUrl && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex bg-slate-100 p-1 rounded-lg">
+            <button
+              onClick={() => setViewMode('doc')}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                viewMode === 'doc' 
+                  ? 'bg-white text-purple-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <FileText size={14} />
+              Doc
+            </button>
+            <button
+              onClick={() => setViewMode('slide')}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                viewMode === 'slide' 
+                  ? 'bg-white text-purple-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Presentation size={14} />
+              Slide
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
            <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
              <Clock size={14} /> {chapter.readingTime}
@@ -84,6 +125,7 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter }
         </div>
       </header>
 
+      {viewMode === 'doc' ? (
       <main className="pt-24 pb-20 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
         
         {/* Main Content */}
@@ -153,9 +195,205 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter }
         </aside>
 
       </main>
+      ) : (
+         <SlideViewer pdfUrl={pdfUrl || ''} onBack={() => setViewMode('doc')} />
+      )}
     </div>
   );
 };
+
+// --- Custom Slide Viewer ---
+// --- Custom Slide Viewer ---
+const SLIDE_TIMINGS = [
+  0,    // 1. 表紙
+  28,   // 2. なぜ「設計図」が必要なのか
+  55,   // 3. AI開発を成功させる4つの柱
+  75,   // 4. 01 構造（Structure）
+  95,   // 5. アプリケーションは「一つのレストラン」
+  125,  // 6. 指示の精度が劇的に向上する思考法
+  145,  // 7. 02 通信（Communication）
+  160,  // 8. 「人間との対話」と「機械との対話」
+  185,  // 9. AIへの具体的な依頼方法
+  205,  // 10. 03 公開（Launch）
+  220,  // 11. ローカルPCから、世界へ
+  240,  // 12. 04 時間（Time）
+  255,  // 13. Gitは「失敗を許可する道具」
+  275,  // 14. 恐れずに実験するために
+  290,  // 15. まとめ
+  9999  // End
+];
+
+const SlideViewer: React.FC<{ pdfUrl: string; onBack: () => void }> = ({ pdfUrl, onBack }) => {
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [scale, setScale] = useState(0.9);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [autoAdvance, setAutoAdvance] = useState(true);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+    setNumPages(numPages);
+  }
+
+  const changePage = (offset: number) => {
+    setPageNumber(prevPageNumber => {
+      const newPage = prevPageNumber + offset;
+      return Math.min(Math.max(1, newPage), numPages);
+    });
+  };
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (!audioRef.current || !autoAdvance) return;
+    
+    const currentTime = audioRef.current.currentTime;
+    // Find the slide index that corresponds to the current time
+    // SLIDE_TIMINGS[i] is the start time of slide i+1
+    let nextSlide = 1;
+    for (let i = 0; i < SLIDE_TIMINGS.length; i++) {
+      if (currentTime >= SLIDE_TIMINGS[i]) {
+        nextSlide = i + 1;
+      } else {
+        break;
+      }
+    }
+
+    if (nextSlide !== pageNumber && nextSlide <= numPages) {
+      setPageNumber(nextSlide);
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        changePage(1);
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        changePage(-1);
+      } else if (event.key === 'Escape') {
+        onBack();
+      } else if (event.key === ' ') {
+        event.preventDefault(); // Prevent scroll
+        togglePlay();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [numPages, isPlaying]);
+
+  return (
+    <div className="fixed inset-0 bg-[#0f172a] flex flex-col items-center justify-center z-[100]">
+      {/* Top Controls (Fade on hover) */}
+      <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center opacity-0 hover:opacity-100 transition-opacity duration-300 z-50 bg-gradient-to-b from-black/50 to-transparent">
+        <button onClick={onBack} className="text-white/80 hover:text-white flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors">
+          <ArrowLeft size={20} /> Exit
+        </button>
+        <div className="flex items-center gap-4">
+           <button 
+             onClick={() => setAutoAdvance(!autoAdvance)} 
+             className={`text-xs font-bold px-3 py-1 rounded-full border transition-all ${autoAdvance ? 'bg-purple-500/20 border-purple-500 text-purple-300' : 'bg-transparent border-white/20 text-white/50'}`}
+           >
+             Auto-Sync: {autoAdvance ? 'ON' : 'OFF'}
+           </button>
+           <div className="text-white/80 text-sm font-medium">
+             {pageNumber} / {numPages}
+           </div>
+        </div>
+      </div>
+
+      {/* Audio Player (Hidden visually but functional) */}
+      <audio 
+        ref={audioRef} 
+        src="/audio/vibe/chapter1.wav"
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={() => setIsPlaying(false)}
+      />
+
+      {/* Main Slide Area */}
+      <div className="flex-1 flex items-center justify-center w-full h-full p-4 md:p-8 overflow-hidden relative">
+        <Document
+          file={pdfUrl}
+          onLoadSuccess={onDocumentLoadSuccess}
+          className="flex items-center justify-center shadow-2xl"
+          loading={
+             <div className="flex flex-col items-center text-slate-400 gap-3">
+                <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm">Loading Slides...</span>
+             </div>
+          }
+          error={<div className="text-red-400 bg-red-900/20 px-4 py-2 rounded">Failed to load PDF.</div>}
+        >
+          <div className="relative rounded-xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5">
+             <Page 
+               pageNumber={pageNumber} 
+               scale={scale} 
+               renderAnnotationLayer={false}
+               renderTextLayer={false}
+               className="transition-opacity duration-200"
+             />
+             
+             {/* Invisible Click Zones for Navigation */}
+             <div className="absolute inset-y-0 left-0 w-1/3 cursor-w-resize z-10" onClick={() => changePage(-1)} title="Previous" />
+             <div className="absolute inset-y-0 right-0 w-1/3 cursor-e-resize z-10" onClick={() => changePage(1)} title="Next" />
+          </div>
+        </Document>
+
+        {/* Navigation Arrows (Visual Only) */}
+        <button 
+           onClick={() => changePage(-1)}
+           disabled={pageNumber <= 1}
+           className="absolute left-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all disabled:opacity-0"
+        >
+           <ChevronLeft size={32} />
+        </button>
+        <button 
+           onClick={() => changePage(1)}
+           disabled={pageNumber >= numPages}
+           className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all disabled:opacity-0"
+        >
+           <ChevronRight size={32} />
+        </button>
+      </div>
+
+      {/* Bottom Controls (Play/Pause & Progress) */}
+      <div className="w-full bg-black/40 backdrop-blur-md border-t border-white/10 p-4 flex items-center justify-center gap-4 relative z-50">
+         <button 
+           onClick={togglePlay}
+           className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform"
+         >
+            {isPlaying ? <span className="w-4 h-4 bg-black rounded-sm" /> : <Presentation size={20} className="ml-1" />}
+         </button>
+         
+         <div className="flex-1 max-w-2xl h-1.5 bg-white/10 rounded-full overflow-hidden relative cursor-pointer" onClick={(e) => {
+            if (audioRef.current) {
+               const rect = e.currentTarget.getBoundingClientRect();
+               const percent = (e.clientX - rect.left) / rect.width;
+               audioRef.current.currentTime = percent * audioRef.current.duration;
+            }
+         }}>
+            <div 
+               className="absolute inset-y-0 left-0 bg-purple-500 transition-all duration-100" 
+               style={{ width: `${audioRef.current ? (audioRef.current.currentTime / audioRef.current.duration) * 100 : 0}%` }} 
+            />
+         </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Mermaid Block Component ---
+
 
 // --- Mermaid Block Component ---
 const MermaidBlock: React.FC<{ chart: string; caption?: string }> = ({ chart, caption }) => {
