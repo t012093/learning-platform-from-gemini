@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { GLOSSARY_TERMS, GlossaryTerm } from '../../data/glossary/terms';
-import { Sparkles, MessageCircle, X } from 'lucide-react';
-import { useLumina } from '../features/ai/LuminaConciergeView'; // Assuming we can access Lumina context later
+import { Sparkles, X } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Utility to escape regex characters
 const escapeRegExp = (string: string) => {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return string.replace(/[.*+?^${}()|[\\]/g, '\\$&');
 };
 
 interface GlossaryTextProps {
@@ -14,6 +14,7 @@ interface GlossaryTextProps {
 }
 
 const GlossaryText: React.FC<GlossaryTextProps> = ({ text }) => {
+  const { language } = useLanguage();
   const [activeTerm, setActiveTerm] = useState<GlossaryTerm | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number, y: number } | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -58,15 +59,15 @@ const GlossaryText: React.FC<GlossaryTextProps> = ({ text }) => {
   const handleAskAI = () => {
     if (!activeTerm) return;
     
-    // In a real implementation, this would trigger the Chatbot with context
-    // For now, we'll just log or alert
-    // alert(`Luminaに聞いてみよう: ${activeTerm.term}\n(ここにチャットボット起動ロジックが入ります)`);
-    
+    // Get localized prompt or default
+    const contextPrompt = activeTerm.aiContextPrompts ? activeTerm.aiContextPrompts[language] : undefined;
+    const askPrefix = language === 'jp' ? 'について教えてください。' : ' tell me more about this.';
+
     // Dispatch a custom event that the Layout or Chatbot component can listen to
     const event = new CustomEvent('open-lumina-chat', { 
       detail: { 
-        message: `${activeTerm.term}について教えてください。`,
-        context: activeTerm.aiContextPrompt 
+        message: `${activeTerm.term}${askPrefix}`,
+        context: contextPrompt 
       } 
     });
     window.dispatchEvent(event);
@@ -74,30 +75,36 @@ const GlossaryText: React.FC<GlossaryTextProps> = ({ text }) => {
     setActiveTerm(null);
   };
 
-  // 1. Markdown Bold Parsing (**text**)
-  // 2. Term Parsing
-  
-  // First, let's process bold markdown to avoid breaking it with term replacement
-  // We will represent the text as an array of segments
-  // Segment: { text: string, type: 'normal' | 'bold' | 'term', termId?: string }
-  
-  // Simplification: We will only look for terms in "normal" text, not inside bold text for now to avoid conflict
-  // Or simpler: Process bold first, then process terms in the resulting nodes.
-  
   const renderContent = () => {
     // Step 1: Split by Bold Markdown
     const boldParts = text.split(/(\*\*.*?\*\*)/g);
+    
+    // Sort terms by length (desc) to match longest terms first
+    const sortedTerms = [...GLOSSARY_TERMS].sort((a, b) => b.term.length - a.length);
+
+    // Create a mapping of all patterns (term + synonyms) to their original term object
+    const termToIdMap: Record<string, string> = {};
+    const allSearchPatterns: string[] = [];
+    
+    sortedTerms.forEach(t => {
+      // Main term
+      allSearchPatterns.push(escapeRegExp(t.term));
+      termToIdMap[t.term] = t.id;
+      
+      // Synonyms
+      t.synonyms?.forEach(syn => {
+        allSearchPatterns.push(escapeRegExp(syn));
+        termToIdMap[syn] = t.id;
+      });
+    });
+
+    // Re-sort patterns by length to avoid partial matches
+    const termPattern = allSearchPatterns.sort((a, b) => b.length - a.length).join('|');
     
     return boldParts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={i} className="text-slate-900 font-bold">{part.slice(2, -2)}</strong>;
       }
-      
-      // Step 2: Find terms in normal text
-      // Create a massive regex for all terms
-      // Sort terms by length (desc) to match longest terms first
-      const sortedTerms = [...GLOSSARY_TERMS].sort((a, b) => b.term.length - a.term.length);
-      const termPattern = sortedTerms.map(t => escapeRegExp(t.term)).join('|');
       
       if (!termPattern) return <span key={i}>{part}</span>;
       
@@ -107,7 +114,9 @@ const GlossaryText: React.FC<GlossaryTextProps> = ({ text }) => {
       return (
         <React.Fragment key={i}>
           {textParts.map((subPart, j) => {
-            const matchedTerm = sortedTerms.find(t => t.term === subPart);
+            const termId = termToIdMap[subPart];
+            const matchedTerm = termId ? sortedTerms.find(t => t.id === termId) : null;
+            
             if (matchedTerm) {
               return (
                 <span 
@@ -131,7 +140,6 @@ const GlossaryText: React.FC<GlossaryTextProps> = ({ text }) => {
     <>
       {renderContent()}
       
-      {/* Popover Portal or Absolute Div */}
       {activeTerm && popupPosition && createPortal(
         <div 
             ref={popupRef}
@@ -158,7 +166,7 @@ const GlossaryText: React.FC<GlossaryTextProps> = ({ text }) => {
           </div>
           
           <p className="text-sm text-slate-600 leading-relaxed mb-4">
-            {activeTerm.definition}
+            {activeTerm.definitions[language]}
           </p>
           
           <button 
@@ -166,7 +174,7 @@ const GlossaryText: React.FC<GlossaryTextProps> = ({ text }) => {
             className="w-full bg-slate-900 hover:bg-indigo-600 text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all group"
           >
             <Sparkles size={14} className="text-indigo-300 group-hover:text-white" />
-            AI先生に詳しく聞く
+            {language === 'jp' ? 'AI先生に詳しく聞く' : 'Ask AI Tutor'}
           </button>
         </div>,
         document.body

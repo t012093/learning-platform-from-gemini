@@ -88,8 +88,8 @@ const UnityPathView: React.FC<UnityPathViewProps> = ({ onBack, onNavigate, langu
   // Map static data to translated content
   const chapters = t.chapters.map((ch, idx) => ({
     ...ch,
-    status: idx === 0 ? 'completed' : (idx === 1 ? 'current' : 'locked'), // Unlock Ch0 and Ch1
-    view: idx === 0 ? ViewState.UNITY_CHAPTER_0 : (idx === 1 ? ViewState.UNITY_CHAPTER_1 : null)
+    status: idx === 0 ? 'completed' : (idx === 1 ? 'completed' : (idx === 2 ? 'current' : 'locked')), // Unlock Ch0, Ch1, Ch2
+    view: idx === 0 ? ViewState.UNITY_CHAPTER_0 : (idx === 1 ? ViewState.UNITY_CHAPTER_1 : (idx === 2 ? ViewState.UNITY_CHAPTER_2 : null))
   }));
 
   return (

@@ -11,9 +11,11 @@ interface UnityChapterOneViewProps {
 }
 
 const UnityChapterOneView: React.FC<UnityChapterOneViewProps> = ({ onBack, onNavigate, language, setLanguage }) => {
+  const chapterData = UNITY_CHAPTER_1_DATA[language];
+
   return (
     <VibeDocView 
-      chapter={UNITY_CHAPTER_1_DATA}
+      chapter={chapterData}
       onBack={onBack}
       onNavigate={onNavigate}
     />

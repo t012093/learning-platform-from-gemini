@@ -1,7 +1,7 @@
 import { DocChapter } from '../../../types';
 
-export const UNITY_CHAPTER_1_DATA: DocChapter = {
-  id: 'unity-ch1',
+const JP_DATA: DocChapter = {
+  id: 'unity-ch1-jp',
   title: '第1章｜Unity基礎（AI時代版・最重要）',
   subtitle: 'AIに指示を出すための共通言語。Unityの「世界観」を理解する。',
   readingTime: '20 min read',
@@ -116,4 +116,127 @@ export const UNITY_CHAPTER_1_DATA: DocChapter = {
       ]
     }
   ]
+};
+
+const EN_DATA: DocChapter = {
+  id: 'unity-ch1-en',
+  title: 'Chapter 1: Unity Basics (AI Era Edition)',
+  subtitle: 'The common language for directing AI. Understanding the Unity "Worldview".',
+  readingTime: '20 min read',
+  sections: [
+    {
+      id: '1-1',
+      title: '1-1. Unity Worldview (Scene / GameObject / Component)',
+      content: [
+        {
+          type: 'text',
+          text: 'The structure of Unity is easier to understand if you compare it to a "play" or "movie shoot". These three keywords are the common language of Unity development.',
+          style: 'lead'
+        },
+        {
+          type: 'list',
+          items: [
+            '**Scene**: A stage/scene. Title screen, game screen, result screen, etc. There is basically one (or more) stage at a time.',
+            '**GameObject**: Actors and props on the stage. Players, enemies, floors, lights, cameras, everything in the scene is a GameObject.',
+            '**Component**: "Roles" or "scripts" given to actors. By attaching a Component to a GameObject, a simple box becomes a "box with physics" or a "glowing box".'
+          ]
+        },
+        {
+          type: 'callout',
+          title: 'Essence of Unity Development',
+          text: 'Unity development is the task of attaching the appropriate **GameObject** to the appropriate **Component** and adjusting their parameters (state). C# scripts are also a type of Component.',
+          variant: 'info'
+        },
+        {
+          type: 'image',
+          src: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=1200',
+          alt: 'Unity Editor Layout',
+          caption: 'Basic 4 screens of Unity Editor: Hierarchy (Structure), Scene (Stage), Inspector (Detail), Project (Warehouse). Let\'s check how they work together.'
+        }
+      ]
+    },
+    {
+      id: '1-2',
+      title: '1-2. Scene Design Basics',
+      content: [
+        {
+          type: 'text',
+          text: 'A common mistake for beginners is to cram all functions into one scene. Instructions to AI become complex, and management breaks down.'
+        },
+        {
+          type: 'list',
+          items: [
+            '**1 Scene, 1 Role**: Clearly divide roles like "TitleScene", "GameScene", "ResultScene".',
+            '**Light Scene Design**: Heavy scenes delay test play startup and disrupt the rhythm of Vibe Coding.',
+            '**Balance**: Conversely, if you chop it up too much, data passing becomes complicated. Granularity is key.'
+          ]
+        }
+      ]
+    },
+    {
+      id: '1-3',
+      title: '1-3. GameObject and Component Puzzle',
+      content: [
+        {
+          type: 'text',
+          text: 'A GameObject immediately after creation is just an "empty box" with only position information. You add functionality by adding Components here.'
+        },
+        {
+          type: 'table',
+          headers: ['Component Name', 'Role', 'Example'],
+          rows: [
+            ['Transform', 'Position, Rotation, Scale', 'Basic function that every GameObject has'],
+            ['Mesh Renderer', 'Display shape', 'Drawing 3D models'],
+            ['Box Collider', 'Has collision', 'Walls, floors, obstacles'],
+            ['Rigidbody', 'Follows physics', 'Falls by gravity, bounces on collision'],
+            ['Audio Source', 'Plays sound', 'Source of BGM and sound effects']
+          ]
+        },
+        {
+          type: 'callout',
+          title: '🧪 Try it: Physics',
+          text: '1. Right-click in Hierarchy > Create 3D Object > Cube\n2. Search for `Rigidbody` from "Add Component" in Inspector and add it\n3. Press the "▶ (Play)" button at the top\n\nJust this makes the box fall according to gravity. This is the experience of "changing behavior without writing code".',
+          variant: 'success'
+        }
+      ]
+    },
+    {
+      id: '1-4',
+      title: '1-4. Transform (Accident Prevention)',
+      content: [
+        {
+          type: 'text',
+          text: 'Transform, which handles Position, Rotation, and Scale, is a point where mistakes in AI instructions are likely to occur.'
+        },
+        {
+          type: 'list',
+          items: [
+            '**World Coordinates**: Absolute values seen from the entire game world.',
+            '**Local Coordinates**: Relative values seen from the parent object.'
+          ]
+        },
+        {
+          type: 'callout',
+          title: 'Tips for AI Instructions',
+          text: 'When asking AI to "move right", if you cannot distinguish between "right in local coordinates (direction facing)" or "right in world coordinates (screen right)", unintended behavior will occur.',
+          variant: 'warning'
+        },
+        {
+          type: 'text',
+          text: 'Also, in Unity, you can create a **Parent-Child Relationship** by dragging and dropping in the Hierarchy window. The mechanism where "if the parent moves, the child moves too" (the tank turret follows the tank body) is frequent.'
+        },
+        {
+          type: 'callout',
+          title: '🧪 Try it: Coordinates & Parent-Child',
+          text: '1. Rotate the Cube (Rotation Y: 45, etc.).\n2. Switch between "Global" and "Local" in the top left toolbar and check if the movement arrow direction changes.\n3. Create another Sphere, drag it under the Cube in Hierarchy to make it a "Child".\n4. Move the parent Cube and confirm that the child Sphere follows.',
+          variant: 'success'
+        }
+      ]
+    }
+  ]
+};
+
+export const UNITY_CHAPTER_1_DATA = {
+    jp: JP_DATA,
+    en: EN_DATA
 };

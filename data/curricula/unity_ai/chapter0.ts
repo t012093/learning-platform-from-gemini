@@ -1,7 +1,7 @@
 import { DocChapter } from '../../../types';
 
-export const UNITY_CHAPTER_0_DATA: DocChapter = {
-  id: 'unity-ch0',
+const JP_DATA: DocChapter = {
+  id: 'unity-ch0-jp',
   title: '第0章｜AI時代のゲーム開発思想',
   subtitle: 'なぜ今、AIを使ってゲームを作るのか？ 「判断」と「構造」の時代へ',
   readingTime: '10 min read',
@@ -57,4 +57,68 @@ export const UNITY_CHAPTER_0_DATA: DocChapter = {
       ]
     }
   ]
+};
+
+const EN_DATA: DocChapter = {
+  id: 'unity-ch0-en',
+  title: 'Chapter 0: AI Era Game Dev Philosophy',
+  subtitle: 'Why build games with AI now? The era of "Judgment" and "Structure".',
+  readingTime: '10 min read',
+  sections: [
+    {
+      id: '0-1',
+      title: '0-1. Why "Coders" Are Decreasing',
+      content: [
+        {
+          type: 'text',
+          text: 'With the evolution of AI, the need for humans to write code from scratch is rapidly declining. However, this does not mean "developers" are becoming obsolete. The role is shifting significantly.',
+          style: 'lead'
+        },
+        {
+          type: 'table',
+          headers: ['Item', 'What AI is Good At', 'What AI is Bad At (Human Role)'],
+          rows: [
+            ['Coding', 'Boilerplate generation, Error fixing', 'Defining purpose, Judging fun'],
+            ['Design', 'Proposing existing patterns', 'maintaining project consistency'],
+            ['Maintenance', 'Speeding up simple tasks', 'Creative solutions to unknown bugs']
+          ]
+        },
+        {
+          type: 'callout',
+          title: 'The New Human Role',
+          text: 'What is required of future creators is not the ability to write code, but the ability to **judge** whether what AI has generated fits the purpose, and the ability to act as a "commander" who designs the overall **structure (architecture)** so that AI does not get lost.',
+          variant: 'info'
+        }
+      ]
+    },
+    {
+      id: '0-2',
+      title: '0-2. What is Vibe Coding?',
+      content: [
+        {
+          type: 'text',
+          text: 'The era of writing perfect blueprints before building is over. This is the era of "Vibe Coding".'
+        },
+        {
+          type: 'list',
+          items: [
+            '**Working Hypothesis**: Don\'t get hung up on details; use AI to build "something that works" quickly.',
+            '**Vibes (Intuition) First**: Instead of overthinking, touch the working prototype and improve it based on intuition like "this feels off" or "I want it more like this".',
+            '**Failure Logs are Assets**: Error resolution processes and dialogue logs become your personal knowledge assets.'
+          ]
+        },
+        {
+          type: 'callout',
+          title: 'Mindset',
+          text: 'Don\'t try to succeed in one go; enjoy the process of trial and error with AI. You are the boss (director), and AI is the capable subordinate (programmer). It is your job to create an environment where your subordinate can work easily.',
+          variant: 'tip'
+        }
+      ]
+    }
+  ]
+};
+
+export const UNITY_CHAPTER_0_DATA = {
+    jp: JP_DATA,
+    en: EN_DATA
 };
