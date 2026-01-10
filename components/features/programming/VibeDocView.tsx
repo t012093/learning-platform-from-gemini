@@ -461,6 +461,8 @@ const MermaidBlock: React.FC<{ chart: string; caption?: string }> = ({ chart, ca
   );
 };
 
+import GlossaryText from '../../common/GlossaryText';
+
 // --- Block Renderers ---
 
 const BlockRenderer: React.FC<{ block: DocBlock }> = ({ block }) => {
@@ -472,7 +474,7 @@ const BlockRenderer: React.FC<{ block: DocBlock }> = ({ block }) => {
                ${block.style === 'lead' ? 'text-xl font-light text-slate-600 mb-8' : 'text-base'}
                ${block.style === 'quote' ? 'font-serif text-lg italic text-slate-600 border-l-4 border-slate-200 pl-4 py-1' : ''}
             `}>
-               {block.text}
+               <GlossaryText text={block.text} />
             </p>
          );
       
@@ -518,7 +520,9 @@ const BlockRenderer: React.FC<{ block: DocBlock }> = ({ block }) => {
                <div className={`mt-0.5 shrink-0 ${style.iconColor}`}><Icon size={20} /></div>
                <div>
                   {block.title && <h4 className={`font-bold text-sm uppercase tracking-wide mb-2 ${style.text} opacity-80`}>{block.title}</h4>}
-                  <p className={`text-sm leading-relaxed ${style.text}`}>{block.text}</p>
+                  <p className={`text-sm leading-relaxed ${style.text}`}>
+                     <GlossaryText text={block.text} />
+                  </p>
                </div>
             </div>
          );
@@ -531,7 +535,9 @@ const BlockRenderer: React.FC<{ block: DocBlock }> = ({ block }) => {
                      {block.style !== 'number' && (
                         <span className="mt-2 w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0 group-hover:scale-125 transition-transform" />
                      )}
-                     <span dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900 font-bold">$1</strong>') }} />
+                     <span>
+                       <GlossaryText text={item} />
+                     </span>
                   </li>
                ))}
             </ul>

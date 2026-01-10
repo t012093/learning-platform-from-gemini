@@ -200,6 +200,23 @@ const LuminaConciergeView: React.FC<LuminaConciergeViewProps> = ({ onNavigate })
     const t = copy[language];
     const diagnosisFlow = DIAGNOSIS_FLOW_BY_LANG[language];
 
+    // Listen for Glossary/External Chat Triggers
+    useEffect(() => {
+        const handleExternalTrigger = (event: any) => {
+            const { message, context } = event.detail;
+            
+            // If there's context, we wrap the message to guide the AI
+            const finalMessage = context 
+                ? `[Context: ${context}]\n\nUser Question: ${message}`
+                : message;
+                
+            handleSend(finalMessage);
+        };
+
+        window.addEventListener('open-lumina-chat', handleExternalTrigger);
+        return () => window.removeEventListener('open-lumina-chat', handleExternalTrigger);
+    }, [chatSession.current, language]); // Re-bind if session or language changes
+
     useEffect(() => {
         try {
             const basePrompt = SYSTEM_PROMPTS[language];
@@ -238,16 +255,22 @@ const LuminaConciergeView: React.FC<LuminaConciergeViewProps> = ({ onNavigate })
     };
 
     const handleSend = async (text: string) => {
+        // Check if it's a context-wrapped message
+        const displayMatch = text.match(/User Question: (.*)/s);
+        const displayText = displayMatch ? displayMatch[1] : text;
+
         const userMessage: Message = {
             id: Date.now().toString(),
             role: 'user',
-            text: text,
+            text: displayText,
             timestamp: new Date()
         };
         setMessages(prev => [...prev, userMessage]);
 
         // Handing Diagnosis Flow
-        if (diagnosisStep >= 0 && diagnosisStep < diagnosisFlow.length) {
+        // Use original 'text' for AI/Logic, but 'displayText' for UI check if needed
+        const logicText = text; 
+
             // Advance to next step
             if (diagnosisStep === diagnosisFlow.length - 1) {
                 // Was at result, now resetting or starting chat

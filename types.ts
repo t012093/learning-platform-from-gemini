@@ -105,6 +105,9 @@ export enum ViewState {
   HTML_CSS_COURSE = 'HTML_CSS_COURSE', // Web Studio Part 1 (Flexbox)
   HTML_CSS_PART_TWO = 'HTML_CSS_PART_TWO', // Web Studio Part 2 (Grid)
   WEB_INSPECTOR = 'WEB_INSPECTOR', // New: Inspector Tool Simulation
+  UNITY_AI_GAME_DEV = 'UNITY_AI_GAME_DEV', // New: Unity x AI Game Dev Course
+  UNITY_CHAPTER_0 = 'UNITY_CHAPTER_0',
+  UNITY_CHAPTER_1 = 'UNITY_CHAPTER_1',
   VIBE_PATH = 'VIBE_PATH', // New: The Hub for Vibe Coding
   VIBE_PROLOGUE = 'VIBE_PROLOGUE', // Prologue: Mindset
   VIBE_CHAPTER_1 = 'VIBE_CHAPTER_1', // Chapter 1: Prompt Engineering

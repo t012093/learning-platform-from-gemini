@@ -63,6 +63,11 @@ const LearningHub: React.FC<LearningHubProps> = ({ onNavigate }) => {
                     title: 'Scratch game',
                     subtitle: 'Block Coding RPG',
                     description: 'Learn programming by building battle scripts with Scratch-style blocks.'
+                },
+                unity: {
+                    title: 'Unity AI Game Dev',
+                    subtitle: 'AI x Unity Game Dev',
+                    description: 'Develop games using Unity and AI. Learn the role of an architect.'
                 }
             },
             bannerTitle: 'Learning Path Diagnosis',
@@ -112,6 +117,11 @@ const LearningHub: React.FC<LearningHubProps> = ({ onNavigate }) => {
                     title: 'Scratch game',
                     subtitle: 'ブロックプログラミングRPG',
                     description: 'Scratchブロックでバトルの作戦を組み、遊びながらプログラミングを学ぶ。'
+                },
+                unity: {
+                    title: 'Unity AI Game Dev',
+                    subtitle: 'AI x Unity ゲーム開発',
+                    description: 'AIと共にUnityでゲームを作る。コードを書くのではなく、設計する力を養う。'
                 }
             },
             bannerTitle: '学習パス診断',
@@ -170,6 +180,18 @@ const LearningHub: React.FC<LearningHubProps> = ({ onNavigate }) => {
             borderColor: 'border-green-100',
             description: t.portals.scratch.description,
             image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+            id: 'unity',
+            title: t.portals.unity.title,
+            subtitle: t.portals.unity.subtitle,
+            icon: Gamepad2,
+            view: ViewState.UNITY_AI_GAME_DEV,
+            color: 'text-blue-600',
+            bg: 'bg-blue-50',
+            borderColor: 'border-blue-100',
+            description: t.portals.unity.description,
+            image: "https://images.unsplash.com/photo-1596727147705-54a9d0a514d7?auto=format&fit=crop&q=80&w=800"
         },
         {
             id: '3d',

@@ -21,6 +21,9 @@ import LearningHub from './components/features/dashboard/LearningHub';
 import ProfilePassport from './components/features/dashboard/ProfilePassport';
 import MyContent from './components/features/dashboard/MyContent';
 
+// Common Floating Components
+import { FloatingChatbot } from './components/common/FloatingChatbot';
+
 // AI Features
 import CourseGeneratorView from './components/features/ai/CourseGeneratorView';
 import GeneratedCourseView from './components/features/ai/GeneratedCourseView';
@@ -51,6 +54,9 @@ import VibeChapterTwoView from './components/features/programming/VibeChapterTwo
 import VibeChapterThreeView from './components/features/programming/VibeChapterThreeView';
 import VibeChapterFiveView from './components/features/programming/VibeChapterFiveView';
 import VibePathView from './components/features/programming/VibePathView';
+import UnityPathView from './components/features/programming/UnityPathView';
+import UnityChapterZeroView from './components/features/programming/UnityChapterZeroView';
+import UnityChapterOneView from './components/features/programming/UnityChapterOneView';
 
 // Art Features
 import ArtMuseumView from './components/features/art/ArtMuseumView';
@@ -308,6 +314,29 @@ const AppContent: React.FC = () => {
           setLanguage={setLanguage}
         />;
 
+      // Unity AI Game Dev
+      case ViewState.UNITY_AI_GAME_DEV:
+        return <UnityPathView
+          onBack={() => setCurrentView(ViewState.LEARNING_HUB)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.UNITY_CHAPTER_0:
+        return <UnityChapterZeroView
+          onBack={() => setCurrentView(ViewState.UNITY_AI_GAME_DEV)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.UNITY_CHAPTER_1:
+        return <UnityChapterOneView
+          onBack={() => setCurrentView(ViewState.UNITY_AI_GAME_DEV)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+
       // Art Routes
       case ViewState.ART_MUSEUM:
         return <ArtMuseumView onNavigate={setCurrentView} language={language} setLanguage={setLanguage} />;
@@ -395,6 +424,7 @@ const AppContent: React.FC = () => {
           <Layout currentView={currentView} onNavigate={setCurrentView}>
             {renderContent()}
           </Layout>
+          <FloatingChatbot />
         </>
       )}
     </>
