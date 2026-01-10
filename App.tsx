@@ -49,7 +49,9 @@ import VibePrologueView from './components/features/programming/VibePrologueView
 import VibeChapterOneView from './components/features/programming/VibeChapterOneView';
 import VibeChapterTwoView from './components/features/programming/VibeChapterTwoView';
 import VibeChapterThreeView from './components/features/programming/VibeChapterThreeView';
+import VibeChapterFourView from './components/features/programming/VibeChapterFourView';
 import VibeChapterFiveView from './components/features/programming/VibeChapterFiveView';
+import VibeChapterZeroView from './components/features/programming/VibeChapterZeroView';
 import VibePathView from './components/features/programming/VibePathView';
 
 // Art Features
@@ -279,6 +281,13 @@ const AppContent: React.FC = () => {
           language={language}
           setLanguage={setLanguage}
         />;
+      case ViewState.VIBE_CHAPTER_0:
+        return <VibeChapterZeroView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
       case ViewState.VIBE_CHAPTER_1:
         return <VibeChapterOneView
           onBack={() => setCurrentView(ViewState.VIBE_PATH)}
@@ -295,6 +304,13 @@ const AppContent: React.FC = () => {
         />;
       case ViewState.VIBE_CHAPTER_3:
         return <VibeChapterThreeView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.VIBE_CHAPTER_4:
+        return <VibeChapterFourView
           onBack={() => setCurrentView(ViewState.VIBE_PATH)}
           onNavigate={setCurrentView}
           language={language}

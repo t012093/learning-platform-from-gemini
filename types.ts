@@ -107,6 +107,7 @@ export enum ViewState {
   WEB_INSPECTOR = 'WEB_INSPECTOR', // New: Inspector Tool Simulation
   VIBE_PATH = 'VIBE_PATH', // New: The Hub for Vibe Coding
   VIBE_PROLOGUE = 'VIBE_PROLOGUE', // Prologue: Mindset
+  VIBE_CHAPTER_0 = 'VIBE_CHAPTER_0', // Chapter 0: Premise
   VIBE_CHAPTER_1 = 'VIBE_CHAPTER_1', // Chapter 1: Prompt Engineering
   VIBE_CHAPTER_2 = 'VIBE_CHAPTER_2', // Chapter 2: The Cockpit
   VIBE_CHAPTER_3 = 'VIBE_CHAPTER_3', // Chapter 3: The Engine (Codex)
@@ -293,26 +294,37 @@ export type CourseTemplate = 'focus_slide' | 'workshop_split' | 'dialogue_chat' 
 
 // --- Vibe Coding Document Types ---
 
-export type DocBlock = 
-  | { type: 'text'; text: string; style?: 'normal' | 'lead' | 'quote' }
-  | { type: 'image'; src: string; alt: string; caption?: string; layout?: 'full' | 'float-right' }
+export type LocalizedDocBlock = 
+  | { type: 'text'; text: LocalizedText; style?: 'normal' | 'lead' | 'quote' }
+  | { type: 'image'; src: string; alt: string; caption?: LocalizedText; layout?: 'full' | 'float-right' }
   | { type: 'code'; code: string; language: string; filename?: string; highlightLines?: number[] }
-  | { type: 'list'; items: string[]; style?: 'bullet' | 'number' | 'check' }
-  | { type: 'callout'; title?: string; text: string; variant: 'info' | 'warning' | 'tip' | 'success' }
-  | { type: 'mermaid'; chart: string; caption?: string }
-  | { type: 'table'; headers: string[]; rows: string[][] };
+  | { type: 'list'; items: LocalizedText[]; style?: 'bullet' | 'number' | 'check' }
+  | { type: 'callout'; title?: LocalizedText; text: LocalizedText; variant: 'info' | 'warning' | 'tip' | 'success' }
+  | { type: 'mermaid'; chart: string; caption?: LocalizedText }
+  | { type: 'table'; headers: LocalizedText[]; rows: LocalizedText[][] }
+  | { 
+      type: 'mindmap'; 
+      root: {
+        text: LocalizedText;
+        children: {
+          text: LocalizedText;
+          details: LocalizedText;
+          children?: { text: LocalizedText; details: LocalizedText }[];
+        }[];
+      }
+    };
 
 export interface DocSection {
   id: string;
-  title: string;
-  content: DocBlock[];
+  title: LocalizedText;
+  content: LocalizedDocBlock[];
 }
 
 export interface DocChapter {
   id: string;
-  title: string;
-  subtitle: string;
-  readingTime: string; // e.g. "10 min read"
+  title: LocalizedText;
+  subtitle: LocalizedText;
+  readingTime: LocalizedText; // e.g. "10 min read"
   sections: DocSection[];
 }
 
@@ -320,19 +332,19 @@ export interface DocChapter {
 
 export interface QuizOption {
   id: string;
-  text: string;
+  text: LocalizedText;
 }
 
 export interface QuizQuestion {
   id: string;
-  text: string;
+  text: LocalizedText;
   options: QuizOption[];
   correctAnswer: string; // id of the correct option
-  explanation: string;
+  explanation: LocalizedText;
 }
 
 export interface QuizData {
   id: string;
-  title: string;
+  title: LocalizedText;
   questions: QuizQuestion[];
 }

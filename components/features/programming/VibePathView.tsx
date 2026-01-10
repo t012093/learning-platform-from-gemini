@@ -49,7 +49,7 @@ const VibePathView: React.FC<VibePathViewProps> = ({ onBack, onNavigate, languag
         {
           id: 'ch3',
           title: 'Chapter 3: Generating Frontend',
-          desc: 'Google AI Studio basics. Creating UI prototypes with Gemini 1.5 Pro.',
+          desc: 'Google AI Studio basics. Creating UI prototypes with Gemini 3 Pro.',
           duration: "90 min",
           image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=800"
         },
@@ -137,7 +137,7 @@ const VibePathView: React.FC<VibePathViewProps> = ({ onBack, onNavigate, languag
         {
           id: 'ch3',
           title: '第3章｜フロントエンドをAIで生成する',
-          desc: 'Google AI Studioの基本操作。Gemini ProでUIの叩き台を作る思考法。',
+          desc: 'Google AI Studioの基本操作。Gemini 3 ProでUIの叩き台を作る思考法。',
           duration: "90分",
           image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=800"
         },
@@ -199,8 +199,8 @@ const VibePathView: React.FC<VibePathViewProps> = ({ onBack, onNavigate, languag
   // Map static data to translated content
   const chapters = t.chapters.map((ch, idx) => ({
     ...ch,
-    status: idx === 0 ? 'completed' : (idx === 1 ? 'completed' : (idx === 2 ? 'current' : 'locked')), 
-    view: idx === 0 ? ViewState.VIBE_PROLOGUE : (idx === 1 ? ViewState.VIBE_CHAPTER_1 : (idx === 2 ? ViewState.VIBE_CHAPTER_2 : null))
+    status: idx === 0 ? 'completed' : (idx === 1 ? 'completed' : (idx === 2 ? 'completed' : (idx === 3 ? 'completed' : (idx === 4 ? 'completed' : (idx === 5 ? 'current' : 'locked'))))), 
+    view: idx === 0 ? ViewState.VIBE_CHAPTER_0 : (idx === 1 ? ViewState.VIBE_CHAPTER_1 : (idx === 2 ? ViewState.VIBE_CHAPTER_2 : (idx === 3 ? ViewState.VIBE_CHAPTER_3 : (idx === 4 ? ViewState.VIBE_CHAPTER_4 : (idx === 5 ? ViewState.VIBE_CHAPTER_5 : null)))))
   }));
 
   return (
