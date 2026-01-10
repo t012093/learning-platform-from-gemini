@@ -17,6 +17,13 @@ import VibeQuizView from './VibeQuizView';
 // Configure PDF worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
+// Helper to handle both string (legacy/resolved) and LocalizedText
+const getText = (content: string | LocalizedText | undefined, lang: 'en' | 'jp'): string => {
+  if (!content) return '';
+  if (typeof content === 'string') return content;
+  return content[lang] || content['en'] || '';
+};
+
 interface VibeDocViewProps {
   onBack: () => void;
   onNavigate: (view: ViewState) => void;
@@ -119,7 +126,7 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
           </button>
           <div className="flex flex-col">
             <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">{t.tag}</span>
-            <span className="text-sm font-bold text-slate-800 line-clamp-1">{chapter.title[safeLanguage]}</span>
+            <span className="text-sm font-bold text-slate-800 line-clamp-1">{getText(chapter.title, safeLanguage)}</span>
           </div>
         </div>
 
@@ -174,7 +181,7 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
              </div>
            )}
            <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
-             <Clock size={14} /> {chapter.readingTime[safeLanguage]}
+             <Clock size={14} /> {getText(chapter.readingTime, safeLanguage)}
            </span>
         </div>
       </header>
@@ -189,10 +196,10 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
                Chapter 1
             </div>
             <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight tracking-tight">
-              {chapter.title[safeLanguage]}
+              {getText(chapter.title, safeLanguage)}
             </h1>
             <p className="text-xl text-slate-500 leading-relaxed font-serif italic">
-              {chapter.subtitle[safeLanguage]}
+              {getText(chapter.subtitle, safeLanguage)}
             </p>
           </header>
 
@@ -201,7 +208,7 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
               <section key={section.id} id={section.id} className="scroll-mt-24">
                 <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 group cursor-pointer" onClick={() => scrollToSection(section.id)}>
                    <span className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center text-sm group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">#</span>
-                   {section.title[safeLanguage]}
+                   {getText(section.title, safeLanguage)}
                 </h2>
                 <div className="space-y-8">
                   {section.content.map((block, idx) => (
@@ -246,7 +253,7 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
                              : 'border-transparent text-slate-500 hover:text-slate-800'
                         }`}
                      >
-                        {(section.title[safeLanguage].split('. ')[1] || section.title[safeLanguage])}
+                        {(getText(section.title, safeLanguage).split('. ')[1] || getText(section.title, safeLanguage))}
                      </button>
                   </li>
                 ))}
@@ -281,7 +288,7 @@ const SLIDE_TIMINGS = [
 
 // --- MindMap Block Component ---
 const MindMapNode: React.FC<{ 
-  node: { text: LocalizedText; details?: LocalizedText; children?: any[] }; 
+  node: { text: LocalizedText | string; details?: LocalizedText | string; children?: any[] }; 
   language: 'en' | 'jp';
   isRoot?: boolean;
 }> = ({ node, language, isRoot }) => {
@@ -299,7 +306,7 @@ const MindMapNode: React.FC<{
         `}
       >
         <div className="flex items-center justify-between gap-4">
-          <span className={`font-bold ${isRoot ? 'text-lg' : 'text-sm'}`}>{node.text[language]}</span>
+          <span className={`font-bold ${isRoot ? 'text-lg' : 'text-sm'}`}>{getText(node.text, language)}</span>
           {node.children && (
             <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
               <ChevronDown size={16} className={isRoot ? 'text-white/70' : 'text-slate-400'} />
@@ -309,7 +316,7 @@ const MindMapNode: React.FC<{
         
         {isOpen && node.details && (
           <div className={`mt-2 text-xs leading-relaxed animate-in fade-in slide-in-from-top-1 duration-300 ${isRoot ? 'text-purple-100' : 'text-slate-500'}`}>
-            {node.details[language]}
+            {getText(node.details, language)}
           </div>
         )}
 
@@ -439,7 +446,7 @@ const SlideViewer: React.FC<{ pdfUrl: string; onBack: () => void; language: 'en'
 };
 
 // --- Mermaid Block Component ---
-const MermaidBlock: React.FC<{ chart: string; caption?: LocalizedText; language: 'en' | 'jp' }> = ({ chart, caption, language }) => {
+const MermaidBlock: React.FC<{ chart: string; caption?: LocalizedText | string; language: 'en' | 'jp' }> = ({ chart, caption, language }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgContent, setSvgContent] = useState<string>('');
   const id = useId().replace(/:/g, ''); 
@@ -463,7 +470,7 @@ const MermaidBlock: React.FC<{ chart: string; caption?: LocalizedText; language:
     <div className="my-8 p-8 bg-slate-50 rounded-xl border border-slate-100 flex flex-col items-center justify-center relative">
        <div className="absolute top-4 right-4 px-2 py-1 bg-white rounded border border-slate-200 text-[10px] font-bold text-slate-400 uppercase">Diagram</div>
        <div ref={containerRef} className="w-full flex justify-center overflow-x-auto" dangerouslySetInnerHTML={{ __html: svgContent }} />
-       {caption && <p className="mt-4 text-sm text-slate-500 font-medium text-center">{caption[language]}</p>}
+       {caption && <p className="mt-4 text-sm text-slate-500 font-medium text-center">{getText(caption, language)}</p>}
     </div>
   );
 };
@@ -484,7 +491,7 @@ const BlockRenderer: React.FC<{ block: LocalizedDocBlock; language: 'en' | 'jp' 
                ${block.style === 'quote' ? 'font-serif text-lg italic text-slate-600 border-l-4 border-slate-200 pl-4 py-1' : ''}
             `}>
                {/* Use localized text AND GlossaryText */}
-               <GlossaryText text={block.text[language]} />
+               <GlossaryText text={getText(block.text, language)} />
             </p>
          );
       
@@ -492,7 +499,7 @@ const BlockRenderer: React.FC<{ block: LocalizedDocBlock; language: 'en' | 'jp' 
          return (
             <figure className={`my-8 ${block.layout === 'full' ? '-mx-6 md:-mx-12' : ''}`}>
                <img src={block.src} alt={block.alt} className="w-full rounded-xl shadow-md border border-slate-100" />
-               {block.caption && <figcaption className="text-center text-xs text-slate-400 mt-2 font-medium">{block.caption[language]}</figcaption>}
+               {block.caption && <figcaption className="text-center text-xs text-slate-400 mt-2 font-medium">{getText(block.caption, language)}</figcaption>}
             </figure>
          );
 
@@ -517,9 +524,9 @@ const BlockRenderer: React.FC<{ block: LocalizedDocBlock; language: 'en' | 'jp' 
             <div className={`my-8 p-6 rounded-xl border ${style.bg} ${style.border} flex gap-4`}>
                <div className={`mt-0.5 shrink-0 ${style.iconColor}`}><Icon size={20} /></div>
                <div>
-                  {block.title && <h4 className={`font-bold text-sm uppercase tracking-wide mb-2 ${style.text} opacity-80`}>{block.title[language]}</h4>}
+                  {block.title && <h4 className={`font-bold text-sm uppercase tracking-wide mb-2 ${style.text} opacity-80`}>{getText(block.title, language)}</h4>}
                   <p className={`text-sm leading-relaxed ${style.text}`}>
-                     <GlossaryText text={block.text[language]} />
+                     <GlossaryText text={getText(block.text, language)} />
                   </p>
                </div>
             </div>
@@ -531,12 +538,8 @@ const BlockRenderer: React.FC<{ block: LocalizedDocBlock; language: 'en' | 'jp' 
                {block.items.map((item, i) => (
                   <li key={i} className="flex gap-3 text-slate-700 leading-relaxed group">
                      {block.style !== 'number' && <span className="mt-2 w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0 group-hover:scale-125 transition-transform" />}
-                     {/* For lists, GlossaryText handles plain text, but if there's complex HTML inside (like bold) that GlossaryText also tries to handle, we might have overlap.
-                         GlossaryText handles **bold**. If item[language] has **bold**, GlossaryText will render it.
-                         So we can just use GlossaryText.
-                     */}
                      <span>
-                        <GlossaryText text={item[language]} />
+                        <GlossaryText text={getText(item, language)} />
                      </span>
                   </li>
                ))}
