@@ -2,39 +2,38 @@ import { DocChapter } from '../../../types';
 
 export const VIBE_CHAPTER_3_DATA: DocChapter = {
   id: 'vibe-ch3',
-  title: { en: 'Chapter 3 | Generating Frontend with AI', jp: '第3章｜フロントエンドをAIで生成する' },
+  title: { en: 'Chapter 3 | The Development Cockpit', jp: '第3章｜開発環境コックピット（VSCode）' },
   subtitle: { 
-    en: 'Building the "Look and Feel" instantly using Google AI Studio & Gemini 3 Pro.', 
-    jp: 'Google AI Studio × Gemini 3 Pro で「見た目」を爆速構築する' 
+    en: 'Setting up Visual Studio Code, the ultimate weapon for modern developers.', 
+    jp: '最強の武器「VSCode」を導入し、AI開発に最適化されたコックピットを構築する。' 
   },
-  readingTime: { en: '25 min read', jp: '25分で読める' },
+  readingTime: { en: '20 min read', jp: '20分で読める' },
   sections: [
     {
       id: '3-1',
-      title: { en: '3-1. Why Google AI Studio?', jp: '3-1. なぜ Google AI Studio なのか？' },
+      title: { en: '3-1. Why Not Notepad?', jp: '3-1. なぜ「メモ帳」ではダメなのか' },
       content: [
         {
           type: 'text',
           text: {
-            en: 'While ChatGPT is great, for development, **Google AI Studio** is a hidden gem. It offers raw access to Gemini 3 Pro, one of the most powerful models for coding, often for free.',
-            jp: 'ChatGPTも優秀ですが、開発においては **Google AI Studio** が隠れた名ツールです。コーディング性能が極めて高い「Gemini 3 Pro」の生の能力を、（多くの場合無料で）フル活用できるからです。'
+            en: 'Programming is not just writing text. It involves file management, terminal commands, git operations, and debugging. You need a tool that does it all in one window.',
+            jp: 'プログラミングは単なる文字入力ではありません。ファイル管理、ターミナル操作、Git連携、デバッグ...これら全てを1つのウィンドウで完結できるツールが必要です。'
           },
           style: 'lead'
         },
         {
-          type: 'list',
-          items: [
-            { en: '**Long Context**: It can read massive amounts of documentation or existing code at once (up to 2M tokens!).', jp: '**ロングコンテキスト**: 膨大なドキュメントや既存のコードを一度に読み込めます（最大200万トークン！）。' },
-            { en: '**Multimodal**: It understands images and videos with exceptionally high precision.', jp: '**マルチモーダル**: 画像や動画の認識精度が極めて高いです。「このスクショと同じUIを作って」が得意技です。' },
-            { en: '**Controllability**: You can tweak "Temperature" (creativity) to get consistent code outputs.', jp: '**制御性**: 「Temperature（創造性）」などのパラメータを調整し、安定したコードを出力させることができます。' }
-          ]
+          type: 'text',
+          text: {
+            en: '**Visual Studio Code (VSCode)** is the industry standard. It is lightweight, free, and has an endless ecosystem of extensions.',
+            jp: '**Visual Studio Code (VSCode)** は、現代の業界標準エディタです。軽量で無料、そして無限の拡張機能エコシステムを持っています。'
+          }
         },
         {
           type: 'callout',
-          title: { en: 'Setup', jp: '準備' },
+          title: { en: 'Installation', jp: 'インストール' },
           text: {
-            en: 'Access https://aistudio.google.com/ and log in with your Google account. That\'s it. You are ready to develop.',
-            jp: 'https://aistudio.google.com/ にアクセスし、Googleアカウントでログインするだけです。これだけで、最強の開発環境が手に入ります。'
+            en: 'Download from https://code.visualstudio.com/. It supports Windows, Mac, and Linux.',
+            jp: 'https://code.visualstudio.com/ からダウンロードしてください。Windows, Mac, Linuxすべてに対応しています。'
           },
           variant: 'info'
         }
@@ -42,140 +41,68 @@ export const VIBE_CHAPTER_3_DATA: DocChapter = {
     },
     {
       id: '3-2',
-      title: { en: '3-2. "Screenshot" is the Best Blueprint', jp: '3-2. 「スクショ」が最強の設計図' },
+      title: { en: '3-2. Anatomy of the Cockpit', jp: '3-2. 画面の見方（コックピットの計器類）' },
       content: [
         {
           type: 'text',
           text: {
-            en: 'Why is image input faster? Because describing UI in words is incredibly inefficient. A single screenshot contains thousands of data points about layout, color, and spacing.',
-            jp: 'なぜ画像のほうが早いのか？ それは、UIを言葉で説明するのが圧倒的に非効率だからです。1枚のスクショには、レイアウト、色、余白に関する数千のデータポイントが含まれています。'
+            en: 'Understanding your tool is the first step to speed.',
+            jp: 'ツールの各部名称を覚えることが、スピードへの第一歩です。'
           }
         },
         {
-          type: 'table',
-          headers: [
-            { en: 'Comparison', jp: '比較' },
-            { en: 'Text Prompting', jp: 'テキスト指示' },
-            { en: 'Image Prompting', jp: '画像指示（スクショ）' }
-          ],
-          rows: [
-            [
-              { en: 'Effort', jp: '指示の手間' }, 
-              { en: 'High (Need to define layout, colors, font sizes)', jp: '高い（レイアウト、色、サイズを言語化する必要あり）' }, 
-              { en: 'Zero (Just Paste)', jp: 'ゼロ（貼るだけ）' }
-            ],
-            [
-              { en: 'Information Density', jp: '情報量' }, 
-              { en: 'Low (Nuances are lost)', jp: '低い（ニュアンスが伝わりきらない）' }, 
-              { en: 'High (Pixel-perfect details)', jp: '高い（ピクセル単位の情報を網羅）' }
-            ],
-            [
-              { en: 'Result Accuracy', jp: '再現度' }, 
-              { en: 'Hit or Miss (Depends on your vocabulary)', jp: 'バラつく（言語化能力に依存）' }, 
-              { en: 'Consistent (AI sees what you see)', jp: '安定（AIが「正解」を見ているため）' }
-            ]
+          type: 'list',
+          items: [
+            { en: '**Explorer (Left)**: Your project files. `Ctrl/Cmd + B` to toggle.', jp: '**エクスプローラー (左)**: プロジェクトのファイル一覧。`Ctrl/Cmd + B` で開閉できます。' },
+            { en: '**Editor (Center)**: Where you write code. You can split screens to see multiple files.', jp: '**エディタ (中央)**: コードを書く場所。画面を分割して複数のファイルを同時に見ることができます。' },
+            { en: '**Terminal (Bottom)**: Where you talk to the system. `Ctrl/Cmd + J` (or `~`) to toggle.', jp: '**ターミナル (下)**: システムに命令を送る場所。`Ctrl/Cmd + J` (または `~`) で開閉します。' },
+            { en: '**Command Palette (Top)**: The magic search bar. `Ctrl/Cmd + Shift + P` to do ANYTHING.', jp: '**コマンドパレット (上)**: 魔法の検索バー。`Ctrl/Cmd + Shift + P` を押せば、マウスを使わずにあらゆる操作が可能です。' }
           ]
-        },
-        {
-          type: 'text',
-          text: {
-            en: 'Draw a rough sketch on paper, take a photo, and paste it. Or take a screenshot of a website you like. Gemini will understand the layout, colors, and even the "vibe" instantly.',
-            jp: '紙に手書きでラフを描いて写真を撮るか、参考になるWebサイトのスクリーンショットを撮って貼り付けましょう。Geminiはレイアウト、配色、そして「雰囲気」までも一瞬で理解します。'
-          }
-        },
-        {
-          type: 'mermaid',
-          chart: `graph LR
-    Input[Input: Image/Sketch] --> Gemini{Gemini 3 Pro}
-    Gemini --> Code[Output: React/HTML Code]
-    Code --> Preview[Browser Preview]`,
-          caption: { en: 'Image to Code Workflow', jp: '画像からコードを生成するフロー' }
         }
       ]
     },
     {
       id: '3-3',
-      title: { en: '3-3. The "One-Shot" Prompt for UI', jp: '3-3. 1発で動くコードを出させるプロンプト' },
+      title: { en: '3-3. Essential Extensions', jp: '3-3. 必須の拡張機能' },
       content: [
         {
           type: 'text',
           text: {
-            en: 'To get usable code instantly, you need to specify the "Tech Stack" clearly. Otherwise, you might get raw HTML when you wanted React.',
-            jp: '使えるコードを即座に得るためには、「技術スタック」を明確に指定する必要があります。そうしないと、Reactが欲しいのに生のHTMLが返ってきたりします。'
+            en: 'VSCode is just a skeleton. You need to equip it with armor (Extensions).',
+            jp: '初期状態のVSCodeは「素体」です。拡張機能という「装備」を整えましょう。'
           }
         },
         {
-          type: 'code',
-          language: 'markdown',
-          filename: 'UI Generation Prompt Template',
-          code: `Act as an expert Frontend Developer.
-Create a modern, responsive landing page based on the attached image.
-
-Requirements:
-- Framework: React (Functional Components)
-- Styling: Tailwind CSS (use standard utility classes)
-- Icons: Lucide React (import from 'lucide-react')
-- Structure: Single file component (for easy copying)
-- Design: Make it look clean, professional, and mobile-responsive.
-
-Output ONLY the code. No explanation needed.`
-        },
-        {
-          type: 'callout',
-          title: { en: 'Why Single File?', jp: 'なぜ「単一ファイル」？' },
-          text: {
-            en: 'For prototyping, asking for a "Single file component" is crucial. It allows you to copy-paste everything into `App.tsx` and see it work immediately without managing multiple files.',
-            jp: 'プロトタイピングでは「単一ファイル（Single file）」で出力させることが重要です。そうすれば、`App.tsx` に丸ごとコピペするだけで動きます。ファイル分割は、動いた後にやればいいのです。'
-          },
-          variant: 'tip'
+          type: 'table',
+          headers: [{ en: 'Extension', jp: '拡張機能名' }, { en: 'Why you need it', jp: '役割' }],
+          rows: [
+            [{ en: 'Prettier', jp: 'Prettier' }, { en: 'Automatically formats your messy code on save.', jp: '汚いコードを保存時に自動で整形してくれます。必須。' }],
+            [{ en: 'ESLint', jp: 'ESLint' }, { en: 'Finds bugs and errors before you run the code.', jp: '実行前にバグやエラーを見つけて警告してくれます。' }],
+            [{ en: 'Tailwind CSS', jp: 'Tailwind CSS' }, { en: 'Gives autocomplete for Tailwind classes.', jp: 'Tailwindのクラス名を補完してくれます。' }],
+            [{ en: 'GitLens', jp: 'GitLens' }, { en: 'Visualizes who wrote which line of code and when.', jp: '「誰がいつこの行を書いたか」を行ごとに表示してくれます。' }]
+          ]
         }
       ]
     },
     {
       id: '3-4',
-      title: { en: '3-4. Local Dev & GitHub Mastery', jp: '3-4. ローカル開発とGitHub連携の極意' },
+      title: { en: '3-4. The AI-Native Alternative: Cursor', jp: '3-4. AIネイティブな選択肢：Cursor' },
       content: [
         {
           type: 'text',
           text: {
-            en: 'Once you have the code, don\'t let it sit in the browser. Move it to your professional workshop: **VSCode**.',
-            jp: 'コードができたら、ブラウザの中に置いたままにしてはいけません。プロの仕事場である **VSCode** へ移動させましょう。'
+            en: 'If you want to go all-in on AI, try **Cursor**. It is a fork of VSCode with built-in AI capabilities like "Command K" to generate code inline.',
+            jp: 'もしAI開発にフルコミットするなら、**Cursor** という選択肢もあります。VSCodeをベースに作られており、`Cmd + K` でエディタ内に直接AIコードを生成できる機能などが標準搭載されています。'
           }
         },
         {
-          type: 'list',
-          style: 'number',
-          items: [
-            { en: '**Export/Download**: Use the "Download" or "Get Code" button in AI Studio to save the generated code as a file.', jp: '**ダウンロード**: AI Studioの「Download」またはコード出力機能を使って、生成されたコードをファイルとして保存します。' },
-            { en: '**Open in VSCode**: Open the downloaded folder in VSCode to start the development environment.', jp: '**VSCodeで開く**: 保存したファイルをVSCodeで開き、ローカルでの開発・微調整を開始します。' },
-            { en: '**Push to GitHub**: Initialize a Git repo (`git init`), add a remote, and `push` your code to the cloud.', jp: '**GitHubへPush**: `git init` でリポジトリを作成し、GitHubにリモート登録して `push` します。これで「セーブポイント」がクラウドに保存されます。' },
-            { en: '**Clone Anywhere**: Now you can `clone` this project on any other machine and continue developing from where you left off.', jp: '**どこでもClone**: 一度GitHubに上げれば、別のPCでも `git clone` するだけで、すぐに開発の続きを再開できます。' }
-          ]
-        },
-        {
           type: 'callout',
-          title: { en: 'Note on Git Commands', jp: 'Gitコマンドについて' },
+          title: { en: 'Migration is Easy', jp: '移行は簡単' },
           text: {
-            en: 'Detailed Git commands and setup procedures will be explained in **Chapter 4**. For now, just understand the flow.',
-            jp: '具体的なGitコマンドやセットアップ手順については、次の**第4章**で詳しく解説します。まずは全体の流れを理解してください。'
-          },
-          variant: 'info'
-        },
-        {
-          type: 'callout',
-          title: { en: 'The Professional Loop', jp: 'プロフェッショナル・ループ' },
-          text: {
-            en: 'AI Studio (Prototype) -> Download -> VSCode (Refine) -> GitHub (Save/Share) -> Clone (Scale). This is the standard pipeline for modern creators.',
-            jp: 'AI Studio（試作）→ ダウンロード → VSCode（調整）→ GitHub（保存・共有）→ Clone（展開）。これが現代のクリエイターの標準的なパイプラインです。'
+            en: 'Since Cursor is built on VSCode, you can import all your VSCode extensions and settings with one click.',
+            jp: 'CursorはVSCodeがベースなので、VSCodeで使っていた拡張機能や設定をワンクリックで引き継ぐことができます。'
           },
           variant: 'success'
-        },
-        {
-          type: 'text',
-          text: {
-            en: 'This flow—**Generate, Sync, and Collaborate**—turns a simple experiment into a production-ready software project.',
-            jp: 'この **「生成・同期・共有」** の流れを身につけることで、単なる実験レベルのコードが、本番品質のソフトウェアプロジェクトへと進化します。'
-          }
         }
       ]
     }

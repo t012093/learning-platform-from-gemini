@@ -118,6 +118,7 @@ export enum ViewState {
   VIBE_CHAPTER_8 = 'VIBE_CHAPTER_8', // Chapter 8: Failure & Debugging
   VIBE_CHAPTER_9 = 'VIBE_CHAPTER_9', // Chapter 9: Game/Service Dev
   VIBE_CHAPTER_10 = 'VIBE_CHAPTER_10', // Chapter 10: Future Learning
+  VIBE_CHAPTER_11 = 'VIBE_CHAPTER_11', // Chapter 11: Future Learning (Shifted)
 
   // Art Section
   ART_MUSEUM = 'ART_MUSEUM', // The Hub

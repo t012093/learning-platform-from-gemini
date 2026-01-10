@@ -2,72 +2,130 @@ import { DocChapter } from '../../../types';
 
 export const VIBE_CHAPTER_4_DATA: DocChapter = {
   id: 'vibe-ch4',
-  title: { en: 'Chapter 4 | GitHub Workflow Mastery', jp: '第4章｜GitHubワークフロー完全理解' },
+  title: { en: 'Chapter 4 | Generating Frontend with AI', jp: '第4章｜フロントエンドをAIで生成する' },
   subtitle: { 
-    en: 'Understanding the lifecycle of code and why Git is the ultimate safety net for AI-driven development.', 
-    jp: 'コードのライフサイクルを理解し、なぜGitがAI開発において最強の安全網なのかを学ぶ。' 
+    en: 'Building the "Look and Feel" instantly using Google AI Studio & Gemini 3 Pro.', 
+    jp: 'Google AI Studio × Gemini 3 Pro で「見た目」を爆速構築する' 
   },
-  readingTime: { en: '20 min read', jp: '20分で読める' },
+  readingTime: { en: '25 min read', jp: '25分で読める' },
   sections: [
     {
       id: '4-1',
-      title: { en: '4-1. What is a Repository?', jp: '4-1. リポジトリとは何か' },
+      title: { en: '4-1. Why Google AI Studio?', jp: '4-1. なぜ Google AI Studio なのか？' },
       content: [
         {
           type: 'text',
           text: {
-            en: 'A **Repository** is like a digital warehouse for your project. But it\'s not just a folder; it\'s a warehouse with a built-in surveillance camera that records every single change.',
-            jp: '**リポジトリ**は、プロジェクトのためのデジタルな「倉庫」です。単なるフォルダではなく、すべての変更を記録する監視カメラが備わった倉庫だと考えてください。'
+            en: 'While ChatGPT is great, for development, **Google AI Studio** is a hidden gem. It offers raw access to Gemini 3 Pro, one of the most powerful models for coding, often for free.',
+            jp: 'ChatGPTも優秀ですが、開発においては **Google AI Studio** が隠れた名ツールです。コーディング性能が極めて高い「Gemini 3 Pro」の生の能力を、（多くの場合無料で）フル活用できるからです。'
           },
           style: 'lead'
         },
         {
-          type: 'mermaid',
-          chart: `graph TD
-    Local[Local Repo<br>Your Computer] -- Push --> Remote[Remote Repo<br>GitHub Cloud]
-    Remote -- Clone/Pull --> Others[Team Members<br>Other Devices]`,
-          caption: { en: 'Local vs Remote Repositories', jp: 'ローカルリポジトリとリモートリポジトリの関係' }
+          type: 'list',
+          items: [
+            { en: '**Long Context**: It can read massive amounts of documentation or existing code at once (up to 2M tokens!).', jp: '**ロングコンテキスト**: 膨大なドキュメントや既存のコードを一度に読み込めます（最大200万トークン！）。' },
+            { en: '**Multimodal**: It understands images and videos with exceptionally high precision.', jp: '**マルチモーダル**: 画像や動画の認識精度が極めて高いです。「このスクショと同じUIを作って」が得意技です。' },
+            { en: '**Controllability**: You can tweak "Temperature" (creativity) to get consistent code outputs.', jp: '**制御性**: 「Temperature（創造性）」などのパラメータを調整し、安定したコードを出力させることができます。' }
+          ]
+        },
+        {
+          type: 'callout',
+          title: { en: 'Setup', jp: '準備' },
+          text: {
+            en: 'Access https://aistudio.google.com/ and log in with your Google account. That\'s it. You are ready to develop.',
+            jp: 'https://aistudio.google.com/ にアクセスし、Googleアカウントでログインするだけです。これだけで、最強の開発環境が手に入ります。'
+          },
+          variant: 'info'
         }
       ]
     },
     {
       id: '4-2',
-      title: { en: '4-2. Commit / Push / Clone Meanings', jp: '4-2. commit / push / clone の意味' },
+      title: { en: '4-2. "Screenshot" is the Best Blueprint', jp: '4-2. 「スクショ」が最強の設計図' },
       content: [
         {
           type: 'text',
           text: {
-            en: 'These three commands are the "Three Sacred Treasures" of development. Let\'s break them down.',
-            jp: 'これらの3つのコマンドは、開発における「三種の神器」です。その意味を正しく理解しましょう。'
+            en: 'Why is image input faster? Because describing UI in words is incredibly inefficient. A single screenshot contains thousands of data points about layout, color, and spacing.',
+            jp: 'なぜ画像のほうが早いのか？ それは、UIを言葉で説明するのが圧倒的に非効率だからです。1枚のスクショには、レイアウト、色、余白に関する数千のデータポイントが含まれています。'
           }
         },
         {
-          type: 'list',
-          items: [
-            { en: '**Commit**: Taking a "Snapshot" of the current working state. You give it a message like "feat: added login button".', jp: '**Commit**: 現在の作業状態の「スナップショット」を撮ること。「ログインボタンを追加」といったメッセージを添えて保存します。' },
-            { en: '**Push**: Sending your local commits to the GitHub cloud. This is like "Syncing" your progress.', jp: '**Push**: ローカルのスナップショットをGitHubのクラウドに送り出すこと。進捗を「同期」する行為です。' },
-            { en: '**Clone**: Downloading a whole repository from GitHub to a new computer. The "Start Line" for any project.', jp: '**Clone**: GitHubにある倉庫丸ごとを、新しい自分のPCにダウンロードすること。開発の「スタートライン」です。' }
+          type: 'table',
+          headers: [
+            { en: 'Comparison', jp: '比較' },
+            { en: 'Text Prompting', jp: 'テキスト指示' },
+            { en: 'Image Prompting', jp: '画像指示（スクショ）' }
+          ],
+          rows: [
+            [
+              { en: 'Effort', jp: '指示の手間' }, 
+              { en: 'High (Need to define layout, colors, font sizes)', jp: '高い（レイアウト、色、サイズを言語化する必要あり）' }, 
+              { en: 'Zero (Just Paste)', jp: 'ゼロ（貼るだけ）' }
+            ],
+            [
+              { en: 'Information Density', jp: '情報量' }, 
+              { en: 'Low (Nuances are lost)', jp: '低い（ニュアンスが伝わりきらない）' }, 
+              { en: 'High (Pixel-perfect details)', jp: '高い（ピクセル単位の情報を網羅）' }
+            ],
+            [
+              { en: 'Result Accuracy', jp: '再現度' }, 
+              { en: 'Hit or Miss (Depends on your vocabulary)', jp: 'バラつく（言語化能力に依存）' }, 
+              { en: 'Consistent (AI sees what you see)', jp: '安定（AIが「正解」を見ているため）' }
+            ]
           ]
+        },
+        {
+          type: 'text',
+          text: {
+            en: 'Draw a rough sketch on paper, take a photo, and paste it. Or take a screenshot of a website you like. Gemini will understand the layout, colors, and even the "vibe" instantly.',
+            jp: '紙に手書きでラフを描いて写真を撮るか、参考になるWebサイトのスクリーンショットを撮って貼り付けましょう。Geminiはレイアウト、配色、そして「雰囲気」までも一瞬で理解します。'
+          }
+        },
+        {
+          type: 'mermaid',
+          chart: `graph LR
+    Input[Input: Image/Sketch] --> Gemini{Gemini 3 Pro}
+    Gemini --> Code[Output: React/HTML Code]
+    Code --> Preview[Browser Preview]`,
+          caption: { en: 'Image to Code Workflow', jp: '画像からコードを生成するフロー' }
         }
       ]
     },
     {
       id: '4-3',
-      title: { en: '4-3. Why Git is Essential for AI Dev', jp: '4-3. AI開発でGitが必須な理由' },
+      title: { en: '4-3. The "One-Shot" Prompt for UI', jp: '4-3. 1発で動くコードを出させるプロンプト' },
       content: [
         {
           type: 'text',
           text: {
-            en: 'In traditional coding, bugs are often small. In AI-driven "Vibe Coding," AI might delete a whole file or rewrite a complex logic in a way that breaks everything.',
-            jp: '従来のコーディングでは、バグは少しずつ発生します。しかし、AIによる「バイブコーディング」では、AIが一気にファイルを消したり、複雑なロジックをめちゃくちゃに書き換えてしまうことがあります。'
+            en: 'To get usable code instantly, you need to specify the "Tech Stack" clearly. Otherwise, you might get raw HTML when you wanted React.',
+            jp: '使えるコードを即座に得るためには、「技術スタック」を明確に指定する必要があります。そうしないと、Reactが欲しいのに生のHTMLが返ってきたりします。'
           }
         },
         {
+          type: 'code',
+          language: 'markdown',
+          filename: 'UI Generation Prompt Template',
+          code: `Act as an expert Frontend Developer.
+Create a modern, responsive landing page based on the attached image.
+
+Requirements:
+- Framework: React (Functional Components)
+- Styling: Tailwind CSS (use standard utility classes)
+- Icons: Lucide React (import from 'lucide-react')
+- Structure: Single file component (for easy copying)
+- Design: Make it look clean, professional, and mobile-responsive.
+
+Output ONLY the code. No explanation needed.`
+        },
+        {
           type: 'callout',
-          title: { en: 'The AI Paradox', jp: 'AIのパラドックス' },
+          title: { en: 'Why Single File?', jp: 'なぜ「単一ファイル」？' },
           text: {
-            en: 'AI is fast, but it can be destructive. Git allows you to accept AI\'s bold suggestions because you know you can always hit the "Undo" button on a project-wide scale.',
-            jp: 'AIは高速ですが、時に破壊的です。Gitがあれば、プロジェクト全体を「元に戻す」ボタンがあることがわかっているので、AIの大胆な提案を安心して受け入れることができます。'
+            en: 'For prototyping, asking for a "Single file component" is crucial. It allows you to copy-paste everything into `App.tsx` and see it work immediately without managing multiple files.',
+            jp: 'プロトタイピングでは「単一ファイル（Single file）」で出力させることが重要です。そうすれば、`App.tsx` に丸ごとコピペするだけで動きます。ファイル分割は、動いた後にやればいいのです。'
           },
           variant: 'tip'
         }
@@ -75,129 +133,49 @@ export const VIBE_CHAPTER_4_DATA: DocChapter = {
     },
     {
       id: '4-4',
-      title: { en: '4-4. The "Safety First" Workflow', jp: '4-4. 壊れても戻れる安心設計' },
+      title: { en: '4-4. Download & GitHub Integration', jp: '4-4. ダウンロード・GitHub連携' },
       content: [
         {
           type: 'text',
           text: {
-            en: 'The golden rule of Vibe Coding is: **Commit frequently.**',
-            jp: 'バイブコーディングの鉄則は、**「こまめにコミットする」**ことです。'
+            en: 'Once you have the code, don\'t just stare at it. Put it in your local environment.',
+            jp: 'コードが生成されたら、眺めているだけではいけません。自分のローカル環境に移しましょう。'
           }
         },
         {
-          type: 'code',
-          language: 'bash',
-          filename: 'The Recovery Command',
-          code: `# If AI breaks your code, just run this to return to the last working state:
-git checkout .`
-        },
-        {
-          type: 'text',
-          text: {
-            en: 'By integrating Git into your daily rhythm, you turn development from a "fear of breaking things" into an "excitement of experimenting."',
-            jp: 'Gitを日常の習慣に取り入れることで、開発は「壊す恐怖」から「実験するワクワク」へと変わります。'
-          }
-        },
-        {
-          type: 'mermaid',
-          chart: `mindmap
-  root((Git for AI))
-    Safety Net
-      Instant Revert
-      Version History
-    Collaboration
-      Team Sync
-      Open Source
-    Mindset
-      Fearless Experiment
-      Rapid Iteration`,
-          caption: { en: 'Mind Map: Why we use Git', jp: 'マインドマップ：なぜGitを使うのか' }
-        }
-      ]
-    },
-    {
-      id: '4-5',
-      title: { en: '4-5. Practice: Git Command Cheat Sheet', jp: '4-5. 実践：Gitコマンド・チートシート' },
-      content: [
-        {
-          type: 'text',
-          text: {
-            en: 'Here are the actual commands you will use every day. Copy and paste these into your terminal.',
-            jp: 'これらが、あなたが毎日使うことになる実際のコマンドです。ターミナルにコピペして使いましょう。'
-          }
+          type: 'list',
+          style: 'number',
+          items: [
+            { en: '**Download**: Use the "Download" or "Export" button in AI Studio to save your project as a folder.', jp: '**ダウンロード**: AI Studioの「Download」または「Export」機能を使って、プロジェクトをフォルダとして保存します。' },
+            { en: '**Open in VSCode**: Open the downloaded folder in VSCode to start the development environment.', jp: '**VSCodeで開く**: 保存したフォルダをVSCodeで開き、ローカルでの開発・微調整を開始します。' },
+            { en: '**Push to GitHub**: Initialize a Git repo (`git init`), add a remote, and `push` your code to the cloud.', jp: '**GitHubへPush**: `git init` でリポジトリを作成し、GitHubにリモート登録して `push` します。これで「セーブポイント」がクラウドに保存されます。' },
+            { en: '**Clone Anywhere**: Now you can `clone` this project on any other machine and continue developing from where you left off.', jp: '**どこでもClone**: 一度GitHubに上げれば、別のPCでも `git clone` するだけで、すぐに開発の続きを再開できます。' }
+          ]
         },
         {
           type: 'callout',
-          title: { en: 'Step 1: First Setup (One time only)', jp: 'Step 1: 最初の設定（1回だけ）' },
+          title: { en: 'Note on Git Commands', jp: 'Gitコマンドについて' },
           text: {
-            en: 'Tell Git who you are so your commits are labeled correctly.',
-            jp: 'コミットの作者情報を登録します。'
+            en: 'Detailed Git commands and setup procedures will be explained in **Chapter 4**. For now, just understand the flow.',
+            jp: '具体的なGitコマンドやセットアップ手順については、次の**第4章**で詳しく解説します。まずは全体の流れを理解してください。'
           },
           variant: 'info'
         },
         {
-          type: 'code',
-          language: 'bash',
-          filename: 'Terminal',
-          code: `git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"`
-        },
-        {
           type: 'callout',
-          title: { en: 'Step 2: Start a Project', jp: 'Step 2: プロジェクトの開始' },
+          title: { en: 'The Professional Loop', jp: 'プロフェッショナル・ループ' },
           text: {
-            en: 'Turn a normal folder into a Git repository.',
-            jp: '普通のフォルダをGitリポジトリに変身させます。'
-          },
-          variant: 'info'
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          filename: 'Terminal',
-          code: `cd my-project-folder
-git init`
-        },
-        {
-          type: 'callout',
-          title: { en: 'Step 3: Save Changes (The Daily Loop)', jp: 'Step 3: 変更の保存（毎日のルーチン）' },
-          text: {
-            en: 'Do this every time you make a working change.',
-            jp: 'コードが動くようになったら、すぐにこれを実行します。'
+            en: 'AI Studio (Prototype) -> Download -> VSCode (Refine) -> GitHub (Save/Share) -> Clone (Scale). This is the standard pipeline for modern creators.',
+            jp: 'AI Studio（試作）→ ダウンロード → VSCode（調整）→ GitHub（保存・共有）→ Clone（展開）。これが現代のクリエイターの標準的なパイプラインです。'
           },
           variant: 'success'
         },
         {
-          type: 'code',
-          language: 'bash',
-          filename: 'Terminal',
-          code: `# 1. Add all changes to the "Staging Area"
-git add .
-
-# 2. Commit the changes with a message
-git commit -m "feat: added login form"
-
-# 3. (Optional) Check status
-git status`
-        },
-        {
-          type: 'callout',
-          title: { en: 'Step 4: Sync to Cloud', jp: 'Step 4: クラウドへの同期' },
+          type: 'text',
           text: {
-            en: 'Send your commits to GitHub.',
-            jp: 'コミットをGitHubに送信します。'
-          },
-          variant: 'warning'
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          filename: 'Terminal',
-          code: `# 1. Link to GitHub repo (First time only)
-git remote add origin https://github.com/your-id/your-repo.git
-
-# 2. Push code
-git push -u origin main`
+            en: 'This flow—**Generate, Sync, and Collaborate**—turns a simple experiment into a production-ready software project.',
+            jp: 'この **「生成・同期・共有」** の流れを身につけることで、単なる実験レベルのコードが、本番品質のソフトウェアプロジェクトへと進化します。'
+          }
         }
       ]
     }

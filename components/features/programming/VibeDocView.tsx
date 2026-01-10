@@ -271,7 +271,7 @@ const SLIDE_TIMINGS = [
 
 // --- MindMap Block Component ---
 const MindMapNode: React.FC<{ 
-  node: { text: LocalizedText; details: LocalizedText; children?: any[] }; 
+  node: { text: LocalizedText; details?: LocalizedText; children?: any[] }; 
   language: 'en' | 'jp';
   isRoot?: boolean;
 }> = ({ node, language, isRoot }) => {
@@ -297,7 +297,7 @@ const MindMapNode: React.FC<{
           )}
         </div>
         
-        {isOpen && (
+        {isOpen && node.details && (
           <div className={`mt-2 text-xs leading-relaxed animate-in fade-in slide-in-from-top-1 duration-300 ${isRoot ? 'text-purple-100' : 'text-slate-500'}`}>
             {node.details[language]}
           </div>
