@@ -63,10 +63,7 @@ import VibeChapterElevenView from './components/features/programming/VibeChapter
 import VibeChapterZeroView from './components/features/programming/VibeChapterZeroView';
 import VibePathView from './components/features/programming/VibePathView';
 import UnityPathView from './components/features/programming/UnityPathView';
-import UnityChapterZeroView from './components/features/programming/UnityChapterZeroView';
-import UnityChapterOneView from './components/features/programming/UnityChapterOneView';
-import UnityChapterTwoView from './components/features/programming/UnityChapterTwoView';
-import UnityChapterThreeView from './components/features/programming/UnityChapterThreeView';
+import UnityChapterView from './components/features/programming/UnityChapterView';
 
 // Art Features
 import ArtMuseumView from './components/features/art/ArtMuseumView';
@@ -389,28 +386,11 @@ const AppContent: React.FC = () => {
           setLanguage={setLanguage}
         />;
       case ViewState.UNITY_CHAPTER_0:
-        return <UnityChapterZeroView
-          onBack={() => setCurrentView(ViewState.UNITY_AI_GAME_DEV)}
-          onNavigate={setCurrentView}
-          language={language}
-          setLanguage={setLanguage}
-        />;
       case ViewState.UNITY_CHAPTER_1:
-        return <UnityChapterOneView
-          onBack={() => setCurrentView(ViewState.UNITY_AI_GAME_DEV)}
-          onNavigate={setCurrentView}
-          language={language}
-          setLanguage={setLanguage}
-        />;
       case ViewState.UNITY_CHAPTER_2:
-        return <UnityChapterTwoView
-          onBack={() => setCurrentView(ViewState.UNITY_AI_GAME_DEV)}
-          onNavigate={setCurrentView}
-          language={language}
-          setLanguage={setLanguage}
-        />;
       case ViewState.UNITY_CHAPTER_3:
-        return <UnityChapterThreeView
+        return <UnityChapterView
+          viewState={currentView}
           onBack={() => setCurrentView(ViewState.UNITY_AI_GAME_DEV)}
           onNavigate={setCurrentView}
           language={language}
