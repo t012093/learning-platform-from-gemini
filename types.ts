@@ -315,3 +315,24 @@ export interface DocChapter {
   readingTime: string; // e.g. "10 min read"
   sections: DocSection[];
 }
+
+// --- Quiz Types ---
+
+export interface QuizOption {
+  id: string;
+  text: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  text: string;
+  options: QuizOption[];
+  correctAnswer: string; // id of the correct option
+  explanation: string;
+}
+
+export interface QuizData {
+  id: string;
+  title: string;
+  questions: QuizQuestion[];
+}

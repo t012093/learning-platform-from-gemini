@@ -2,14 +2,15 @@ import React, { useState, useEffect, useRef, useId } from 'react';
 import { 
   ArrowLeft, BookOpen, List, Share2, Clock, 
   ChevronRight, AlertTriangle, Info, Lightbulb, CheckCircle2,
-  Copy, Check, FileText, Presentation, ChevronLeft, Maximize2, Minimize2
+  Copy, Check, FileText, Presentation, ChevronLeft, Maximize2, Minimize2, Brain
 } from 'lucide-react';
 import mermaid from 'mermaid';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import { ViewState, DocChapter, DocBlock } from '../../../types';
+import { ViewState, DocChapter, DocBlock, QuizData } from '../../../types';
 import { useTheme } from '../../../context/ThemeContext';
+import VibeQuizView from './VibeQuizView';
 
 // Configure PDF worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -19,12 +20,13 @@ interface VibeDocViewProps {
   onNavigate: (view: ViewState) => void;
   chapter: DocChapter;
   pdfUrl?: string;
+  quizData?: QuizData;
 }
 
-const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, pdfUrl }) => {
+const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, pdfUrl, quizData }) => {
   const { setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'doc' | 'slide'>('doc');
+  const [viewMode, setViewMode] = useState<'doc' | 'slide' | 'quiz'>('doc');
   const observer = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -91,19 +93,20 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
         </div>
 
         {/* View Mode Toggle */}
-        {pdfUrl && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex bg-slate-100 p-1 rounded-lg">
-            <button
-              onClick={() => setViewMode('doc')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                viewMode === 'doc' 
-                  ? 'bg-white text-purple-600 shadow-sm' 
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <FileText size={14} />
-              Doc
-            </button>
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex bg-slate-100 p-1 rounded-lg">
+          <button
+            onClick={() => setViewMode('doc')}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+              viewMode === 'doc' 
+                ? 'bg-white text-purple-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <FileText size={14} />
+            Doc
+          </button>
+          
+          {pdfUrl && (
             <button
               onClick={() => setViewMode('slide')}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
@@ -115,8 +118,22 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
               <Presentation size={14} />
               Slide
             </button>
-          </div>
-        )}
+          )}
+
+          {quizData && (
+            <button
+              onClick={() => setViewMode('quiz')}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                viewMode === 'quiz' 
+                  ? 'bg-white text-purple-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Brain size={14} />
+              Quiz
+            </button>
+          )}
+        </div>
 
         <div className="flex items-center gap-3">
            <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
@@ -125,7 +142,7 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
         </div>
       </header>
 
-      {viewMode === 'doc' ? (
+      {viewMode === 'doc' && (
       <main className="pt-24 pb-20 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
         
         {/* Main Content */}
@@ -163,8 +180,8 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
              <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-medium transition-colors">
                 <ArrowLeft size={16} /> Back to Course
              </button>
-             <button onClick={() => onNavigate(ViewState.VIBE_PATH)} className="bg-slate-900 text-white px-6 py-3 rounded-full font-bold hover:bg-slate-800 transition-all flex items-center gap-2">
-                Complete Chapter <CheckCircle2 size={18} />
+             <button onClick={() => setViewMode(quizData ? 'quiz' : 'doc')} className="bg-slate-900 text-white px-6 py-3 rounded-full font-bold hover:bg-slate-800 transition-all flex items-center gap-2">
+                {quizData ? 'Take Quiz' : 'Complete'} <CheckCircle2 size={18} />
              </button>
           </div>
         </article>
@@ -195,8 +212,20 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
         </aside>
 
       </main>
-      ) : (
-         <SlideViewer pdfUrl={pdfUrl || ''} onBack={() => setViewMode('doc')} />
+      )}
+      
+      {viewMode === 'slide' && pdfUrl && (
+         <SlideViewer pdfUrl={pdfUrl} onBack={() => setViewMode('doc')} />
+      )}
+
+      {viewMode === 'quiz' && quizData && (
+         <div className="pt-16 min-h-screen bg-slate-50">
+            <VibeQuizView 
+               quiz={quizData} 
+               onComplete={(score) => console.log('Quiz completed', score)}
+               onBack={() => setViewMode('doc')}
+            />
+         </div>
       )}
     </div>
   );
