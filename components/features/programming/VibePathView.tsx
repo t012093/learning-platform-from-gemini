@@ -48,56 +48,63 @@ const VibePathView: React.FC<VibePathViewProps> = ({ onBack, onNavigate, languag
         },
         {
           id: 'ch3',
-          title: 'Chapter 3: Generating Frontend',
-          desc: 'Google AI Studio basics. Creating UI prototypes with Gemini 1.5 Pro.',
+          title: 'Chapter 3: The Development Cockpit',
+          desc: 'Setting up VSCode, Extensions, and the AI-Native editor Cursor.',
+          duration: "45 min",
+          image: "https://images.unsplash.com/photo-1607799275518-d79f278ec964?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch4',
+          title: 'Chapter 4: Generating Frontend',
+          desc: 'Google AI Studio basics. Creating UI prototypes with Gemini 3 Pro.',
           duration: "90 min",
           image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch4',
-          title: 'Chapter 4: GitHub Workflow',
+          id: 'ch5',
+          title: 'Chapter 5: GitHub Workflow',
           desc: 'Understanding Repositories, Commits, and why Git is essential for AI dev.',
           duration: "60 min",
           image: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch5',
-          title: 'Chapter 5: Vibe Coding with CLI',
+          id: 'ch6',
+          title: 'Chapter 6: Vibe Coding with CLI',
           desc: 'Gemini CLI introduction. Implementing logic with natural language.',
           duration: "120 min",
           image: "https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch6',
-          title: 'Chapter 6: Data with Supabase',
+          id: 'ch7',
+          title: 'Chapter 7: Data with Supabase',
           desc: 'Auth, DB, Storage. Understanding the role of PostgreSQL.',
           duration: "120 min",
           image: "https://images.unsplash.com/photo-1633419461186-7d75076e2609?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch7',
-          title: 'Chapter 7: Deployment',
+          id: 'ch8',
+          title: 'Chapter 8: Deployment',
           desc: 'Releasing to Vercel and Render. The checklist for going live.',
           duration: "45 min",
           image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch8',
-          title: 'Chapter 8: Failure & Debugging',
+          id: 'ch9',
+          title: 'Chapter 9: Failure & Debugging',
           desc: 'How to deal with AI breaking things. Reading logs and error handling.',
           duration: "60 min",
           image: "https://images.unsplash.com/photo-1555861496-0666c8981751?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch9',
-          title: 'Chapter 9: Advanced Application',
+          id: 'ch10',
+          title: 'Chapter 10: Advanced Application',
           desc: 'Applied Game/Service Development. Refining UI/UX with AI.',
           duration: "90 min",
           image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch10',
-          title: 'Chapter 10: Future Learning',
+          id: 'ch11',
+          title: 'Chapter 11: Future Learning',
           desc: 'What not to learn. Cultivating selection eyes for AI tools.',
           duration: "30 min",
           image: "https://images.unsplash.com/photo-1535378437327-b7149b379bab?auto=format&fit=crop&q=80&w=800"
@@ -136,56 +143,63 @@ const VibePathView: React.FC<VibePathViewProps> = ({ onBack, onNavigate, languag
         },
         {
           id: 'ch3',
-          title: '第3章｜フロントエンドをAIで生成する',
-          desc: 'Google AI Studioの基本操作。Gemini ProでUIの叩き台を作る思考法。',
+          title: '第3章｜開発環境コックピット',
+          desc: 'VSCodeの導入と必須拡張機能。AIネイティブエディタCursorの活用法。',
+          duration: "45分",
+          image: "https://images.unsplash.com/photo-1607799275518-d79f278ec964?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch4',
+          title: '第4章｜フロントエンドをAIで生成する',
+          desc: 'Google AI Studioの基本操作。Gemini 3 ProでUIの叩き台を作る思考法。',
           duration: "90分",
           image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch4',
-          title: '第4章｜GitHubワークフロー完全理解',
+          id: 'ch5',
+          title: '第5章｜GitHubワークフロー完全理解',
           desc: 'リポジトリとは何か。AI開発でGitが必須な理由と、壊れても戻れる安心設計。',
           duration: "60分",
           image: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch5',
-          title: '第5章｜Gemini CLIによるバイブコーディング',
+          id: 'ch6',
+          title: '第6章｜Gemini CLIによるバイブコーディング',
           desc: '自然言語でコードを実装する。AIが複数ファイルを編集する仕組み。',
           duration: "120分",
           image: "https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch6',
-          title: '第6章｜Supabaseでデータを持たせる',
+          id: 'ch7',
+          title: '第7章｜Supabaseでデータを持たせる',
           desc: 'PostgreSQLの超基礎理解。Auth・DB・Storageの役割と環境変数の考え方。',
           duration: "120分",
           image: "https://images.unsplash.com/photo-1633419461186-7d75076e2609?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch7',
-          title: '第7章｜デプロイして“世界に出す”',
+          id: 'ch8',
+          title: '第8章｜デプロイして“世界に出す”',
           desc: 'VercelとRenderでの公開手法。無料枠の制限と、公開後のチェックリスト。',
           duration: "45分",
           image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch8',
-          title: '第8章｜失敗と修正を前提にした開発',
+          id: 'ch9',
+          title: '第9章｜失敗と修正を前提にした開発',
           desc: 'AIが壊すポイントとエラーとの付き合い方。ログを見るという行為。',
           duration: "60分",
           image: "https://images.unsplash.com/photo-1555861496-0666c8981751?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch9',
-          title: '第9章｜応用：ゲーム・サービス開発へ',
+          id: 'ch10',
+          title: '第10章｜応用：ゲーム・サービス開発へ',
           desc: 'リアルタイム処理の考え方。UI/UXをAIと磨き、小さく作って公開する戦略。',
           duration: "90分",
           image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"
         },
         {
-          id: 'ch10',
-          title: '第10章｜これからの学び方',
+          id: 'ch11',
+          title: '第11章｜これからの学び方',
           desc: 'プログラミングをどう学ぶか（学ばなくていい範囲）。AIツールの選別力。',
           duration: "30分",
           image: "https://images.unsplash.com/photo-1535378437327-b7149b379bab?auto=format&fit=crop&q=80&w=800"
@@ -196,14 +210,43 @@ const VibePathView: React.FC<VibePathViewProps> = ({ onBack, onNavigate, languag
 
   const t = content[language];
 
-  // Map static data to translated content
-  const chapters = t.chapters.map((ch, idx) => ({
-    ...ch,
-    status: idx === 0 ? 'completed' : (idx === 1 ? 'completed' : (idx === 2 ? 'current' : 'locked')), 
-    view: idx === 0 ? ViewState.VIBE_PROLOGUE : (idx === 1 ? ViewState.VIBE_CHAPTER_1 : (idx === 2 ? ViewState.VIBE_CHAPTER_2 : null))
-  }));
+            // Map static data to translated content
 
-  return (
+            const chapters = t.chapters.map((ch, idx) => ({
+
+              ...ch,
+
+              status: idx <= 10 ? 'completed' : (idx === 11 ? 'current' : 'locked'), 
+
+              view: [
+
+                ViewState.VIBE_CHAPTER_0,
+
+                ViewState.VIBE_CHAPTER_1,
+
+                ViewState.VIBE_CHAPTER_2,
+
+                ViewState.VIBE_CHAPTER_3,
+
+                ViewState.VIBE_CHAPTER_4,
+
+                ViewState.VIBE_CHAPTER_5,
+
+                ViewState.VIBE_CHAPTER_6,
+
+                ViewState.VIBE_CHAPTER_7,
+
+                ViewState.VIBE_CHAPTER_8,
+
+                ViewState.VIBE_CHAPTER_9,
+
+                ViewState.VIBE_CHAPTER_10,
+
+                ViewState.VIBE_CHAPTER_11
+
+              ][idx] || null
+
+            }));  return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-600 pb-20">
       {/* Hero Section */}
       <div className="relative h-[300px] w-full overflow-hidden">

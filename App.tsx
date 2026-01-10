@@ -52,7 +52,15 @@ import VibePrologueView from './components/features/programming/VibePrologueView
 import VibeChapterOneView from './components/features/programming/VibeChapterOneView';
 import VibeChapterTwoView from './components/features/programming/VibeChapterTwoView';
 import VibeChapterThreeView from './components/features/programming/VibeChapterThreeView';
+import VibeChapterFourView from './components/features/programming/VibeChapterFourView';
 import VibeChapterFiveView from './components/features/programming/VibeChapterFiveView';
+import VibeChapterSixView from './components/features/programming/VibeChapterSixView';
+import VibeChapterSevenView from './components/features/programming/VibeChapterSevenView';
+import VibeChapterEightView from './components/features/programming/VibeChapterEightView';
+import VibeChapterNineView from './components/features/programming/VibeChapterNineView';
+import VibeChapterTenView from './components/features/programming/VibeChapterTenView';
+import VibeChapterElevenView from './components/features/programming/VibeChapterElevenView';
+import VibeChapterZeroView from './components/features/programming/VibeChapterZeroView';
 import VibePathView from './components/features/programming/VibePathView';
 import UnityPathView from './components/features/programming/UnityPathView';
 import UnityChapterZeroView from './components/features/programming/UnityChapterZeroView';
@@ -287,6 +295,13 @@ const AppContent: React.FC = () => {
           language={language}
           setLanguage={setLanguage}
         />;
+      case ViewState.VIBE_CHAPTER_0:
+        return <VibeChapterZeroView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
       case ViewState.VIBE_CHAPTER_1:
         return <VibeChapterOneView
           onBack={() => setCurrentView(ViewState.VIBE_PATH)}
@@ -308,8 +323,57 @@ const AppContent: React.FC = () => {
           language={language}
           setLanguage={setLanguage}
         />;
+      case ViewState.VIBE_CHAPTER_4:
+        return <VibeChapterFourView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
       case ViewState.VIBE_CHAPTER_5:
         return <VibeChapterFiveView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.VIBE_CHAPTER_6:
+        return <VibeChapterSixView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.VIBE_CHAPTER_7:
+        return <VibeChapterSevenView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.VIBE_CHAPTER_8:
+        return <VibeChapterEightView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.VIBE_CHAPTER_9:
+        return <VibeChapterNineView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.VIBE_CHAPTER_10:
+        return <VibeChapterTenView
+          onBack={() => setCurrentView(ViewState.VIBE_PATH)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.VIBE_CHAPTER_11:
+        return <VibeChapterElevenView
           onBack={() => setCurrentView(ViewState.VIBE_PATH)}
           onNavigate={setCurrentView}
           language={language}
