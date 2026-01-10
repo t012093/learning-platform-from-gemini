@@ -21,9 +21,12 @@ interface VibeDocViewProps {
   chapter: DocChapter;
   pdfUrl?: string;
   quizData?: QuizData;
+  // Language props
+  language?: 'en' | 'jp';
+  setLanguage?: (lang: 'en' | 'jp') => void;
 }
 
-const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, pdfUrl, quizData }) => {
+const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, pdfUrl, quizData, language, setLanguage }) => {
   const { setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState<string>('');
   const [viewMode, setViewMode] = useState<'doc' | 'slide' | 'quiz'>('doc');
@@ -136,6 +139,12 @@ const VibeDocView: React.FC<VibeDocViewProps> = ({ onBack, onNavigate, chapter, 
         </div>
 
         <div className="flex items-center gap-3">
+           {setLanguage && language && (
+             <div className="flex bg-slate-50 rounded-lg p-1 border border-slate-200/60">
+               <button onClick={() => setLanguage('en')} className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${language === 'en' ? 'bg-white text-slate-800 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}>EN</button>
+               <button onClick={() => setLanguage('jp')} className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${language === 'jp' ? 'bg-white text-slate-800 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}>JP</button>
+             </div>
+           )}
            <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
              <Clock size={14} /> {chapter.readingTime}
            </span>

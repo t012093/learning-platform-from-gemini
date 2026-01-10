@@ -58,6 +58,7 @@ import UnityPathView from './components/features/programming/UnityPathView';
 import UnityChapterZeroView from './components/features/programming/UnityChapterZeroView';
 import UnityChapterOneView from './components/features/programming/UnityChapterOneView';
 import UnityChapterTwoView from './components/features/programming/UnityChapterTwoView';
+import UnityChapterThreeView from './components/features/programming/UnityChapterThreeView';
 
 // Art Features
 import ArtMuseumView from './components/features/art/ArtMuseumView';
@@ -339,6 +340,13 @@ const AppContent: React.FC = () => {
         />;
       case ViewState.UNITY_CHAPTER_2:
         return <UnityChapterTwoView
+          onBack={() => setCurrentView(ViewState.UNITY_AI_GAME_DEV)}
+          onNavigate={setCurrentView}
+          language={language}
+          setLanguage={setLanguage}
+        />;
+      case ViewState.UNITY_CHAPTER_3:
+        return <UnityChapterThreeView
           onBack={() => setCurrentView(ViewState.UNITY_AI_GAME_DEV)}
           onNavigate={setCurrentView}
           language={language}

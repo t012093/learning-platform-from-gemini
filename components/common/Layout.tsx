@@ -348,11 +348,11 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
               className={`
                 flex items-center rounded-lg border px-2 py-2
                 ${isCollapsed ? 'flex-col gap-2' : 'justify-between'}
-                ${theme === 'default' ? 'bg-slate-100 border-slate-200' : 'bg-white/10 border-white/10'}
+                ${theme === 'default' ? 'bg-slate-100 border-slate-200' : 'bg-transparent border-white/10'}
               `}
             >
               {!isCollapsed && (
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'default' ? 'text-slate-500' : 'text-white/70'}`}>
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'default' ? 'text-slate-500' : 'text-slate-400'}`}>
                   {t.language}
                 </span>
               )}
@@ -361,8 +361,8 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
                   type="button"
                   onClick={() => setLanguage('en')}
                   className={`px-2 py-1 rounded-full text-[10px] font-bold transition-all ${language === 'en'
-                    ? (theme === 'default' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900')
-                    : (theme === 'default' ? 'text-slate-500 hover:text-slate-700' : 'text-white/60 hover:text-white')
+                    ? (theme === 'default' ? 'bg-slate-900 text-white' : 'bg-white/10 text-white')
+                    : (theme === 'default' ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-white')
                   }`}
                   aria-pressed={language === 'en'}
                 >
@@ -372,8 +372,8 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) =>
                   type="button"
                   onClick={() => setLanguage('jp')}
                   className={`px-2 py-1 rounded-full text-[10px] font-bold transition-all ${language === 'jp'
-                    ? (theme === 'default' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900')
-                    : (theme === 'default' ? 'text-slate-500 hover:text-slate-700' : 'text-white/60 hover:text-white')
+                    ? (theme === 'default' ? 'bg-slate-900 text-white' : 'bg-white/10 text-white')
+                    : (theme === 'default' ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-white')
                   }`}
                   aria-pressed={language === 'jp'}
                 >

@@ -41,12 +41,18 @@ const UnityPathView: React.FC<UnityPathViewProps> = ({ onBack, onNavigate, langu
         },
         {
           id: 'ch2',
-          title: 'Chapter 2: MonoBehaviour & C#',
+          title: 'Chapter 2: MonoBehaviour & C# Basics',
           desc: 'Reading AI code without fear. Understanding the Unity lifecycle.',
           duration: "30 min",
           image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800"
         },
-        // ... (Future chapters)
+        {
+          id: 'ch3',
+          title: 'Chapter 3: Generating Unity Code with AI',
+          desc: 'Prompt design for Unity. How to prevent "broken code".',
+          duration: "25 min",
+          image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=800"
+        }
       ]
     },
     jp: {
@@ -78,6 +84,13 @@ const UnityPathView: React.FC<UnityPathViewProps> = ({ onBack, onNavigate, langu
           desc: 'AIが書いたコードを「怖がらず読める」ようになる。Unity独自のルール。',
           duration: "30分",
           image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch3',
+          title: '第3章｜AIにUnityコードを書かせる',
+          desc: '「動かないコード」を書かせないための、Unity特化型プロンプト設計。',
+          duration: "25分",
+          image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=800"
         }
       ]
     }
@@ -88,8 +101,11 @@ const UnityPathView: React.FC<UnityPathViewProps> = ({ onBack, onNavigate, langu
   // Map static data to translated content
   const chapters = t.chapters.map((ch, idx) => ({
     ...ch,
-    status: idx === 0 ? 'completed' : (idx === 1 ? 'completed' : (idx === 2 ? 'current' : 'locked')), // Unlock Ch0, Ch1, Ch2
-    view: idx === 0 ? ViewState.UNITY_CHAPTER_0 : (idx === 1 ? ViewState.UNITY_CHAPTER_1 : (idx === 2 ? ViewState.UNITY_CHAPTER_2 : null))
+    status: idx <= 2 ? 'completed' : (idx === 3 ? 'current' : 'locked'), 
+    view: idx === 0 ? ViewState.UNITY_CHAPTER_0 : (
+          idx === 1 ? ViewState.UNITY_CHAPTER_1 : (
+          idx === 2 ? ViewState.UNITY_CHAPTER_2 : (
+          idx === 3 ? ViewState.UNITY_CHAPTER_3 : null)))
   }));
 
   return (

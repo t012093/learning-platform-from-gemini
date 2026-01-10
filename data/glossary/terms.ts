@@ -90,6 +90,57 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
       jp: 'Unityスクリプトの基本となるクラス。これを継承することで、Start()やUpdate()などのUnityの魔法が使えるようになる。'
     },
     category: 'code'
+  },
+  {
+    id: 'update',
+    term: 'Update',
+    synonyms: ['Update関数'],
+    definitions: {
+      en: 'A function called every frame. Use this for continuous actions like movement or input checking.',
+      jp: '毎フレーム（1秒間に60回など）繰り返し呼ばれ続ける関数。移動や入力のチェックなどはここに書く。'
+    },
+    category: 'code'
+  },
+  {
+    id: 'serializefield',
+    term: 'SerializeField',
+    synonyms: ['シリアライズフィールド'],
+    definitions: {
+      en: 'A C# attribute that makes private variables editable in the Unity Inspector. Essential for game balancing.',
+      jp: 'スクリプト内の変数を、UnityエディタのInspectorから設定・変更できるようにする魔法の言葉（属性）。private変数のまま扱えるので安全。'
+    },
+    category: 'code'
+  },
+  
+  // --- AI & Prompting ---
+  {
+    id: 'prompt',
+    term: 'Prompt',
+    synonyms: ['プロンプト', '指示文'],
+    definitions: {
+      en: 'The instructions given to AI. The quality of the prompt determines the quality of the generated code.',
+      jp: 'AIに対する指示のこと。この質が、出力されるコードの質を左右する。「AIへの発注書」。'
+    },
+    category: 'general'
+  },
+  {
+    id: 'constraint',
+    term: 'Constraint',
+    synonyms: ['制約', '制約条件'],
+    definitions: {
+      en: 'Rules set for AI to prevent bugs or messy code (e.g., "Use Rigidbody", "Do not use Find").',
+      jp: 'AIが変なコードを書かないようにあらかじめ決めておくルールのこと。「Rigidbodyを使って」「Findは使わないで」など。'
+    },
+    category: 'general'
+  },
+  {
+    id: 'find',
+    term: 'GameObject.Find',
+    synonyms: ['Find関数', 'Find'],
+    definitions: {
+      en: 'A heavy function that searches for objects by name. Avoid using this in Update() as it causes lag.',
+      jp: '名前でオブジェクトを探す関数。非常に処理が重いため、Updateの中で使うとゲームがカクつく原因になる。「検索」ではなく「参照」を使うべき。'
+    },
+    category: 'code'
   }
-  // ※ 他の用語も同様の形式で拡張可能
 ];

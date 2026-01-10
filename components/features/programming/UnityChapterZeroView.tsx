@@ -18,6 +18,8 @@ const UnityChapterZeroView: React.FC<UnityChapterZeroViewProps> = ({ onBack, onN
       chapter={chapterData}
       onBack={onBack}
       onNavigate={onNavigate}
+      language={language}
+      setLanguage={setLanguage}
     />
   );
 };

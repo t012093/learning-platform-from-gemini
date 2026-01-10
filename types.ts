@@ -109,6 +109,7 @@ export enum ViewState {
   UNITY_CHAPTER_0 = 'UNITY_CHAPTER_0',
   UNITY_CHAPTER_1 = 'UNITY_CHAPTER_1',
   UNITY_CHAPTER_2 = 'UNITY_CHAPTER_2',
+  UNITY_CHAPTER_3 = 'UNITY_CHAPTER_3',
   VIBE_PATH = 'VIBE_PATH', // New: The Hub for Vibe Coding
   VIBE_PROLOGUE = 'VIBE_PROLOGUE', // Prologue: Mindset
   VIBE_CHAPTER_1 = 'VIBE_CHAPTER_1', // Chapter 1: Prompt Engineering

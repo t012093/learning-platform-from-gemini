@@ -18,6 +18,8 @@ const UnityChapterTwoView: React.FC<UnityChapterTwoViewProps> = ({ onBack, onNav
       chapter={chapterData}
       onBack={onBack}
       onNavigate={onNavigate}
+      language={language}
+      setLanguage={setLanguage}
     />
   );
 };
