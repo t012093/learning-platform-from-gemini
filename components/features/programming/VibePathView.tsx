@@ -23,36 +23,85 @@ const VibePathView: React.FC<VibePathViewProps> = ({ onBack, onNavigate, languag
       subtitle: "Master the art of directing AI to build software. No memorization required.",
       progressTitle: "Track Status",
       level: "Intermediate",
-      time: "12 Hours",
+      time: "20 Hours",
       chapters: [
         {
-          id: 'prologue',
-          title: 'Prologue: The Paradigm Shift',
-          desc: 'Understand the mindset. Why coding is dead, and long live coding.',
-          duration: "45 min",
+          id: 'ch0',
+          title: 'Chapter 0: Sharing the Premise',
+          desc: 'Why "No-Code" development works now. Separating Human and AI roles.',
+          duration: "30 min",
           image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800"
         },
         {
           id: 'ch1',
-          title: 'Chapter 1: The Power of Speech',
-          desc: 'Prompt Engineering Lab. Learn "Role", "Context", and "Vibe".',
-          duration: "90 min",
+          title: 'Chapter 1: Minimum Viable Knowledge',
+          desc: 'Frontend, Backend, DB, and Git. The absolute basics you must understand.',
+          duration: "45 min",
           image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=800"
         },
         {
           id: 'ch2',
-          title: 'Chapter 2: The Cockpit',
-          desc: 'Cloud vs. Local, VSCode basics, and dancing with Copilot.',
-          duration: "120 min",
-          image: "https://images.unsplash.com/photo-1607799275518-d79f278ec964?auto=format&fit=crop&q=80&w=800"
+          title: 'Chapter 2: Planning with AI',
+          desc: 'Wall-boarding with ChatGPT. Translating "Want" into App Structure.',
+          duration: "60 min",
+          image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=800"
         },
         {
           id: 'ch3',
-          title: 'Chapter 3: The World (GitHub)',
-          desc: 'Time machines, Save points, and the infinite library of Open Source.',
-          duration: "150 min",
+          title: 'Chapter 3: Generating Frontend',
+          desc: 'Google AI Studio basics. Creating UI prototypes with Gemini 1.5 Pro.',
+          duration: "90 min",
+          image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch4',
+          title: 'Chapter 4: GitHub Workflow',
+          desc: 'Understanding Repositories, Commits, and why Git is essential for AI dev.',
+          duration: "60 min",
           image: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?auto=format&fit=crop&q=80&w=800"
         },
+        {
+          id: 'ch5',
+          title: 'Chapter 5: Vibe Coding with CLI',
+          desc: 'Gemini CLI introduction. Implementing logic with natural language.',
+          duration: "120 min",
+          image: "https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch6',
+          title: 'Chapter 6: Data with Supabase',
+          desc: 'Auth, DB, Storage. Understanding the role of PostgreSQL.',
+          duration: "120 min",
+          image: "https://images.unsplash.com/photo-1633419461186-7d75076e2609?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch7',
+          title: 'Chapter 7: Deployment',
+          desc: 'Releasing to Vercel and Render. The checklist for going live.',
+          duration: "45 min",
+          image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch8',
+          title: 'Chapter 8: Failure & Debugging',
+          desc: 'How to deal with AI breaking things. Reading logs and error handling.',
+          duration: "60 min",
+          image: "https://images.unsplash.com/photo-1555861496-0666c8981751?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch9',
+          title: 'Chapter 9: Advanced Application',
+          desc: 'Applied Game/Service Development. Refining UI/UX with AI.',
+          duration: "90 min",
+          image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch10',
+          title: 'Chapter 10: Future Learning',
+          desc: 'What not to learn. Cultivating selection eyes for AI tools.',
+          duration: "30 min",
+          image: "https://images.unsplash.com/photo-1535378437327-b7149b379bab?auto=format&fit=crop&q=80&w=800"
+        }
       ]
     },
     jp: {
@@ -62,36 +111,85 @@ const VibePathView: React.FC<VibePathViewProps> = ({ onBack, onNavigate, languag
       subtitle: "AIを指揮してソフトウェアを構築する技術。暗記は不要です。",
       progressTitle: "コース進捗",
       level: "中級",
-      time: "12時間",
+      time: "20時間",
       chapters: [
         {
-          id: 'prologue',
-          title: 'プロローグ：パラダイムシフト',
-          desc: 'マインドセットを理解する。なぜ「コーディング」は死に、新たに生まれ変わるのか。',
-          duration: "45分",
+          id: 'ch0',
+          title: '第0章｜この時代の前提を共有する',
+          desc: 'なぜ「コードを書かない開発」が成立するのか。人間の役割とAIの役割の分離。',
+          duration: "30分",
           image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800"
         },
         {
           id: 'ch1',
-          title: '第1章：言葉の力',
-          desc: 'プロンプトエンジニアリング研究所。「役割」「文脈」「バイブ」を学ぶ。',
-          duration: "90分",
+          title: '第1章｜人間が理解すべき最低ライン',
+          desc: 'フロントエンド / バックエンド / DBの関係。UIとAPIの違い。',
+          duration: "45分",
           image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=800"
         },
         {
           id: 'ch2',
-          title: '第2章：コックピット',
-          desc: 'クラウド vs ローカル。VSCodeの基礎と、Copilotとのダンス。',
-          duration: "120分",
-          image: "https://images.unsplash.com/photo-1607799275518-d79f278ec964?auto=format&fit=crop&q=80&w=800"
+          title: '第2章｜AIと企画する力を身につける',
+          desc: 'ChatGPTとの壁打ち設計術。「作りたい」をアプリ構造に翻訳する。',
+          duration: "60分",
+          image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=800"
         },
         {
           id: 'ch3',
-          title: '第3章：ザ・ワールド (GitHub)',
-          desc: 'タイムマシン、セーブポイント、そして無限のオープンソース図書館。',
-          duration: "150分",
+          title: '第3章｜フロントエンドをAIで生成する',
+          desc: 'Google AI Studioの基本操作。Gemini ProでUIの叩き台を作る思考法。',
+          duration: "90分",
+          image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch4',
+          title: '第4章｜GitHubワークフロー完全理解',
+          desc: 'リポジトリとは何か。AI開発でGitが必須な理由と、壊れても戻れる安心設計。',
+          duration: "60分",
           image: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?auto=format&fit=crop&q=80&w=800"
         },
+        {
+          id: 'ch5',
+          title: '第5章｜Gemini CLIによるバイブコーディング',
+          desc: '自然言語でコードを実装する。AIが複数ファイルを編集する仕組み。',
+          duration: "120分",
+          image: "https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch6',
+          title: '第6章｜Supabaseでデータを持たせる',
+          desc: 'PostgreSQLの超基礎理解。Auth・DB・Storageの役割と環境変数の考え方。',
+          duration: "120分",
+          image: "https://images.unsplash.com/photo-1633419461186-7d75076e2609?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch7',
+          title: '第7章｜デプロイして“世界に出す”',
+          desc: 'VercelとRenderでの公開手法。無料枠の制限と、公開後のチェックリスト。',
+          duration: "45分",
+          image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch8',
+          title: '第8章｜失敗と修正を前提にした開発',
+          desc: 'AIが壊すポイントとエラーとの付き合い方。ログを見るという行為。',
+          duration: "60分",
+          image: "https://images.unsplash.com/photo-1555861496-0666c8981751?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch9',
+          title: '第9章｜応用：ゲーム・サービス開発へ',
+          desc: 'リアルタイム処理の考え方。UI/UXをAIと磨き、小さく作って公開する戦略。',
+          duration: "90分",
+          image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 'ch10',
+          title: '第10章｜これからの学び方',
+          desc: 'プログラミングをどう学ぶか（学ばなくていい範囲）。AIツールの選別力。',
+          duration: "30分",
+          image: "https://images.unsplash.com/photo-1535378437327-b7149b379bab?auto=format&fit=crop&q=80&w=800"
+        }
       ]
     }
   };
@@ -99,28 +197,11 @@ const VibePathView: React.FC<VibePathViewProps> = ({ onBack, onNavigate, languag
   const t = content[language];
 
   // Map static data to translated content
-  const chapters = [
-    {
-      ...t.chapters[0],
-      status: 'completed',
-      view: ViewState.VIBE_PROLOGUE,
-    },
-    {
-      ...t.chapters[1],
-      status: 'completed',
-      view: ViewState.VIBE_CHAPTER_1,
-    },
-    {
-      ...t.chapters[2],
-      status: 'completed',
-      view: ViewState.VIBE_CHAPTER_2,
-    },
-    {
-      ...t.chapters[3],
-      status: 'current',
-      view: ViewState.VIBE_CHAPTER_3,
-    },
-  ];
+  const chapters = t.chapters.map((ch, idx) => ({
+    ...ch,
+    status: idx === 0 ? 'completed' : (idx === 1 ? 'completed' : (idx === 2 ? 'current' : 'locked')), 
+    view: idx === 0 ? ViewState.VIBE_PROLOGUE : (idx === 1 ? ViewState.VIBE_CHAPTER_1 : (idx === 2 ? ViewState.VIBE_CHAPTER_2 : null))
+  }));
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-600 pb-20">

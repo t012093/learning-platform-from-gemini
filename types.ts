@@ -110,7 +110,13 @@ export enum ViewState {
   VIBE_CHAPTER_1 = 'VIBE_CHAPTER_1', // Chapter 1: Prompt Engineering
   VIBE_CHAPTER_2 = 'VIBE_CHAPTER_2', // Chapter 2: The Cockpit
   VIBE_CHAPTER_3 = 'VIBE_CHAPTER_3', // Chapter 3: The Engine (Codex)
-  VIBE_CHAPTER_5 = 'VIBE_CHAPTER_5', // Chapter 5: The World (GitHub)
+  VIBE_CHAPTER_4 = 'VIBE_CHAPTER_4', // Chapter 4: GitHub Workflow
+  VIBE_CHAPTER_5 = 'VIBE_CHAPTER_5', // Chapter 5: Gemini CLI
+  VIBE_CHAPTER_6 = 'VIBE_CHAPTER_6', // Chapter 6: Supabase
+  VIBE_CHAPTER_7 = 'VIBE_CHAPTER_7', // Chapter 7: Deployment
+  VIBE_CHAPTER_8 = 'VIBE_CHAPTER_8', // Chapter 8: Failure & Debugging
+  VIBE_CHAPTER_9 = 'VIBE_CHAPTER_9', // Chapter 9: Game/Service Dev
+  VIBE_CHAPTER_10 = 'VIBE_CHAPTER_10', // Chapter 10: Future Learning
 
   // Art Section
   ART_MUSEUM = 'ART_MUSEUM', // The Hub
@@ -284,3 +290,28 @@ export interface GeneratedCourse {
 }
 
 export type CourseTemplate = 'focus_slide' | 'workshop_split' | 'dialogue_chat' | 'explore_map';
+
+// --- Vibe Coding Document Types ---
+
+export type DocBlock = 
+  | { type: 'text'; text: string; style?: 'normal' | 'lead' | 'quote' }
+  | { type: 'image'; src: string; alt: string; caption?: string; layout?: 'full' | 'float-right' }
+  | { type: 'code'; code: string; language: string; filename?: string; highlightLines?: number[] }
+  | { type: 'list'; items: string[]; style?: 'bullet' | 'number' | 'check' }
+  | { type: 'callout'; title?: string; text: string; variant: 'info' | 'warning' | 'tip' | 'success' }
+  | { type: 'mermaid'; chart: string; caption?: string }
+  | { type: 'table'; headers: string[]; rows: string[][] };
+
+export interface DocSection {
+  id: string;
+  title: string;
+  content: DocBlock[];
+}
+
+export interface DocChapter {
+  id: string;
+  title: string;
+  subtitle: string;
+  readingTime: string; // e.g. "10 min read"
+  sections: DocSection[];
+}

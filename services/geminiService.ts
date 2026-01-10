@@ -3,7 +3,7 @@ import { LessonRubric, AnalysisResult, GeneratedCourse, GeneratedChapter, Big5Pr
 import { retrieveBlenderContext } from './blenderRagService';
 import { retrieveBlenderImages } from './blenderImageRagService';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY });
 
 // --- Configuration Interfaces ---
 export interface GenerateCourseConfig {
